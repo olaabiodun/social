@@ -676,7 +676,7 @@
 }
 
 .category-header {
-  padding: 14px 20px;
+  padding: 8px 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -691,13 +691,13 @@
 }
 
 .cat-platform-icon {
-  width: 36px;
-  height: 36px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 15px;
   background: hsl(0 0% 100% / 0.15);
   flex-shrink: 0;
   color: hsl(0 0% 100%);
