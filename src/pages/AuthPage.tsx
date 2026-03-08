@@ -176,6 +176,9 @@ const AuthPage = () => {
       <div className="auth-container">
         {/* LEFT — Branding */}
         <div className="auth-left">
+          <div className="auth-orb auth-orb-1" />
+          <div className="auth-orb auth-orb-2" />
+          <div className="auth-orb auth-orb-3" />
           <div className="auth-left-inner">
             <Link to="/" className="auth-logo">
               <div className="auth-logo-dot" />
