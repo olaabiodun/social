@@ -622,48 +622,41 @@ export default function Dashboard() {
                 <span className="breadcrumb-sep">›</span>
                 <span className="breadcrumb-link" onClick={() => { setSelectedCategory(null); setActivePanel("categories"); }}>Categories</span>
                 <span className="breadcrumb-sep">›</span>
-                <span className="breadcrumb-current">{selectedCategory.catTitle.toUpperCase()}</span>
+                <span className="breadcrumb-current">{selectedCategory.name.toUpperCase()}</span>
               </div>
 
               <div className="category-banner">
                 <div className="category-banner-icon">
-                  {selectedCategory.catIcon ? <i className={selectedCategory.catIcon} /> : "🎵"}
+                  {getCatIcon(selectedCategory) ? <i className={getCatIcon(selectedCategory)} /> : (selectedCategory.emoji || "📦")}
                 </div>
                 <div>
-                  <h2 className="category-banner-title">{selectedCategory.catTitle.toUpperCase()}</h2>
-                  <p className="category-banner-count">{selectedCategory.items.length} products available</p>
+                  <h2 className="category-banner-title">{selectedCategory.name.toUpperCase()}</h2>
+                  <p className="category-banner-count">{getProductsForCategory(selectedCategory.id).length} products available</p>
                 </div>
-              </div>
-
-              <div className="category-filters">
-                <span className="filter-label">Filter by:</span>
-                <select className="filter-select"><option>Region</option><option>All Regions</option><option>Europe</option><option>USA</option><option>UK</option></select>
-                <select className="filter-select"><option>Price Range</option><option>All Prices</option><option>Under ₦5,000</option><option>₦5,000 - ₦10,000</option><option>Above ₦10,000</option></select>
-                <select className="filter-select"><option>Age</option><option>All Ages</option><option>1-3 Years</option><option>4-6 Years</option><option>7+ Years</option></select>
-                <select className="filter-select"><option>Sort: Newest</option><option>Price: Low to High</option><option>Price: High to Low</option><option>Stock: High to Low</option></select>
               </div>
 
               <div className="category-detail-list">
-                {selectedCategory.items.map((item, j) => (
-                  <div key={j} className="account-row">
+                {getProductsForCategory(selectedCategory.id).filter(p => filterBySearch(p.title + p.description)).map((product) => (
+                  <div key={product.id} className="account-row">
                     <div className="acc-platform-icon">
-                      {selectedCategory.catIcon ? <i className={selectedCategory.catIcon} /> : "🎵"}
+                      {platformIconMap[product.platform] ? <i className={platformIconMap[product.platform]} /> : (selectedCategory.emoji || "📦")}
                     </div>
                     <div className="acc-info">
-                      <div className="acc-desc" style={{ WebkitLineClamp: 'unset', display: 'block' }}>{item.desc}</div>
+                      <div className="acc-desc-title">{product.title}</div>
+                      <div className="acc-desc" style={{ WebkitLineClamp: 'unset', display: 'block' }}>{product.description}</div>
                     </div>
                     <div className="acc-stock-price">
                       <div style={{ textAlign: "center" }}>
                         <div className="stock-label">Stock</div>
-                        <div className={`stock-num ${item.stockClass}`}>{item.stock}</div>
+                        <div className={`stock-num ${product.stock === 0 ? "zero" : product.stock < 10 ? "low" : ""}`}>{product.stock}</div>
                       </div>
                       <div style={{ textAlign: "center" }}>
                         <div className="price-label">Price</div>
-                        <div className="price-val">{item.price}</div>
+                        <div className="price-val">{product.currency} {product.price.toLocaleString("en-NG")}</div>
                       </div>
                     </div>
-                    {item.stock > 0 ? (
-                      <button className="buy-btn" onClick={() => setModal({ title: item.modalTitle, desc: item.modalDesc, platform: selectedCategory.catTitle, stock: item.stock, price: item.price })}>
+                    {product.stock > 0 ? (
+                      <button className="buy-btn" onClick={() => setModal({ title: product.title, desc: product.description, platform: product.platform, stock: product.stock, price: `${product.currency} ${product.price.toLocaleString("en-NG")}`, product_id: product.id, priceNum: product.price })}>
                         <i className="fa-solid fa-cart-shopping" /> BUY
                       </button>
                     ) : (
