@@ -351,13 +351,30 @@ export default function Dashboard() {
     setSelectedCategory(null);
   }, []);
 
-  const filteredAccounts = ACCOUNTS_DATA.filter(
-    (cat) => activeFilter === "all" || cat.category === activeFilter || cat.category.startsWith(activeFilter)
-  );
+  const getProductsForCategory = (catId: string) => dbProducts.filter(p => p.category_id === catId);
 
-  const filterBySearch = (desc: string) => {
+  const platformIconMap: Record<string, string> = {
+    Facebook: "fa-brands fa-facebook", Instagram: "fa-brands fa-instagram",
+    TikTok: "fa-brands fa-tiktok", "Twitter/X": "fa-brands fa-x-twitter",
+    YouTube: "fa-brands fa-youtube", Snapchat: "fa-brands fa-snapchat",
+    LinkedIn: "fa-brands fa-linkedin", Discord: "fa-brands fa-discord",
+    Gmail: "fa-brands fa-google", Telegram: "fa-brands fa-telegram",
+  };
+  const getCatIcon = (cat: Category) => {
+    const prods = getProductsForCategory(cat.id);
+    if (prods.length > 0 && platformIconMap[prods[0].platform]) return platformIconMap[prods[0].platform];
+    return "";
+  };
+
+  const filteredDbCategories = dbCategories.filter(cat => {
+    if (activeFilter === "all") return true;
+    const prods = getProductsForCategory(cat.id);
+    return prods.some(p => p.platform.toLowerCase().includes(activeFilter));
+  });
+
+  const filterBySearch = (text: string) => {
     if (!searchQuery) return true;
-    return desc.toLowerCase().includes(searchQuery.toLowerCase());
+    return text.toLowerCase().includes(searchQuery.toLowerCase());
   };
 
   const handleSignOut = async () => {
