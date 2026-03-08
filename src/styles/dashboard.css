@@ -1948,6 +1948,7 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 0 16px;
 }
 
 /* Category detail filters */
