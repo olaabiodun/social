@@ -25,7 +25,10 @@ const AuthPage = () => {
   const [suEmailErr, setSuEmailErr] = useState(false);
   const [suPw, setSuPw] = useState("");
   const [suPwErr, setSuPwErr] = useState(false);
+  const [suConfirmPw, setSuConfirmPw] = useState("");
+  const [suConfirmPwErr, setSuConfirmPwErr] = useState(false);
   const [showSuPw, setShowSuPw] = useState(false);
+  const [showSuConfirmPw, setShowSuConfirmPw] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [pwStrength, setPwStrength] = useState(0);
   const [showPwStrength, setShowPwStrength] = useState(false);
@@ -97,6 +100,7 @@ const AuthPage = () => {
     if (!suFname.trim()) { showToast("Please enter a username"); return; }
     if (!validateEmail(suEmail)) { setSuEmailErr(true); return; }
     if (suPw.length < 6) { setSuPwErr(true); return; }
+    if (suPw !== suConfirmPw) { setSuConfirmPwErr(true); showToast("❌ Passwords do not match"); return; }
     if (!termsChecked) { showToast("Please accept the terms to continue"); return; }
 
     setLoading(true);
@@ -105,7 +109,6 @@ const AuthPage = () => {
       password: suPw,
       options: {
         data: { username: suFname },
-        emailRedirectTo: window.location.origin,
       },
     });
     setLoading(false);
@@ -113,8 +116,7 @@ const AuthPage = () => {
     if (error) {
       showToast(`❌ ${error.message}`);
     } else {
-      showToast("✅ Account created! Check your email to confirm.");
-      setSignupStep(2);
+      showToast("✅ Account created! Redirecting...");
     }
   };
 
@@ -377,6 +379,24 @@ const AuthPage = () => {
                     {showPwStrength && <PasswordStrengthBars score={pwStrength} />}
                   </div>
 
+                  <div className="auth-field">
+                    <label>Confirm Password</label>
+                    <div className="auth-input-wrap">
+                      <Lock size={16} className="auth-input-icon" />
+                      <input
+                        type={showSuConfirmPw ? "text" : "password"}
+                        className={suConfirmPwErr ? "error" : ""}
+                        value={suConfirmPw}
+                        onChange={(e) => { setSuConfirmPw(e.target.value); setSuConfirmPwErr(false); }}
+                        placeholder="Re-enter your password"
+                      />
+                      <button className="auth-eye" onClick={() => setShowSuConfirmPw(!showSuConfirmPw)}>
+                        {showSuConfirmPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                    {suConfirmPwErr && <span className="auth-field-error">Passwords do not match</span>}
+                  </div>
+
                   <label className="auth-checkbox">
                     <input type="checkbox" checked={termsChecked} onChange={() => setTermsChecked(!termsChecked)} />
                     <span className="auth-checkmark" />
@@ -385,20 +405,6 @@ const AuthPage = () => {
 
                   <button className={`auth-submit${loading ? " loading" : ""}`} onClick={handleSignupSubmit} disabled={loading}>
                     <span className="auth-submit-text">Create Account</span>
-                    <ArrowRight size={16} className="auth-submit-arrow" />
-                  </button>
-                </div>
-              )}
-
-              {signupStep === 2 && (
-                <div className="auth-success">
-                  <div className="auth-success-icon">
-                    <CheckCircle2 size={32} />
-                  </div>
-                  <h3>Check your email!</h3>
-                  <p>We sent a confirmation link to <strong>{suEmail}</strong>. Click it to activate your account.</p>
-                  <button className="auth-submit" onClick={() => showPage("login")}>
-                    <span className="auth-submit-text">Go to Sign In</span>
                     <ArrowRight size={16} className="auth-submit-arrow" />
                   </button>
                 </div>
