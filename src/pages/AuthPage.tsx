@@ -100,6 +100,7 @@ const AuthPage = () => {
     if (!suFname.trim()) { showToast("Please enter a username"); return; }
     if (!validateEmail(suEmail)) { setSuEmailErr(true); return; }
     if (suPw.length < 6) { setSuPwErr(true); return; }
+    if (suPw !== suConfirmPw) { setSuConfirmPwErr(true); showToast("❌ Passwords do not match"); return; }
     if (!termsChecked) { showToast("Please accept the terms to continue"); return; }
 
     setLoading(true);
@@ -108,7 +109,6 @@ const AuthPage = () => {
       password: suPw,
       options: {
         data: { username: suFname },
-        emailRedirectTo: window.location.origin,
       },
     });
     setLoading(false);
@@ -116,8 +116,7 @@ const AuthPage = () => {
     if (error) {
       showToast(`❌ ${error.message}`);
     } else {
-      showToast("✅ Account created! Check your email to confirm.");
-      setSignupStep(2);
+      showToast("✅ Account created! Redirecting...");
     }
   };
 
