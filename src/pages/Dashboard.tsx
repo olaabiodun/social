@@ -109,6 +109,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<PanelName>("home");
   const [selectedCategory, setSelectedCategory] = useState<typeof ACCOUNTS_DATA[0] | null>(null);
+  const [categorySearch, setCategorySearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
