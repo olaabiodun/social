@@ -296,8 +296,59 @@ export default function Dashboard() {
 
         {/* Content */}
         <div className="dash-content">
+          {/* CATEGORY DETAIL */}
+          {activePanel === "home" && selectedCategory && (
+            <div className="dash-panel">
+              <div className="category-breadcrumb">
+                <span className="breadcrumb-link" onClick={() => setSelectedCategory(null)}>Dashboard</span>
+                <span className="breadcrumb-sep">›</span>
+                <span className="breadcrumb-current">{selectedCategory.catTitle.toUpperCase()}</span>
+              </div>
+
+              <div className="category-banner">
+                <div className="category-banner-icon">
+                  {selectedCategory.catIcon ? <i className={selectedCategory.catIcon} /> : "🎵"}
+                </div>
+                <div>
+                  <h2 className="category-banner-title">{selectedCategory.catTitle.toUpperCase()}</h2>
+                  <p className="category-banner-count">{selectedCategory.items.length} products available</p>
+                </div>
+              </div>
+
+              <div className="category-detail-list">
+                {selectedCategory.items.map((item, j) => (
+                  <div key={j} className="account-row">
+                    <div className="acc-platform-icon">
+                      {selectedCategory.catIcon ? <i className={selectedCategory.catIcon} /> : "🎵"}
+                    </div>
+                    <div className="acc-info">
+                      <div className="acc-desc" style={{ WebkitLineClamp: 'unset', display: 'block' }}>{item.desc}</div>
+                    </div>
+                    <div className="acc-stock-price">
+                      <div style={{ textAlign: "center" }}>
+                        <div className="stock-label">Stock</div>
+                        <div className={`stock-num ${item.stockClass}`}>{item.stock}</div>
+                      </div>
+                      <div style={{ textAlign: "center" }}>
+                        <div className="price-label">Price</div>
+                        <div className="price-val">{item.price}</div>
+                      </div>
+                    </div>
+                    {item.stock > 0 ? (
+                      <button className="buy-btn" onClick={() => setModal({ title: item.modalTitle, desc: item.modalDesc, platform: selectedCategory.catTitle, stock: item.stock, price: item.price })}>
+                        <i className="fa-solid fa-cart-shopping" /> BUY
+                      </button>
+                    ) : (
+                      <button className="buy-btn" disabled>Out of Stock</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* HOME */}
-          {activePanel === "home" && (
+          {activePanel === "home" && !selectedCategory && (
             <div className="dash-panel">
               <div className="welcome-banner">
                 <div className="welcome-inner">
