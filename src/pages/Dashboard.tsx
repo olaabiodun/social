@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import "../styles/dashboard.css";
 
-type PanelName = "home" | "orders" | "profile" | "add-funds" | "support";
+type PanelName = "home" | "orders" | "profile" | "add-funds" | "support" | "categories";
 
 interface ModalData {
   title: string;
@@ -87,6 +87,7 @@ type NavItem = NavSection | NavLink;
 const NAV_ITEMS: NavItem[] = [
   { label: "Main", type: "section" },
   { label: "Home", icon: "fa-solid fa-house", panel: "home" },
+  { label: "Categories", icon: "fa-solid fa-layer-group", panel: "categories" },
   { label: "Profile", icon: "fa-solid fa-user", panel: "profile" },
   { label: "My Orders", icon: "fa-solid fa-box", panel: "orders" },
   { label: "Finance", type: "section" },
@@ -99,6 +100,7 @@ const NAV_ITEMS: NavItem[] = [
 
 const PANEL_TITLES: Record<PanelName, string> = {
   home: "Goodluckstore",
+  categories: "Categories",
   profile: "My Profile",
   orders: "My Orders",
   "add-funds": "Add Funds",
@@ -259,36 +261,6 @@ export default function Dashboard() {
             );
           })}
 
-          <div className="nav-section-label">Categories</div>
-          <div className="sidebar-cat-search">
-            <i className="fa-solid fa-magnifying-glass" />
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={categorySearch}
-              onChange={(e) => setCategorySearch(e.target.value)}
-            />
-          </div>
-          {ACCOUNTS_DATA
-            .filter((cat) => cat.catTitle.toLowerCase().includes(categorySearch.toLowerCase()))
-            .map((cat, i) => (
-              <button
-                key={`cat-${i}`}
-                className={`dash-nav-item ${selectedCategory?.category === cat.category ? "active" : ""}`}
-                onClick={() => {
-                  setActivePanel("home");
-                  setSelectedCategory(cat);
-                  setSidebarOpen(false);
-                  setCategorySearch("");
-                }}
-              >
-                <span className="nav-icon">
-                  {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
-                </span>
-                <span className="nav-cat-label">{cat.catTitle}</span>
-                <span className="nav-badge">{cat.items.length}</span>
-              </button>
-            ))}
         </nav>
 
         <div className="sidebar-bottom">
@@ -332,7 +304,9 @@ export default function Dashboard() {
           {activePanel === "home" && selectedCategory && (
             <div className="dash-panel">
               <div className="category-breadcrumb">
-                <span className="breadcrumb-link" onClick={() => setSelectedCategory(null)}>Dashboard</span>
+                <span className="breadcrumb-link" onClick={() => { setSelectedCategory(null); setActivePanel("home"); }}>Dashboard</span>
+                <span className="breadcrumb-sep">›</span>
+                <span className="breadcrumb-link" onClick={() => { setSelectedCategory(null); setActivePanel("categories"); }}>Categories</span>
                 <span className="breadcrumb-sep">›</span>
                 <span className="breadcrumb-current">{selectedCategory.catTitle.toUpperCase()}</span>
               </div>
@@ -383,6 +357,49 @@ export default function Dashboard() {
                     )}
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* CATEGORIES */}
+          {activePanel === "categories" && (
+            <div className="dash-panel">
+              <div className="category-breadcrumb">
+                <span className="breadcrumb-link" onClick={() => setActivePanel("home")}>Dashboard</span>
+                <span className="breadcrumb-sep">›</span>
+                <span className="breadcrumb-current">Categories</span>
+              </div>
+
+              <div className="categories-search-wrap">
+                <i className="fa-solid fa-magnifying-glass" />
+                <input
+                  type="text"
+                  placeholder="Search categories..."
+                  value={categorySearch}
+                  onChange={(e) => setCategorySearch(e.target.value)}
+                />
+              </div>
+
+              <div className="categories-grid">
+                {ACCOUNTS_DATA
+                  .filter((cat) => cat.catTitle.toLowerCase().includes(categorySearch.toLowerCase()))
+                  .map((cat, i) => (
+                    <div
+                      key={i}
+                      className="category-card"
+                      onClick={() => {
+                        setSelectedCategory(cat);
+                        setActivePanel("home");
+                        setCategorySearch("");
+                      }}
+                    >
+                      <div className="category-card-icon">
+                        {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
+                      </div>
+                      <div className="category-card-title">{cat.catTitle}</div>
+                      <div className="category-card-count">{cat.items.length} products</div>
+                    </div>
+                  ))}
               </div>
             </div>
           )}
