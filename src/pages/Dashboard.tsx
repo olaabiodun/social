@@ -753,43 +753,44 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {filteredAccounts.map((cat) => {
-                const visibleItems = cat.items.filter((item) => filterBySearch(item.desc));
-                if (visibleItems.length === 0) return null;
+              {filteredDbCategories.map((cat) => {
+                const prods = getProductsForCategory(cat.id).filter(p => filterBySearch(p.title + p.description));
+                if (prods.length === 0) return null;
+                const icon = getCatIcon(cat);
                 return (
-                  <div key={cat.category} className="category-block">
+                  <div key={cat.id} className="category-block">
                     <div className="category-header">
                       <div className="cat-head-left">
                         <div className="cat-platform-icon">
-                          {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
+                          {icon ? <i className={icon} /> : (cat.emoji || "📦")}
                         </div>
                         <div>
-                          <div className="cat-title">{cat.catTitle}</div>
+                          <div className="cat-title">{cat.name}</div>
                         </div>
                       </div>
                       <button className="cat-see-more" onClick={() => setSelectedCategory(cat)}>See More →</button>
                     </div>
-                    {visibleItems.map((item, j) => (
-                      <div key={j} className="account-row">
+                    {prods.map((product) => (
+                      <div key={product.id} className="account-row">
                         <div className="acc-platform-icon">
-                          {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
+                          {platformIconMap[product.platform] ? <i className={platformIconMap[product.platform]} /> : (cat.emoji || "📦")}
                         </div>
                         <div className="acc-info">
-                          <div className="acc-desc-title">{item.modalTitle}</div>
-                          <div className="acc-desc">{item.desc}</div>
+                          <div className="acc-desc-title">{product.title}</div>
+                          <div className="acc-desc">{product.description}</div>
                         </div>
                         <div className="acc-stock-price">
                           <div style={{ textAlign: "center" }}>
                             <div className="stock-label">Stock</div>
-                            <div className={`stock-num ${item.stockClass}`}>{item.stock}</div>
+                            <div className={`stock-num ${product.stock === 0 ? "zero" : product.stock < 10 ? "low" : ""}`}>{product.stock}</div>
                           </div>
                           <div style={{ textAlign: "center" }}>
                             <div className="price-label">Price</div>
-                            <div className="price-val">{item.price}</div>
+                            <div className="price-val">{product.currency} {product.price.toLocaleString("en-NG")}</div>
                           </div>
                         </div>
-                        {item.stock > 0 ? (
-                          <button className="buy-btn" onClick={() => setModal({ title: item.modalTitle, desc: item.modalDesc, platform: cat.catTitle, stock: item.stock, price: item.price })}>
+                        {product.stock > 0 ? (
+                          <button className="buy-btn" onClick={() => setModal({ title: product.title, desc: product.description, platform: product.platform, stock: product.stock, price: `${product.currency} ${product.price.toLocaleString("en-NG")}`, product_id: product.id, priceNum: product.price })}>
                             <i className="fa-solid fa-cart-shopping" /> BUY
                           </button>
                         ) : (
