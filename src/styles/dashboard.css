@@ -1983,31 +1983,3 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   font-weight: 500;
 }
 
-.category-sort-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 0 16px;
-}
-
-.view-toggle {
-  display: flex;
-  border: 1px solid hsl(var(--db-border));
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.view-toggle button {
-  padding: 6px 10px;
-  background: hsl(var(--db-white));
-  border: none;
-  color: hsl(var(--db-text-muted));
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.view-toggle button.active {
-  background: hsl(var(--db-primary));
-  color: hsl(0 0% 100%);
-}
