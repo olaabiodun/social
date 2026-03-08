@@ -574,8 +574,9 @@ export default function AdminPanel() {
                           <div className="admin-user-detail-id">{selectedUser.user_id}</div>
                         </div>
                       </div>
-                      <div>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                         {isUserAdmin(selectedUser.user_id) && <span className="admin-status admin-status-active">Admin</span>}
+                        {selectedUser.is_blocked && <span className="admin-status admin-status-blocked">Blocked</span>}
                       </div>
                     </div>
                     <div className="admin-user-detail-stats">
