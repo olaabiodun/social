@@ -33,6 +33,7 @@ interface Product {
   price: number;
   stock: number;
   platform: string;
+  currency: string;
 }
 
 interface Order {
@@ -41,6 +42,17 @@ interface Order {
   product_platform: string;
   total_price: number;
   status: string;
+  created_at: string;
+  account_details: string | null;
+}
+
+interface Message {
+  id: string;
+  order_id: string | null;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  is_read: boolean;
   created_at: string;
 }
 
