@@ -688,11 +688,11 @@ export default function Dashboard() {
               </div>
 
               <div className="categories-grid">
-                {ACCOUNTS_DATA
-                  .filter((cat) => cat.catTitle.toLowerCase().includes(categorySearch.toLowerCase()))
-                  .map((cat, i) => (
+                {dbCategories
+                  .filter((cat) => cat.name.toLowerCase().includes(categorySearch.toLowerCase()))
+                  .map((cat) => (
                     <div
-                      key={i}
+                      key={cat.id}
                       className="category-card"
                       onClick={() => {
                         setSelectedCategory(cat);
@@ -701,10 +701,10 @@ export default function Dashboard() {
                       }}
                     >
                       <div className="category-card-icon">
-                        {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
+                        {getCatIcon(cat) ? <i className={getCatIcon(cat)} /> : (cat.emoji || "📦")}
                       </div>
-                      <div className="category-card-title">{cat.catTitle}</div>
-                      <div className="category-card-count">{cat.items.length} products</div>
+                      <div className="category-card-title">{cat.name}</div>
+                      <div className="category-card-count">{getProductsForCategory(cat.id).length} products</div>
                     </div>
                   ))}
               </div>
