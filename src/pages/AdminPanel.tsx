@@ -696,19 +696,23 @@ export default function AdminPanel() {
                       <div className="admin-table-title">All Users ({filteredProfiles.length})</div>
                     </div>
                     <table className="admin-table">
-                      <thead><tr><th>Username</th><th>Balance</th><th>Orders</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+                      <thead><tr><th>Username</th><th>Balance</th><th>Orders</th><th>Status</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
                       <tbody>
                         {filteredProfiles.map((p) => (
                           <tr key={p.id}>
                             <td style={{ fontWeight: 600 }}>{p.username || "—"}</td>
                             <td style={{ fontWeight: 700 }}>₦{getWalletBalance(p.user_id).toLocaleString()}</td>
                             <td>{getUserOrders(p.user_id).length}</td>
+                            <td>{p.is_blocked ? <span className="admin-status admin-status-blocked">Blocked</span> : <span className="admin-status admin-status-active">Active</span>}</td>
                             <td>{isUserAdmin(p.user_id) ? <span className="admin-status admin-status-active">Admin</span> : <span className="admin-status">User</span>}</td>
                             <td>{new Date(p.created_at).toLocaleDateString()}</td>
                             <td>
-                              <button className="admin-btn admin-btn-primary admin-btn-sm" onClick={() => setSelectedUser(p)}>
-                                View
-                              </button>
+                              <div style={{ display: "flex", gap: 4 }}>
+                                <button className="admin-btn admin-btn-primary admin-btn-sm" onClick={() => setSelectedUser(p)}>View</button>
+                                <button className={`admin-btn admin-btn-sm ${p.is_blocked ? "admin-btn-success" : "admin-btn-danger"}`} onClick={() => toggleBlockUser(p.user_id)}>
+                                  {p.is_blocked ? "Unblock" : "Block"}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
