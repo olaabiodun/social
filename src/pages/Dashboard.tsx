@@ -311,7 +311,23 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="filter-row">
+              {/* Mobile search bar */}
+              <div className="mobile-search-section">
+                <div className="mobile-search-wrap">
+                  <i className="fa-solid fa-magnifying-glass" />
+                  <input type="text" placeholder="Search for products or categories..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                </div>
+                <div className="filter-row" style={{ padding: 0, marginTop: 12 }}>
+                  <span className="filter-label">Popular:</span>
+                  {[{ label: "Instagram", value: "instagram" }, { label: "TikTok", value: "tiktok" }, { label: "YouTube", value: "youtube" }, { label: "Twitter", value: "twitter" }].map((f) => (
+                    <button key={f.value} className={`filter-pill ${activeFilter === f.value ? "active" : ""}`} onClick={() => setActiveFilter(f.value)}>
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="filter-row desktop-filter-row">
                 <span className="filter-label">Popular:</span>
                 {[{ label: "All", value: "all" }, { label: "Instagram", value: "instagram" }, { label: "TikTok", value: "tiktok" }, { label: "YouTube", value: "youtube" }, { label: "Twitter", value: "twitter" }, { label: "Facebook", value: "facebook" }].map((f) => (
                   <button key={f.value} className={`filter-pill ${activeFilter === f.value ? "active" : ""}`} onClick={() => setActiveFilter(f.value)}>
@@ -366,6 +382,36 @@ export default function Dashboard() {
                   </div>
                 );
               })}
+              {/* Recent Orders Section */}
+              <div className="recent-orders-section">
+                <div className="recent-orders-header">
+                  <span className="recent-dot" /> RECENT ORDERS
+                </div>
+                <div className="recent-orders-table">
+                  <div className="recent-orders-th">
+                    <span>ITEM</span><span>TIME</span>
+                  </div>
+                  {[
+                    { user: "Phoenix.", product: "PRIVATE PROXIES", price: "₦4,000", time: "10 minutes ago" },
+                    { user: "Sage.", product: "MALE POF(NOT PAI...", price: "₦6,000", time: "Just now" },
+                    { user: "Cameron.", product: "POF AGED ACCOUNT", price: "₦4,500", time: "25 minutes ago" },
+                    { user: "Avery.", product: "DATACENTER PROXY", price: "₦3,500", time: "5 minutes ago" },
+                  ].map((r, i) => (
+                    <div key={i} className="recent-order-row">
+                      <div className="recent-order-info">
+                        <div><span className="recent-user">{r.user}</span> <span className="recent-bought">just bought</span></div>
+                        <div className="recent-product">{r.product}</div>
+                        <div className="recent-price">{r.price}</div>
+                      </div>
+                      <div className="recent-time">{r.time}</div>
+                    </div>
+                  ))}
+                  <div className="recent-orders-footer">
+                    <span className="recent-dot" /> Live updates · 5 recent orders
+                  </div>
+                </div>
+              </div>
+
               <div style={{ height: 28 }} />
             </div>
           )}
