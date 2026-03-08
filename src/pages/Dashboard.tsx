@@ -100,6 +100,7 @@ const NAV_ITEMS: NavItem[] = [
 
 const PANEL_TITLES: Record<PanelName, string> = {
   home: "Goodluckstore",
+  categories: "Categories",
   profile: "My Profile",
   orders: "My Orders",
   "add-funds": "Add Funds",
