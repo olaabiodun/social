@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, ArrowRight, Shield, Zap, Star, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+
 import "../styles/auth.css";
 
 type AuthView = "login" | "signup" | "forgot";
