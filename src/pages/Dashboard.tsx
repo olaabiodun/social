@@ -45,7 +45,7 @@ interface Order {
 const ACCOUNTS_DATA = [
   {
     category: "facebook",
-    catTitle: "Random Country Facebook 🇬🇧 🇨🇱 🇩🇪",
+    catTitle: "Random Facebook 🇬🇧 🇨🇱 🇩🇪",
     catEmoji: "",
     catIcon: "fa-brands fa-facebook",
     catTags: ["GB", "CL", "DE", "US"],
