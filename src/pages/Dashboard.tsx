@@ -74,17 +74,21 @@ const TRANSACTIONS = [
   { name: "Purchase: TikTok 100K", date: "Feb 28, 2026 · Order #ORD003", amount: "-NGN 15,000", type: "out", icon: "🛒" },
 ];
 
-const NAV_ITEMS = [
-  { label: "Main", type: "section" as const },
-  { label: "Home", icon: "fa-solid fa-house", panel: "home" as PanelName },
-  { label: "Profile", icon: "fa-solid fa-user", panel: "profile" as PanelName },
-  { label: "My Orders", icon: "fa-solid fa-box", panel: "orders" as PanelName, badge: "3" },
-  { label: "Finance", type: "section" as const },
-  { label: "Add Funds", icon: "fa-solid fa-credit-card", panel: "add-funds" as PanelName },
-  { label: "Manual Payments", icon: "fa-solid fa-money-bill", panel: "add-funds" as PanelName },
-  { label: "Info", type: "section" as const },
+type NavSection = { label: string; type: "section" };
+type NavLink = { label: string; icon: string; panel?: PanelName; action?: () => void; badge?: string; ext?: boolean };
+type NavItem = NavSection | NavLink;
+
+const NAV_ITEMS: NavItem[] = [
+  { label: "Main", type: "section" },
+  { label: "Home", icon: "fa-solid fa-house", panel: "home" },
+  { label: "Profile", icon: "fa-solid fa-user", panel: "profile" },
+  { label: "My Orders", icon: "fa-solid fa-box", panel: "orders", badge: "3" },
+  { label: "Finance", type: "section" },
+  { label: "Add Funds", icon: "fa-solid fa-credit-card", panel: "add-funds" },
+  { label: "Manual Payments", icon: "fa-solid fa-money-bill", panel: "add-funds" },
+  { label: "Info", type: "section" },
   { label: "Rules", icon: "fa-solid fa-file-lines", action: () => toast("Rules page coming soon") },
-  { label: "Support", icon: "fa-solid fa-comments", panel: "support" as PanelName },
+  { label: "Support", icon: "fa-solid fa-comments", panel: "support" },
   { label: "Buy Numbers", icon: "fa-solid fa-phone", action: () => toast("Buy Numbers feature coming soon"), ext: true },
 ];
 
