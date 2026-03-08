@@ -159,6 +159,7 @@ export default function Dashboard() {
   const switchPanel = useCallback((panel: PanelName) => {
     setActivePanel(panel);
     setSidebarOpen(false);
+    setSelectedCategory(null);
   }, []);
 
   const filteredAccounts = ACCOUNTS_DATA.filter(
