@@ -440,6 +440,7 @@ export default function Dashboard() {
               </button>
             </>
           )}
+        </nav>
 
         <div className="sidebar-bottom">
           <div className="user-row" onClick={() => switchPanel("profile")}>
