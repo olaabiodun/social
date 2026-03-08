@@ -221,6 +221,7 @@ const PANEL_TITLES: Record<PanelName, string> = {
   "add-funds": "Add Funds",
   "manual-payments": "Manual Payments",
   support: "Support Center",
+  messages: "Messages",
 };
 
 export default function Dashboard() {
