@@ -604,6 +604,12 @@ export default function AdminPanel() {
                       <button className="admin-btn admin-btn-danger" onClick={() => { setWalletAction("debit"); setWalletAmount(""); }}>
                         💸 Debit Wallet
                       </button>
+                      <button
+                        className={`admin-btn ${selectedUser.is_blocked ? "admin-btn-success" : "admin-btn-danger"}`}
+                        onClick={() => toggleBlockUser(selectedUser.user_id)}
+                      >
+                        {selectedUser.is_blocked ? "✅ Unblock User" : "🚫 Block User"}
+                      </button>
                     </div>
                   </div>
 
