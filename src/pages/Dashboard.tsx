@@ -13,6 +13,8 @@ interface ModalData {
   platform: string;
   stock: number;
   price: string;
+  product_id?: string;
+  priceNum?: number;
 }
 
 interface Category {
@@ -218,6 +220,7 @@ export default function Dashboard() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [modal, setModal] = useState<ModalData | null>(null);
+  const [loading, setLoading] = useState(false);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState("NGN 5,000");
   const [selectedPayment, setSelectedPayment] = useState(0);
@@ -308,14 +311,50 @@ export default function Dashboard() {
             </div>
             <div className="modal-detail-row">
               <span className="mdr-label">Your Balance</span>
-              <span className="mdr-val" style={{ color: "hsl(220 70% 35%)" }}>{formattedBalance}</span>
+              <span className="mdr-val" style={{ color: (modal.priceNum && balance < modal.priceNum) ? "hsl(0 70% 50%)" : "hsl(220 70% 35%)" }}>{formattedBalance}</span>
             </div>
+            {modal.priceNum && balance < modal.priceNum && (
+              <div style={{ color: "hsl(0 70% 50%)", fontSize: 13, marginBottom: 8, fontWeight: 500 }}>
+                ⚠️ Insufficient balance. Please add funds first.
+              </div>
+            )}
             <div className="modal-total">
               <span className="mt-label">Total Cost</span>
               <span className="mt-val">{modal.price}</span>
             </div>
-            <button className="btn-confirm" onClick={() => { setModal(null); toast.success("Order placed! Check My Orders for status."); }}>
-              Confirm Purchase →
+            <button
+              className={`btn-confirm${loading ? " loading" : ""}`}
+              disabled={loading}
+              onClick={async () => {
+                if (!modal.product_id) {
+                  toast.error("This product is not available for purchase yet.");
+                  return;
+                }
+                const priceNum = modal.priceNum || 0;
+                if (balance < priceNum) {
+                  toast.error("Insufficient balance. Please add funds first.");
+                  return;
+                }
+                setLoading(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke("purchase", {
+                    body: { product_id: modal.product_id, quantity: 1 },
+                  });
+                  if (error || !data?.success) {
+                    toast.error(data?.error || error?.message || "Purchase failed");
+                  } else {
+                    toast.success("✅ Purchase successful! Check My Orders.");
+                    setBalance(data.new_balance);
+                    await loadUserData();
+                  }
+                } catch (e: any) {
+                  toast.error("Purchase failed. Please try again.");
+                }
+                setLoading(false);
+                setModal(null);
+              }}
+            >
+              {loading ? "Processing..." : "Confirm Purchase →"}
             </button>
           </div>
         </div>
