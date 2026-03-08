@@ -192,9 +192,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: "My Orders", icon: "fa-solid fa-box", panel: "orders" },
   { label: "Finance", type: "section" },
   { label: "Add Funds", icon: "fa-solid fa-credit-card", panel: "add-funds" },
-  { label: "Manual Payments", icon: "fa-solid fa-money-bill", panel: "add-funds" },
+  { label: "Manual Payments", icon: "fa-solid fa-money-bill", panel: "manual-payments" },
   { label: "Info", type: "section" },
-  { label: "Rules", icon: "fa-solid fa-file-lines", action: () => toast("Rules page coming soon") },
+  { label: "Rules", icon: "fa-solid fa-file-lines", panel: undefined as unknown as PanelName },
   { label: "Support", icon: "fa-solid fa-comments", panel: "support" },
 ];
 
