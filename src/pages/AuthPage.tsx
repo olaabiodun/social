@@ -94,18 +94,13 @@ const AuthPage = () => {
     simulateLoading(() => showToast("✅ Welcome back! Redirecting..."));
   };
 
-  // Signup step 1
-  const handleSignupStep1 = () => {
+  // Signup
+  const handleSignupSubmit = () => {
+    if (!suFname.trim()) {showToast("⚠ Please enter a username");return;}
     if (!validateEmail(suEmail)) {setSuEmailErr(true);return;}
-    simulateLoading(() => setSignupStep(2));
-  };
-
-  // Signup step 2
-  const handleSignupStep2 = () => {
     if (suPw.length < 6) {setSuPwErr(true);setSuPwErrMsg("⚠ Password must be at least 6 characters");return;}
-    if (suPw !== suPw2) {setSuPwErr(true);setSuPwErrMsg("⚠ Passwords do not match");return;}
     if (!termsChecked) {showToast("⚠ Please accept the terms to continue");return;}
-    simulateLoading(() => setSignupStep(3));
+    simulateLoading(() => setSignupStep(2));
   };
 
   // OTP handler
