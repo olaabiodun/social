@@ -25,7 +25,10 @@ const AuthPage = () => {
   const [suEmailErr, setSuEmailErr] = useState(false);
   const [suPw, setSuPw] = useState("");
   const [suPwErr, setSuPwErr] = useState(false);
+  const [suConfirmPw, setSuConfirmPw] = useState("");
+  const [suConfirmPwErr, setSuConfirmPwErr] = useState(false);
   const [showSuPw, setShowSuPw] = useState(false);
+  const [showSuConfirmPw, setShowSuConfirmPw] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [pwStrength, setPwStrength] = useState(0);
   const [showPwStrength, setShowPwStrength] = useState(false);
