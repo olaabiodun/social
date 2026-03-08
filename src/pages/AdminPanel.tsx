@@ -733,7 +733,8 @@ export default function AdminPanel() {
                             <div style={{ fontWeight: 700, fontSize: 14 }}>{p.username || "—"}</div>
                             <div style={{ fontSize: 11, color: "hsl(220 10% 50%)" }}>{new Date(p.created_at).toLocaleDateString()}</div>
                           </div>
-                          <div style={{ marginLeft: "auto" }}>
+                          <div style={{ marginLeft: "auto", display: "flex", gap: 6, alignItems: "center" }}>
+                            {p.is_blocked && <span className="admin-status admin-status-blocked">Blocked</span>}
                             {isUserAdmin(p.user_id) && <span className="admin-status admin-status-active">Admin</span>}
                           </div>
                         </div>
