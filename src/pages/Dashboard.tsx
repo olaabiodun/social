@@ -1137,6 +1137,66 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+
+          {/* MESSAGES */}
+          {activePanel === "messages" && (
+            <div className="dash-panel">
+              <div style={{ padding: "24px 24px 0" }}>
+                <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Messages</h2>
+                <p style={{ fontSize: 14, color: "hsl(220 10% 50%)", marginBottom: 16 }}>Chat with support about your orders</p>
+              </div>
+
+              <div style={{ padding: "0 24px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* Messages list */}
+                <div style={{ background: "hsl(220 20% 97%)", borderRadius: 12, padding: 16, minHeight: 300, maxHeight: 500, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+                  {messages.length === 0 ? (
+                    <div style={{ textAlign: "center", color: "hsl(220 10% 60%)", padding: 40 }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>💬</div>
+                      <p>No messages yet. Send a message to get started!</p>
+                    </div>
+                  ) : (
+                    messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        style={{
+                          alignSelf: msg.sender_id === userId ? "flex-end" : "flex-start",
+                          background: msg.sender_id === userId ? "hsl(220 70% 50%)" : "hsl(0 0% 100%)",
+                          color: msg.sender_id === userId ? "white" : "hsl(220 20% 20%)",
+                          padding: "10px 16px",
+                          borderRadius: 12,
+                          maxWidth: "75%",
+                          fontSize: 14,
+                          boxShadow: "0 1px 3px hsl(0 0% 0% / 0.08)",
+                        }}
+                      >
+                        <div>{msg.content}</div>
+                        <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
+                          {new Date(msg.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                          {msg.sender_id !== userId && " · Admin"}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Message input */}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="text"
+                    className="dash-form-input"
+                    placeholder="Type your message..."
+                    value={msgInput}
+                    onChange={(e) => setMsgInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") sendMessage(); }}
+                    style={{ flex: 1 }}
+                  />
+                  <button className="btn-save" onClick={() => sendMessage()} style={{ whiteSpace: "nowrap" }}>
+                    Send <i className="fa-solid fa-paper-plane" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
