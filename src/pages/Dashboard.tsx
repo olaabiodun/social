@@ -436,8 +436,11 @@ export default function Dashboard() {
                   const { data, error } = await supabase.functions.invoke("purchase", {
                     body: { product_id: modal.product_id, quantity: 1 },
                   });
-                  if (error || !data?.success) {
-                    toast.error(data?.error || error?.message || "Purchase failed");
+                  if (error) {
+                    // Try to parse the error context for a message
+                    toast.error("Purchase failed. Please try again.");
+                  } else if (!data?.success) {
+                    toast.error(data?.error || "Purchase failed");
                   } else {
                     toast.success("✅ Purchase successful! Check My Orders.");
                     setBalance(data.new_balance);
