@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import "../styles/admin.css";
 
-type AdminTab = "overview" | "users" | "orders" | "products" | "categories" | "transactions" | "admins";
+type AdminTab = "overview" | "users" | "orders" | "products" | "categories" | "transactions" | "admins" | "messages";
 
 interface Profile {
   id: string;
