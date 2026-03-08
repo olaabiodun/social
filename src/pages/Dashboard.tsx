@@ -352,7 +352,7 @@ export default function Dashboard() {
                           <div className="cat-title">{cat.catTitle}</div>
                         </div>
                       </div>
-                      <button className="cat-see-more" onClick={() => toast(`Loading more ${cat.catTitle}...`)}>See More →</button>
+                      <button className="cat-see-more" onClick={() => setSelectedCategory(cat)}>See More →</button>
                     </div>
                     {visibleItems.map((item, j) => (
                       <div key={j} className="account-row">
