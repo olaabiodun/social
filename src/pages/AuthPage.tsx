@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, ArrowRight, Shield, Zap, Star, CheckCircle2 } from "lucide-react";
 import "../styles/auth.css";
 
 type AuthView = "login" | "signup" | "forgot";
@@ -9,7 +10,6 @@ const AuthPage = () => {
   const [signupStep, setSignupStep] = useState(1);
   const [forgotStep, setForgotStep] = useState<"A" | "B" | "C" | "D">("A");
 
-  // Form state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginEmailErr, setLoginEmailErr] = useState(false);
@@ -18,15 +18,11 @@ const AuthPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
 
   const [suFname, setSuFname] = useState("");
-  const [suLname, setSuLname] = useState("");
   const [suEmail, setSuEmail] = useState("");
   const [suEmailErr, setSuEmailErr] = useState(false);
   const [suPw, setSuPw] = useState("");
-  const [suPw2, setSuPw2] = useState("");
   const [suPwErr, setSuPwErr] = useState(false);
-  const [suPwErrMsg, setSuPwErrMsg] = useState("⚠ Passwords do not match");
   const [showSuPw, setShowSuPw] = useState(false);
-  const [showSuPw2, setShowSuPw2] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [pwStrength, setPwStrength] = useState(0);
   const [showPwStrength, setShowPwStrength] = useState(false);
@@ -40,16 +36,12 @@ const AuthPage = () => {
   const [showNewPw2, setShowNewPw2] = useState(false);
   const [newPwStrength, setNewPwStrength] = useState(0);
 
-  // OTP
   const [signupOtp, setSignupOtp] = useState(["", "", "", "", "", ""]);
   const [forgotOtp, setForgotOtp] = useState(["", "", "", "", "", ""]);
   const signupOtpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const forgotOtpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Loading
   const [loading, setLoading] = useState(false);
-
-  // Toast
   const [toast, setToast] = useState({ show: false, msg: "" });
   const toastTimer = useRef<number>();
 
@@ -59,7 +51,6 @@ const AuthPage = () => {
     toastTimer.current = window.setTimeout(() => setToast({ show: false, msg: "" }), 3200);
   }, []);
 
-  // Resend
   const [resendDisabled, setResendDisabled] = useState(false);
   const [resendText, setResendText] = useState("Resend Code");
 
@@ -67,7 +58,7 @@ const AuthPage = () => {
 
   const simulateLoading = (cb: () => void) => {
     setLoading(true);
-    setTimeout(() => {setLoading(false);cb();}, 1200 + Math.random() * 400);
+    setTimeout(() => { setLoading(false); cb(); }, 1200 + Math.random() * 400);
   };
 
   const checkStrength = (pw: string) => {
@@ -85,25 +76,22 @@ const AuthPage = () => {
     if (page === "forgot") setForgotStep("A");
   };
 
-  // Login
   const handleLogin = () => {
     let valid = true;
-    if (!validateEmail(loginEmail)) {setLoginEmailErr(true);valid = false;}
-    if (loginPassword.length < 6) {setLoginPwErr(true);valid = false;}
+    if (!validateEmail(loginEmail)) { setLoginEmailErr(true); valid = false; }
+    if (loginPassword.length < 6) { setLoginPwErr(true); valid = false; }
     if (!valid) return;
     simulateLoading(() => showToast("✅ Welcome back! Redirecting..."));
   };
 
-  // Signup
   const handleSignupSubmit = () => {
-    if (!suFname.trim()) {showToast("⚠ Please enter a username");return;}
-    if (!validateEmail(suEmail)) {setSuEmailErr(true);return;}
-    if (suPw.length < 6) {setSuPwErr(true);setSuPwErrMsg("⚠ Password must be at least 6 characters");return;}
-    if (!termsChecked) {showToast("⚠ Please accept the terms to continue");return;}
+    if (!suFname.trim()) { showToast("Please enter a username"); return; }
+    if (!validateEmail(suEmail)) { setSuEmailErr(true); return; }
+    if (suPw.length < 6) { setSuPwErr(true); return; }
+    if (!termsChecked) { showToast("Please accept the terms to continue"); return; }
     simulateLoading(() => setSignupStep(2));
   };
 
-  // OTP handler
   const handleOtp = (otp: string[], setOtp: (v: string[]) => void, refs: React.MutableRefObject<(HTMLInputElement | null)[]>, idx: number, val: string) => {
     const cleaned = val.replace(/\D/g, "");
     const newOtp = [...otp];
@@ -121,35 +109,33 @@ const AuthPage = () => {
     }
   };
 
-  // Verify signup OTP
   const verifySignupOtp = () => {
-    if (signupOtp.join("").length < 6) {showToast("⚠ Please enter the full 6-digit code");return;}
+    if (signupOtp.join("").length < 6) { showToast("Please enter the full 6-digit code"); return; }
     simulateLoading(() => {
-      showToast("✅ Account created! Welcome to Goodluck Store!");
+      showToast("✅ Account created successfully!");
       setTimeout(() => showPage("login"), 1800);
     });
   };
 
-  // Forgot password
   const sendReset = () => {
-    if (!validateEmail(forgotEmail)) {setForgotEmailErr(true);return;}
+    if (!validateEmail(forgotEmail)) { setForgotEmailErr(true); return; }
     simulateLoading(() => setForgotStep("B"));
   };
 
   const verifyResetOtp = () => {
-    if (forgotOtp.join("").length < 6) {showToast("⚠ Please enter the full 6-digit code");return;}
+    if (forgotOtp.join("").length < 6) { showToast("Please enter the full 6-digit code"); return; }
     simulateLoading(() => setForgotStep("C"));
   };
 
   const resetPassword = () => {
-    if (newPw.length < 6 || newPw !== newPw2) {setNewPwErr(true);return;}
+    if (newPw.length < 6 || newPw !== newPw2) { setNewPwErr(true); return; }
     simulateLoading(() => setForgotStep("D"));
   };
 
   const resendCode = () => {
     setResendDisabled(true);
     let t = 30;
-    showToast("📧 Code resent to your email!");
+    showToast("Code resent to your email");
     const iv = setInterval(() => {
       setResendText(`Resend in ${t}s`);
       t--;
@@ -157,298 +143,429 @@ const AuthPage = () => {
         clearInterval(iv);
         setResendDisabled(false);
         setResendText("Resend Code");
-        showToast("📧 A new code has been sent!");
       }
     }, 1000);
   };
 
-  const handleSocial = (provider: string) => showToast(`🔗 Connecting to ${provider}...`);
+  const handleSocial = (provider: string) => showToast(`Connecting to ${provider}...`);
 
   const strengthLevels = ["", "weak", "fair", "good", "strong"];
   const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
 
-  const BackButton = ({ onClick, label = "Back" }: {onClick: () => void;label?: string;}) =>
-  <button className="back-btn" onClick={onClick}>
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+  const BackButton = ({ onClick, label = "Back" }: { onClick: () => void; label?: string }) => (
+    <button className="auth-back-btn" onClick={onClick}>
+      <ArrowLeft size={16} />
       {label}
-    </button>;
+    </button>
+  );
 
+  const OtpInputs = ({ otp, setOtp, refs }: { otp: string[]; setOtp: (v: string[]) => void; refs: React.MutableRefObject<(HTMLInputElement | null)[]> }) => (
+    <div className="otp-group">
+      {otp.map((v, i) => (
+        <input
+          key={i}
+          type="text"
+          maxLength={1}
+          className={`otp-input${v ? " filled" : ""}`}
+          value={v}
+          ref={(el) => { refs.current[i] = el; }}
+          onChange={(e) => handleOtp(otp, setOtp, refs, i, e.target.value)}
+          onKeyDown={(e) => handleOtpBack(otp, setOtp, refs, i, e)}
+        />
+      ))}
+    </div>
+  );
 
-  const OtpInputs = ({ otp, setOtp, refs }: {otp: string[];setOtp: (v: string[]) => void;refs: React.MutableRefObject<(HTMLInputElement | null)[]>;}) =>
-  <div className="otp-group">
-      {otp.map((v, i) =>
-    <input
-      key={i}
-      type="text"
-      maxLength={1}
-      className={`otp-input${v ? " filled" : ""}`}
-      value={v}
-      ref={(el) => {refs.current[i] = el;}}
-      onChange={(e) => handleOtp(otp, setOtp, refs, i, e.target.value)}
-      onKeyDown={(e) => handleOtpBack(otp, setOtp, refs, i, e)} />
-
-    )}
-    </div>;
-
-
-  const PasswordStrengthBars = ({ score }: {score: number;}) =>
-  <div className="pw-strength show">
+  const PasswordStrengthBars = ({ score }: { score: number }) => (
+    <div className="pw-strength show">
       <div className="pw-bars">
-        {[0, 1, 2, 3].map((i) =>
-      <div key={i} className={`pw-bar${i < score ? ` ${strengthLevels[score]}` : ""}`} />
-      )}
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className={`pw-bar${i < score ? ` ${strengthLevels[score]}` : ""}`} />
+        ))}
       </div>
-      <div className="pw-label">{score ? `${strengthLabels[score]} password` : "Enter your password"}</div>
-    </div>;
-
+      <div className="pw-label">{score ? `${strengthLabels[score]} password` : ""}</div>
+    </div>
+  );
 
   return (
-    <div className="auth-page-wrapper">
-      <div className="bg-canvas">
-        <div className="bg-grid" />
-        <div className="bg-glow bg-glow-1" />
-        <div className="bg-glow bg-glow-2" />
-      </div>
-
+    <div className="auth-wrapper">
       {/* Toast */}
       <div className={`auth-toast${toast.show ? " show" : ""}`}>
-        <span className="toast-icon">⚡</span>
+        <Zap size={16} className="toast-icon" />
         <span>{toast.msg}</span>
       </div>
 
-      <div className="auth-layout">
-        {/* LEFT PANEL */}
-        <div className="left-panel">
-          
-          <Link to="/" className="left-logo">
-            <div className="dot" />
-            Goodluck Store<span style={{ opacity: 0.5 }}>Accounts</span>
-          </Link>
-          <div className="left-content">
-            <div className="left-tag"><span>●</span> Premium Platform</div>
-            <h1 className="left-headline">GROW YOUR <span className="outline">SOCIAL</span> EMPIRE</h1>
-            <div className="left-cta">
-              <Link to="/" className="left-dashboard-link">
-                <i className="fa-solid fa-arrow-right" /> Go to Homepage
-              </Link>
+      <div className="auth-container">
+        {/* LEFT — Branding */}
+        <div className="auth-left">
+          <div className="auth-left-inner">
+            <Link to="/" className="auth-logo">
+              <div className="auth-logo-dot" />
+              <span>Goodluck<strong>Store</strong></span>
+            </Link>
+
+            <div className="auth-left-content">
+              <div className="auth-badge">
+                <Shield size={12} />
+                Trusted Platform
+              </div>
+              <h1 className="auth-headline">
+                Your Digital<br />
+                <span className="auth-headline-accent">Marketplace</span>
+              </h1>
+              <p className="auth-description">
+                Access premium accounts across all major platforms with instant delivery, verified quality, and full support.
+              </p>
             </div>
-            <p className="left-sub">Access thousands of verified accounts across all major platforms. Instant delivery, real followers, guaranteed.</p>
-            <div className="left-stats">
-              <div className="lstat"><div className="lstat-num">10K+</div><div className="lstat-label">Accounts</div></div>
-              <div className="lstat"><div className="lstat-num">98%</div><div className="lstat-label">Satisfied</div></div>
-              
+
+            <div className="auth-features">
+              <div className="auth-feature">
+                <div className="auth-feature-icon"><Zap size={18} /></div>
+                <div>
+                  <div className="auth-feature-title">Instant Delivery</div>
+                  <div className="auth-feature-desc">Get your accounts within seconds</div>
+                </div>
+              </div>
+              <div className="auth-feature">
+                <div className="auth-feature-icon"><Shield size={18} /></div>
+                <div>
+                  <div className="auth-feature-title">Fully Verified</div>
+                  <div className="auth-feature-desc">Every account is quality checked</div>
+                </div>
+              </div>
+              <div className="auth-feature">
+                <div className="auth-feature-icon"><Star size={18} /></div>
+                <div>
+                  <div className="auth-feature-title">24/7 Support</div>
+                  <div className="auth-feature-desc">We're here whenever you need us</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="auth-stats">
+              <div className="auth-stat">
+                <div className="auth-stat-num">10K+</div>
+                <div className="auth-stat-label">Accounts Sold</div>
+              </div>
+              <div className="auth-stat">
+                <div className="auth-stat-num">98%</div>
+                <div className="auth-stat-label">Satisfaction</div>
+              </div>
+              <div className="auth-stat">
+                <div className="auth-stat-num">4.9★</div>
+                <div className="auth-stat-label">Rating</div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT PANEL */}
-        <div className="right-panel">
-          <div className="auth-form-wrap">
-
+        {/* RIGHT — Form */}
+        <div className="auth-right">
+          <div className="auth-card">
             {/* LOGIN */}
-            <div className={`auth-page-view${currentPage === "login" ? " active" : ""}`}>
-              <div className="form-header">
-                <div className="form-tag">Welcome Back</div>
-                <h2 className="form-title">SIGN IN</h2>
-                <p className="form-sub">Don't have an account? <a onClick={() => showPage("signup")}>Create one free</a></p>
+            <div className={`auth-view${currentPage === "login" ? " active" : ""}`}>
+              <div className="auth-form-header">
+                <h2 className="auth-form-title">Welcome back</h2>
+                <p className="auth-form-sub">
+                  Don't have an account?{" "}
+                  <a onClick={() => showPage("signup")}>Sign up</a>
+                </p>
               </div>
-              <div className="social-auth">
-                <button className="social-auth-btn" onClick={() => handleSocial("Google")}><span>🌐</span> Google</button>
-                <button className="social-auth-btn" onClick={() => handleSocial("Twitter")}><span>𝕏</span> Twitter</button>
+
+              <div className="auth-social-row">
+                <button className="auth-social-btn" onClick={() => handleSocial("Google")}>
+                  <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                  Google
+                </button>
+                <button className="auth-social-btn" onClick={() => handleSocial("Apple")}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                  Apple
+                </button>
               </div>
-              <div className="divider"><span>or continue with email</span></div>
-              <div className="input-group">
-                <label className="input-label">Email Address</label>
-                <div className="input-wrap">
-                  <span className="input-icon">✉</span>
-                  <input type="email" className={`input-field${loginEmailErr ? " error" : ""}`} value={loginEmail} onChange={(e) => {setLoginEmail(e.target.value);setLoginEmailErr(false);}} placeholder="you@example.com" />
+
+              <div className="auth-divider"><span>or</span></div>
+
+              <div className="auth-field">
+                <label>Email</label>
+                <div className="auth-input-wrap">
+                  <Mail size={16} className="auth-input-icon" />
+                  <input
+                    type="email"
+                    className={loginEmailErr ? "error" : ""}
+                    value={loginEmail}
+                    onChange={(e) => { setLoginEmail(e.target.value); setLoginEmailErr(false); }}
+                    placeholder="name@example.com"
+                  />
                 </div>
-                <div className={`input-error${loginEmailErr ? " show" : ""}`}>⚠ Please enter a valid email</div>
+                {loginEmailErr && <span className="auth-field-error">Please enter a valid email</span>}
               </div>
-              <div className="input-group">
-                <label className="input-label">Password</label>
-                <div className="input-wrap">
-                  <span className="input-icon">🔒</span>
-                  <input type={showLoginPw ? "text" : "password"} className={`input-field${loginPwErr ? " error" : ""}`} value={loginPassword} onChange={(e) => {setLoginPassword(e.target.value);setLoginPwErr(false);}} placeholder="Enter your password" />
-                  <button className="eye-toggle" onClick={() => setShowLoginPw(!showLoginPw)}>{showLoginPw ? "🙈" : "👁"}</button>
+
+              <div className="auth-field">
+                <div className="auth-field-header">
+                  <label>Password</label>
+                  <button className="auth-forgot-link" onClick={() => showPage("forgot")}>Forgot?</button>
                 </div>
-                <div className={`input-error${loginPwErr ? " show" : ""}`}>⚠ Password must be at least 6 characters</div>
+                <div className="auth-input-wrap">
+                  <Lock size={16} className="auth-input-icon" />
+                  <input
+                    type={showLoginPw ? "text" : "password"}
+                    className={loginPwErr ? "error" : ""}
+                    value={loginPassword}
+                    onChange={(e) => { setLoginPassword(e.target.value); setLoginPwErr(false); }}
+                    placeholder="Enter your password"
+                  />
+                  <button className="auth-eye" onClick={() => setShowLoginPw(!showLoginPw)}>
+                    {showLoginPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {loginPwErr && <span className="auth-field-error">Password must be at least 6 characters</span>}
               </div>
-              <div className="forgot-row">
-                <button className="forgot-link" onClick={() => showPage("forgot")}>Forgot password?</button>
-              </div>
-              <div className="checkbox-group">
-                <div className={`custom-checkbox${rememberMe ? " checked" : ""}`} onClick={() => setRememberMe(!rememberMe)} />
-                <label className="checkbox-label" onClick={() => setRememberMe(!rememberMe)}>Keep me signed in for 30 days</label>
-              </div>
-              <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleLogin} disabled={loading}>
-                <span className="btn-text">Sign In →</span>
+
+              <label className="auth-checkbox">
+                <input type="checkbox" checked={rememberMe} onChange={() => setRememberMe(!rememberMe)} />
+                <span className="auth-checkmark" />
+                Remember me for 30 days
+              </label>
+
+              <button className={`auth-submit${loading ? " loading" : ""}`} onClick={handleLogin} disabled={loading}>
+                <span className="auth-submit-text">Sign In</span>
+                <ArrowRight size={16} className="auth-submit-arrow" />
               </button>
             </div>
 
             {/* SIGNUP */}
-            <div className={`auth-page-view${currentPage === "signup" ? " active" : ""}`}>
-              <div className="progress-dots">
-                {[1, 2].map((n) => <div key={n} className={`pdot${n <= signupStep ? " active" : ""}`} />)}
+            <div className={`auth-view${currentPage === "signup" ? " active" : ""}`}>
+              <div className="auth-progress">
+                {[1, 2].map((n) => (
+                  <div key={n} className={`auth-progress-step${n <= signupStep ? " active" : ""}`}>
+                    <div className="auth-progress-dot">{n <= signupStep ? <CheckCircle2 size={14} /> : n}</div>
+                    <span>{n === 1 ? "Details" : "Verify"}</span>
+                  </div>
+                ))}
+                <div className="auth-progress-line">
+                  <div className={`auth-progress-fill${signupStep >= 2 ? " complete" : ""}`} />
+                </div>
               </div>
 
-              {/* Step 1 */}
-              {signupStep === 1 &&
-              <div>
-                  <div className="form-header">
-                    <div className="form-tag">Create Account</div>
-                    <h2 className="form-title">GET STARTED</h2>
-                    <p className="form-sub">Already have an account? <a onClick={() => showPage("login")}>Sign in</a></p>
+              {signupStep === 1 && (
+                <div>
+                  <div className="auth-form-header">
+                    <h2 className="auth-form-title">Create account</h2>
+                    <p className="auth-form-sub">
+                      Already have an account?{" "}
+                      <a onClick={() => showPage("login")}>Sign in</a>
+                    </p>
                   </div>
-                  <div className="social-auth">
-                    <button className="social-auth-btn" onClick={() => handleSocial("Google")}><span>🌐</span> Google</button>
-                    <button className="social-auth-btn" onClick={() => handleSocial("Twitter")}><span>𝕏</span> Twitter</button>
+
+                  <div className="auth-social-row">
+                    <button className="auth-social-btn" onClick={() => handleSocial("Google")}>
+                      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                      Google
+                    </button>
+                    <button className="auth-social-btn" onClick={() => handleSocial("Apple")}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                      Apple
+                    </button>
                   </div>
-                  <div className="divider"><span>or register with email</span></div>
-                  <div className="input-group">
-                    <label className="input-label">Username</label>
-                    <div className="input-wrap"><span className="input-icon">👤</span><input type="text" className="input-field" value={suFname} onChange={(e) => setSuFname(e.target.value)} placeholder="johndoe" /></div>
-                  </div>
-                  <div className="input-group">
-                    <label className="input-label">Email Address</label>
-                    <div className="input-wrap">
-                      <span className="input-icon">✉</span>
-                      <input type="email" className={`input-field${suEmailErr ? " error" : ""}`} value={suEmail} onChange={(e) => {setSuEmail(e.target.value);setSuEmailErr(false);}} placeholder="you@example.com" />
+
+                  <div className="auth-divider"><span>or</span></div>
+
+                  <div className="auth-field">
+                    <label>Username</label>
+                    <div className="auth-input-wrap">
+                      <User size={16} className="auth-input-icon" />
+                      <input type="text" value={suFname} onChange={(e) => setSuFname(e.target.value)} placeholder="johndoe" />
                     </div>
-                    <div className={`input-error${suEmailErr ? " show" : ""}`}>⚠ Please enter a valid email</div>
                   </div>
-                  <div className="input-group">
-                    <label className="input-label">Password</label>
-                    <div className="input-wrap">
-                      <span className="input-icon">🔒</span>
-                      <input type={showSuPw ? "text" : "password"} className="input-field" value={suPw} onChange={(e) => {setSuPw(e.target.value);const s = checkStrength(e.target.value);setPwStrength(s);setShowPwStrength(true);setSuPwErr(false);}} placeholder="Create a strong password" />
-                      <button className="eye-toggle" onClick={() => setShowSuPw(!showSuPw)}>{showSuPw ? "🙈" : "👁"}</button>
+
+                  <div className="auth-field">
+                    <label>Email</label>
+                    <div className="auth-input-wrap">
+                      <Mail size={16} className="auth-input-icon" />
+                      <input
+                        type="email"
+                        className={suEmailErr ? "error" : ""}
+                        value={suEmail}
+                        onChange={(e) => { setSuEmail(e.target.value); setSuEmailErr(false); }}
+                        placeholder="name@example.com"
+                      />
+                    </div>
+                    {suEmailErr && <span className="auth-field-error">Please enter a valid email</span>}
+                  </div>
+
+                  <div className="auth-field">
+                    <label>Password</label>
+                    <div className="auth-input-wrap">
+                      <Lock size={16} className="auth-input-icon" />
+                      <input
+                        type={showSuPw ? "text" : "password"}
+                        value={suPw}
+                        onChange={(e) => {
+                          setSuPw(e.target.value);
+                          setPwStrength(checkStrength(e.target.value));
+                          setShowPwStrength(true);
+                          setSuPwErr(false);
+                        }}
+                        placeholder="Min. 6 characters"
+                      />
+                      <button className="auth-eye" onClick={() => setShowSuPw(!showSuPw)}>
+                        {showSuPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
                     </div>
                     {showPwStrength && <PasswordStrengthBars score={pwStrength} />}
                   </div>
-                  <div className="checkbox-group">
-                    <div className={`custom-checkbox${termsChecked ? " checked" : ""}`} onClick={() => setTermsChecked(!termsChecked)} />
-                    <label className="checkbox-label" onClick={() => setTermsChecked(!termsChecked)}>
-                      I agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>
-                    </label>
-                  </div>
-                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleSignupSubmit} disabled={loading}>
-                    <span className="btn-text">Create Account →</span>
+
+                  <label className="auth-checkbox">
+                    <input type="checkbox" checked={termsChecked} onChange={() => setTermsChecked(!termsChecked)} />
+                    <span className="auth-checkmark" />
+                    I agree to the <a>Terms</a> and <a>Privacy Policy</a>
+                  </label>
+
+                  <button className={`auth-submit${loading ? " loading" : ""}`} onClick={handleSignupSubmit} disabled={loading}>
+                    <span className="auth-submit-text">Create Account</span>
+                    <ArrowRight size={16} className="auth-submit-arrow" />
                   </button>
                 </div>
-              }
+              )}
 
-              {/* Step 2 - Verify */}
-              {signupStep === 2 &&
-              <div>
+              {signupStep === 2 && (
+                <div>
                   <BackButton onClick={() => setSignupStep(1)} />
-                  <div className="form-header">
-                    <div className="form-tag">Almost There</div>
-                    <h2 className="form-title">VERIFY<br />EMAIL</h2>
-                    <p className="form-sub">We sent a 6-digit code to <strong style={{ color: "var(--yellow)" }}>{suEmail}</strong></p>
+                  <div className="auth-form-header">
+                    <h2 className="auth-form-title">Verify your email</h2>
+                    <p className="auth-form-sub">
+                      We sent a 6-digit code to <strong>{suEmail}</strong>
+                    </p>
                   </div>
                   <OtpInputs otp={signupOtp} setOtp={setSignupOtp} refs={signupOtpRefs} />
-                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={verifySignupOtp} disabled={loading}>
-                    <span className="btn-text">Verify & Continue →</span>
+                  <button className={`auth-submit${loading ? " loading" : ""}`} onClick={verifySignupOtp} disabled={loading}>
+                    <span className="auth-submit-text">Verify & Continue</span>
+                    <ArrowRight size={16} className="auth-submit-arrow" />
                   </button>
-                  <div className="resend-row">
+                  <div className="auth-resend">
                     Didn't receive it?{" "}
-                    <button className="resend-btn" disabled={resendDisabled} onClick={resendCode}>{resendText}</button>
+                    <button disabled={resendDisabled} onClick={resendCode}>{resendText}</button>
                   </div>
                 </div>
-              }
+              )}
             </div>
 
             {/* FORGOT PASSWORD */}
-            <div className={`auth-page-view${currentPage === "forgot" ? " active" : ""}`}>
+            <div className={`auth-view${currentPage === "forgot" ? " active" : ""}`}>
               <BackButton onClick={() => showPage("login")} label="Back to Sign In" />
 
-              {forgotStep === "A" &&
-              <div>
-                  <div className="form-header">
-                    <div className="form-tag">Password Recovery</div>
-                    <h2 className="form-title">FORGOT<br />PASSWORD?</h2>
-                    <p className="form-sub">Enter your email and we'll send a reset code.</p>
+              {forgotStep === "A" && (
+                <div>
+                  <div className="auth-form-header">
+                    <h2 className="auth-form-title">Reset password</h2>
+                    <p className="auth-form-sub">Enter your email and we'll send a reset code.</p>
                   </div>
-                  <div className="input-group">
-                    <label className="input-label">Email Address</label>
-                    <div className="input-wrap">
-                      <span className="input-icon">✉</span>
-                      <input type="email" className={`input-field${forgotEmailErr ? " error" : ""}`} value={forgotEmail} onChange={(e) => {setForgotEmail(e.target.value);setForgotEmailErr(false);}} placeholder="you@example.com" />
+                  <div className="auth-field">
+                    <label>Email</label>
+                    <div className="auth-input-wrap">
+                      <Mail size={16} className="auth-input-icon" />
+                      <input
+                        type="email"
+                        className={forgotEmailErr ? "error" : ""}
+                        value={forgotEmail}
+                        onChange={(e) => { setForgotEmail(e.target.value); setForgotEmailErr(false); }}
+                        placeholder="name@example.com"
+                      />
                     </div>
-                    <div className={`input-error${forgotEmailErr ? " show" : ""}`}>⚠ Please enter a valid email</div>
+                    {forgotEmailErr && <span className="auth-field-error">Please enter a valid email</span>}
                   </div>
-                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={sendReset} disabled={loading}>
-                    <span className="btn-text">Send Reset Code →</span>
+                  <button className={`auth-submit${loading ? " loading" : ""}`} onClick={sendReset} disabled={loading}>
+                    <span className="auth-submit-text">Send Reset Code</span>
+                    <ArrowRight size={16} className="auth-submit-arrow" />
                   </button>
                 </div>
-              }
+              )}
 
-              {forgotStep === "B" &&
-              <div>
-                  <div className="form-header">
-                    <div className="form-tag">Check Your Email</div>
-                    <h2 className="form-title">ENTER<br />CODE</h2>
-                    <p className="form-sub">We sent a code to <strong style={{ color: "var(--yellow)" }}>{forgotEmail}</strong></p>
+              {forgotStep === "B" && (
+                <div>
+                  <div className="auth-form-header">
+                    <h2 className="auth-form-title">Enter code</h2>
+                    <p className="auth-form-sub">
+                      We sent a code to <strong>{forgotEmail}</strong>
+                    </p>
                   </div>
                   <OtpInputs otp={forgotOtp} setOtp={setForgotOtp} refs={forgotOtpRefs} />
-                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={verifyResetOtp} disabled={loading}>
-                    <span className="btn-text">Verify Code →</span>
+                  <button className={`auth-submit${loading ? " loading" : ""}`} onClick={verifyResetOtp} disabled={loading}>
+                    <span className="auth-submit-text">Verify Code</span>
+                    <ArrowRight size={16} className="auth-submit-arrow" />
                   </button>
-                  <div className="resend-row">
+                  <div className="auth-resend">
                     Didn't receive it?{" "}
-                    <button className="resend-btn" disabled={resendDisabled} onClick={resendCode}>{resendText}</button>
+                    <button disabled={resendDisabled} onClick={resendCode}>{resendText}</button>
                   </div>
                 </div>
-              }
+              )}
 
-              {forgotStep === "C" &&
-              <div>
-                  <div className="form-header">
-                    <div className="form-tag">Almost Done</div>
-                    <h2 className="form-title">NEW<br />PASSWORD</h2>
-                    <p className="form-sub">Choose a strong new password.</p>
+              {forgotStep === "C" && (
+                <div>
+                  <div className="auth-form-header">
+                    <h2 className="auth-form-title">New password</h2>
+                    <p className="auth-form-sub">Choose a strong new password.</p>
                   </div>
-                  <div className="input-group">
-                    <label className="input-label">New Password</label>
-                    <div className="input-wrap">
-                      <span className="input-icon">🔒</span>
-                      <input type={showNewPw ? "text" : "password"} className="input-field" value={newPw} onChange={(e) => {setNewPw(e.target.value);setNewPwStrength(checkStrength(e.target.value));setNewPwErr(false);}} placeholder="Create new password" />
-                      <button className="eye-toggle" onClick={() => setShowNewPw(!showNewPw)}>{showNewPw ? "🙈" : "👁"}</button>
+                  <div className="auth-field">
+                    <label>New Password</label>
+                    <div className="auth-input-wrap">
+                      <Lock size={16} className="auth-input-icon" />
+                      <input
+                        type={showNewPw ? "text" : "password"}
+                        value={newPw}
+                        onChange={(e) => { setNewPw(e.target.value); setNewPwStrength(checkStrength(e.target.value)); setNewPwErr(false); }}
+                        placeholder="Create new password"
+                      />
+                      <button className="auth-eye" onClick={() => setShowNewPw(!showNewPw)}>
+                        {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
                     </div>
                     <PasswordStrengthBars score={newPwStrength} />
                   </div>
-                  <div className="input-group">
-                    <label className="input-label">Confirm New Password</label>
-                    <div className="input-wrap">
-                      <span className="input-icon">🔒</span>
-                      <input type={showNewPw2 ? "text" : "password"} className={`input-field${newPwErr ? " error" : ""}`} value={newPw2} onChange={(e) => {setNewPw2(e.target.value);setNewPwErr(false);}} placeholder="Repeat new password" />
-                      <button className="eye-toggle" onClick={() => setShowNewPw2(!showNewPw2)}>{showNewPw2 ? "🙈" : "👁"}</button>
+                  <div className="auth-field">
+                    <label>Confirm Password</label>
+                    <div className="auth-input-wrap">
+                      <Lock size={16} className="auth-input-icon" />
+                      <input
+                        type={showNewPw2 ? "text" : "password"}
+                        className={newPwErr ? "error" : ""}
+                        value={newPw2}
+                        onChange={(e) => { setNewPw2(e.target.value); setNewPwErr(false); }}
+                        placeholder="Repeat new password"
+                      />
+                      <button className="auth-eye" onClick={() => setShowNewPw2(!showNewPw2)}>
+                        {showNewPw2 ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
                     </div>
-                    <div className={`input-error${newPwErr ? " show" : ""}`}>⚠ Passwords do not match</div>
+                    {newPwErr && <span className="auth-field-error">Passwords do not match</span>}
                   </div>
-                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={resetPassword} disabled={loading}>
-                    <span className="btn-text">Reset Password →</span>
+                  <button className={`auth-submit${loading ? " loading" : ""}`} onClick={resetPassword} disabled={loading}>
+                    <span className="auth-submit-text">Reset Password</span>
+                    <ArrowRight size={16} className="auth-submit-arrow" />
                   </button>
                 </div>
-              }
+              )}
 
-              {forgotStep === "D" &&
-              <div className="success-msg show">
-                  <div className="success-icon">✓</div>
-                  <h3>PASSWORD RESET!</h3>
-                  <p>Your password has been successfully updated. You can now sign in with your new password.</p>
-                  <button className="btn-submit" onClick={() => showPage("login")}>
-                    <span className="btn-text">Go to Sign In →</span>
+              {forgotStep === "D" && (
+                <div className="auth-success">
+                  <div className="auth-success-icon">
+                    <CheckCircle2 size={32} />
+                  </div>
+                  <h3>Password Reset!</h3>
+                  <p>Your password has been updated successfully.</p>
+                  <button className="auth-submit" onClick={() => showPage("login")}>
+                    <span className="auth-submit-text">Go to Sign In</span>
+                    <ArrowRight size={16} className="auth-submit-arrow" />
                   </button>
                 </div>
-              }
+              )}
             </div>
           </div>
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 };
 
 export default AuthPage;
