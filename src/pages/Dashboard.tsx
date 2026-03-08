@@ -431,7 +431,15 @@ export default function Dashboard() {
             );
           })}
 
-        </nav>
+          {isAdmin && (
+            <>
+              <div className="nav-section-label">Admin</div>
+              <button className="dash-nav-item" onClick={() => navigate("/admin")}>
+                <span className="nav-icon"><i className="fa-solid fa-shield-halved" /></span>
+                Admin Panel
+              </button>
+            </>
+          )}
 
         <div className="sidebar-bottom">
           <div className="user-row" onClick={() => switchPanel("profile")}>
