@@ -243,14 +243,6 @@ const AuthPage = () => {
         {/* RIGHT — Form */}
         <div className="auth-right">
           <div className="auth-card">
-            {/* Mobile branding */}
-            <div className="auth-mobile-brand">
-              <Link to="/" className="auth-logo">
-                <div className="auth-logo-dot" />
-                <span>Goodluck<strong>Store</strong></span>
-              </Link>
-              <div className="auth-mobile-brand-tagline">Your premium digital marketplace</div>
-            </div>
             {/* LOGIN */}
             <div className={`auth-view${currentPage === "login" ? " active" : ""}`}>
               <div className="auth-form-header">
@@ -320,17 +312,6 @@ const AuthPage = () => {
 
             {/* SIGNUP */}
             <div className={`auth-view${currentPage === "signup" ? " active" : ""}`}>
-              <div className="auth-progress">
-                {[1, 2].map((n) => (
-                  <div key={n} className={`auth-progress-step${n <= signupStep ? " active" : ""}`}>
-                    <div className="auth-progress-dot">{n <= signupStep ? <CheckCircle2 size={14} /> : n}</div>
-                    <span>{n === 1 ? "Details" : "Confirm"}</span>
-                  </div>
-                ))}
-                <div className="auth-progress-line">
-                  <div className={`auth-progress-fill${signupStep >= 2 ? " complete" : ""}`} />
-                </div>
-              </div>
 
               {signupStep === 1 && (
                 <div>
