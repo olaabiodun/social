@@ -332,7 +332,7 @@ const AuthPage = () => {
                       I agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>
                     </label>
                   </div>
-                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleSignupStep2} disabled={loading}>
+                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleSignupSubmit} disabled={loading}>
                     <span className="btn-text">Create Account →</span>
                   </button>
                 </div>
