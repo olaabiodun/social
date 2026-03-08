@@ -227,6 +227,7 @@ export default function Dashboard() {
   const [email, setEmail] = useState("");
   const [balance, setBalance] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
+  const { isAdmin } = useAdminCheck();
 
   useEffect(() => {
     loadUserData();
