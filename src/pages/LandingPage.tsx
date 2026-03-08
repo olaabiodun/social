@@ -12,7 +12,7 @@ const LandingPage = () => {
   // Scroll reveal
   useEffect(() => {
     const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("visible"); }),
+      (entries) => entries.forEach((e) => {if (e.isIntersecting) e.target.classList.add("visible");}),
       { threshold: 0.08 }
     );
     document.querySelectorAll(".reveal").forEach((el) => obs.observe(el));
@@ -33,9 +33,9 @@ const LandingPage = () => {
     const ring = ringRef.current;
     if (!cursor || !ring) return;
 
-    let mx = 0, my = 0, rx = 0, ry = 0;
+    let mx = 0,my = 0,rx = 0,ry = 0;
     const onMove = (e: MouseEvent) => {
-      mx = e.clientX; my = e.clientY;
+      mx = e.clientX;my = e.clientY;
       cursor.style.left = mx - 6 + "px";
       cursor.style.top = my - 6 + "px";
     };
@@ -52,20 +52,20 @@ const LandingPage = () => {
     animId = requestAnimationFrame(anim);
 
     const hoverEls = document.querySelectorAll("a,button,.feature-card,.why-card,.testimonial-card,.stat-card,.metric,.why-mini,.orbit-icon,.platform-badge,.social-btn,.faq-q");
-    const enter = () => { cursor.classList.add("hover"); ring.classList.add("hover"); };
-    const leave = () => { cursor.classList.remove("hover"); ring.classList.remove("hover"); };
-    hoverEls.forEach((el) => { el.addEventListener("mouseenter", enter); el.addEventListener("mouseleave", leave); });
+    const enter = () => {cursor.classList.add("hover");ring.classList.add("hover");};
+    const leave = () => {cursor.classList.remove("hover");ring.classList.remove("hover");};
+    hoverEls.forEach((el) => {el.addEventListener("mouseenter", enter);el.addEventListener("mouseleave", leave);});
 
     return () => {
       document.removeEventListener("mousemove", onMove);
       cancelAnimationFrame(animId);
-      hoverEls.forEach((el) => { el.removeEventListener("mouseenter", enter); el.removeEventListener("mouseleave", leave); });
+      hoverEls.forEach((el) => {el.removeEventListener("mouseenter", enter);el.removeEventListener("mouseleave", leave);});
     };
   }, []);
 
   // Close mobile nav on resize
   useEffect(() => {
-    const handler = () => { if (window.innerWidth > 860 && mobileNavOpen) setMobileNavOpen(false); };
+    const handler = () => {if (window.innerWidth > 860 && mobileNavOpen) setMobileNavOpen(false);};
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, [mobileNavOpen]);
@@ -77,12 +77,12 @@ const LandingPage = () => {
   };
 
   const faqItems = [
-    { q: "Are these accounts legitimate and safe to use?", a: "Absolutely. Every account in our inventory undergoes a rigorous vetting process to ensure authenticity. All accounts have real followers, genuine engagement history, and are completely safe to use on their respective platforms." },
-    { q: "How long does the account transfer take?", a: "Most transfers happen instantly — within minutes of purchase confirmation. You'll receive all account credentials via secure email delivery. Our automated system ensures you get access as quickly as possible." },
-    { q: "What if I'm not satisfied with my purchase?", a: "We offer a full replacement or refund within 48 hours of purchase — no questions asked. Customer satisfaction is our top priority, and we stand behind the quality of every account we sell." },
-    { q: "What payment methods do you accept?", a: "We accept all major credit cards, PayPal, and most major cryptocurrencies including Bitcoin and Ethereum. All transactions are processed through our bank-level encrypted payment system." },
-    { q: "Can I verify account stats before buying?", a: "Yes! Each listing contains detailed analytics including follower count, engagement rate, account age, post history, and any verification badges. What you see is exactly what you get — we believe in complete transparency." },
-  ];
+  { q: "Are these accounts legitimate and safe to use?", a: "Absolutely. Every account in our inventory undergoes a rigorous vetting process to ensure authenticity. All accounts have real followers, genuine engagement history, and are completely safe to use on their respective platforms." },
+  { q: "How long does the account transfer take?", a: "Most transfers happen instantly — within minutes of purchase confirmation. You'll receive all account credentials via secure email delivery. Our automated system ensures you get access as quickly as possible." },
+  { q: "What if I'm not satisfied with my purchase?", a: "We offer a full replacement or refund within 48 hours of purchase — no questions asked. Customer satisfaction is our top priority, and we stand behind the quality of every account we sell." },
+  { q: "What payment methods do you accept?", a: "We accept all major credit cards, PayPal, and most major cryptocurrencies including Bitcoin and Ethereum. All transactions are processed through our bank-level encrypted payment system." },
+  { q: "Can I verify account stats before buying?", a: "Yes! Each listing contains detailed analytics including follower count, engagement rate, account age, post history, and any verification badges. What you see is exactly what you get — we believe in complete transparency." }];
+
 
   const tickerItems = ["INSTANT DELIVERY", "VERIFIED ACCOUNTS", "REAL FOLLOWERS", "SECURE PAYMENT", "24/7 SUPPORT", "MONEY BACK GUARANTEE", "BANK-LEVEL ENCRYPTION"];
 
@@ -101,7 +101,7 @@ const LandingPage = () => {
           <li><a href="#testimonials">Reviews</a></li>
           <li><a href="#faq">FAQ</a></li>
         </ul>
-        <Link to="/auth" className="nav-cta nav-cta-desktop">Login →</Link>
+        <Link to="/auth" className="nav-cta nav-cta-desktop text-primary-foreground">Login →</Link>
         <button className={`nav-hamburger${mobileNavOpen ? " open" : ""}`} onClick={() => setMobileNavOpen(!mobileNavOpen)} aria-label="Menu">
           <span /><span /><span />
         </button>
@@ -135,7 +135,7 @@ const LandingPage = () => {
           <h1><span>Premium</span> <span className="blue">Social Media</span> Accounts<br />Ready to Use</h1>
           <p>Instant access to verified Instagram, Twitter, TikTok, YouTube & more. Established accounts with real followers. Secure delivery guaranteed.</p>
           <div className="hero-btns">
-            <button className="btn-primary"><span>Shop Accounts Now →</span></button>
+            <button className="btn-primary text-primary-foreground"><span>Shop Accounts Now →</span></button>
             <button className="btn-ghost">Learn More</button>
           </div>
         </div>
@@ -149,30 +149,30 @@ const LandingPage = () => {
       {/* TICKER */}
       <div className="ticker" role="marquee">
         <div className="ticker-inner">
-          {[...tickerItems, ...tickerItems].map((item, i) => (
-            <div className="ticker-item" key={i}><div className="ticker-dot" />{item}</div>
-          ))}
+          {[...tickerItems, ...tickerItems].map((item, i) =>
+          <div className="ticker-item text-primary-foreground" key={i}><div className="ticker-dot" />{item}</div>
+          )}
         </div>
       </div>
 
       {/* ABOUT */}
       <section className="about landing-section" id="about">
         <div className="about-content reveal">
-          <div className="section-tag">Who We Are</div>
+          <div className="section-tag text-primary-foreground">Who We Are</div>
           <h2 className="section-title">The Premier<br /><span style={{ color: "var(--blue)" }}>Social Media</span><br />Marketplace</h2>
           <p className="section-sub">Goodluck StoreAccounts is a premier provider of established social media accounts across all major platforms. We specialize in delivering authentic, ready-to-use accounts with real followers, genuine engagement, and verified status options.</p>
           <div className="platforms-showcase">
             {[
-              { icon: "fa-brands fa-instagram", name: "Instagram" },
-              { icon: "fa-brands fa-x-twitter", name: "Twitter/X" },
-              { icon: "fa-brands fa-tiktok", name: "TikTok" },
-              { icon: "fa-brands fa-youtube", name: "YouTube" },
-              { icon: "fa-brands fa-facebook", name: "Facebook" },
-              { icon: "fa-brands fa-linkedin", name: "LinkedIn" },
-              { icon: "fa-brands fa-snapchat", name: "Snapchat" },
-            ].map((p) => (
-              <div className="platform-badge" key={p.name}><i className={p.icon} /> {p.name}</div>
-            ))}
+            { icon: "fa-brands fa-instagram", name: "Instagram" },
+            { icon: "fa-brands fa-x-twitter", name: "Twitter/X" },
+            { icon: "fa-brands fa-tiktok", name: "TikTok" },
+            { icon: "fa-brands fa-youtube", name: "YouTube" },
+            { icon: "fa-brands fa-facebook", name: "Facebook" },
+            { icon: "fa-brands fa-linkedin", name: "LinkedIn" },
+            { icon: "fa-brands fa-snapchat", name: "Snapchat" }].
+            map((p) =>
+            <div className="platform-badge" key={p.name}><i className={p.icon} /> {p.name}</div>
+            )}
           </div>
           <div className="about-metrics">
             <div className="metric"><div className="metric-val">10K+</div><div className="metric-label">Accounts Sold</div></div>
@@ -197,7 +197,7 @@ const LandingPage = () => {
               <div className="orbit-icon"><i className="fa-brands fa-instagram" /></div>
               <div className="orbit-icon"><i className="fa-brands fa-comments" /></div>
             </div>
-            <div className="orbit-center">ALL<br />PLATFORMS</div>
+            <div className="orbit-center text-primary-foreground">ALL<br />PLATFORMS</div>
           </div>
         </div>
       </section>
@@ -211,18 +211,18 @@ const LandingPage = () => {
         </div>
         <div className="features-grid">
           {[
-            { num: "01", icon: "fa-solid fa-shield-halved", title: "Verified Accounts", desc: "All accounts are authentic with real followers and genuine engagement history. Every single one vetted by our team." },
-            { num: "02", icon: "fa-solid fa-bolt", title: "Instant Delivery", desc: "Get immediate access to your purchased account credentials via secure email delivery within minutes." },
-            { num: "03", icon: "fa-solid fa-lock", title: "Secure Transactions", desc: "Bank-level encryption and secure payment processing for complete peace of mind on every order." },
-            { num: "04", icon: "fa-solid fa-headset", title: "24/7 Support", desc: "Round-the-clock customer support team ready to assist with any questions or issues you might have." },
-          ].map((f, i) => (
-            <div className={`feature-card reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={f.num}>
+          { num: "01", icon: "fa-solid fa-shield-halved", title: "Verified Accounts", desc: "All accounts are authentic with real followers and genuine engagement history. Every single one vetted by our team." },
+          { num: "02", icon: "fa-solid fa-bolt", title: "Instant Delivery", desc: "Get immediate access to your purchased account credentials via secure email delivery within minutes." },
+          { num: "03", icon: "fa-solid fa-lock", title: "Secure Transactions", desc: "Bank-level encryption and secure payment processing for complete peace of mind on every order." },
+          { num: "04", icon: "fa-solid fa-headset", title: "24/7 Support", desc: "Round-the-clock customer support team ready to assist with any questions or issues you might have." }].
+          map((f, i) =>
+          <div className={`feature-card reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={f.num}>
               <div className="feature-num">{f.num}</div>
               <div className="feature-icon"><i className={f.icon} /></div>
               <div className="feature-title">{f.title}</div>
               <p className="feature-desc">{f.desc}</p>
             </div>
-          ))}
+          )}
         </div>
       </section>
 
@@ -235,19 +235,19 @@ const LandingPage = () => {
         </div>
         <div className="steps">
           {[
-            { num: 1, icon: "fa-solid fa-search", title: "Browse & Select", desc: "Choose your preferred platform and browse our inventory of available accounts with detailed analytics and follower breakdowns." },
-            { num: 2, icon: "fa-solid fa-shopping-cart", title: "Secure Checkout", desc: "Complete your purchase through our encrypted payment system. Multiple payment methods accepted including crypto." },
-            { num: 3, icon: "fa-solid fa-envelope", title: "Instant Access", desc: "Receive account credentials instantly via email. Login and start using your new account immediately — no waiting." },
-          ].map((s, i) => (
-            <div className={`step reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={s.num}>
+          { num: 1, icon: "fa-solid fa-search", title: "Browse & Select", desc: "Choose your preferred platform and browse our inventory of available accounts with detailed analytics and follower breakdowns." },
+          { num: 2, icon: "fa-solid fa-shopping-cart", title: "Secure Checkout", desc: "Complete your purchase through our encrypted payment system. Multiple payment methods accepted including crypto." },
+          { num: 3, icon: "fa-solid fa-envelope", title: "Instant Access", desc: "Receive account credentials instantly via email. Login and start using your new account immediately — no waiting." }].
+          map((s, i) =>
+          <div className={`step reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={s.num}>
               <div className="step-num">{s.num}</div>
               <div className="step-icon"><i className={s.icon} /></div>
               <h3>{s.title}</h3>
               <p>{s.desc}</p>
             </div>
-          ))}
+          )}
         </div>
-        <div className="how-cta reveal"><button className="btn-primary"><span>Get Started Now →</span></button></div>
+        <div className="how-cta reveal text-primary-foreground"><button className="btn-primary"><span>Get Started Now →</span></button></div>
       </section>
 
       {/* WHY */}
@@ -258,28 +258,28 @@ const LandingPage = () => {
         </div>
         <div className="why-main">
           {[
-            { icon: "fa-solid fa-trophy", title: "Premium Quality", desc: "Hand-picked accounts with genuine followers, strong engagement history, and clean reputation. Nothing but the best." },
-            { icon: "fa-solid fa-dollar-sign", title: "Best Prices", desc: "Competitive pricing with transparent costs. No hidden fees, no surprises. Regular discounts and bundle offers available." },
-            { icon: "fa-solid fa-arrows-rotate", title: "Satisfaction Guarantee", desc: "Not satisfied? We offer replacement or full refund within 48 hours of purchase — no questions asked." },
-          ].map((w, i) => (
-            <div className={`why-card reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={w.title}>
+          { icon: "fa-solid fa-trophy", title: "Premium Quality", desc: "Hand-picked accounts with genuine followers, strong engagement history, and clean reputation. Nothing but the best." },
+          { icon: "fa-solid fa-dollar-sign", title: "Best Prices", desc: "Competitive pricing with transparent costs. No hidden fees, no surprises. Regular discounts and bundle offers available." },
+          { icon: "fa-solid fa-arrows-rotate", title: "Satisfaction Guarantee", desc: "Not satisfied? We offer replacement or full refund within 48 hours of purchase — no questions asked." }].
+          map((w, i) =>
+          <div className={`why-card reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={w.title}>
               <div className="why-icon-circle"><i className={w.icon} /></div>
               <h3>{w.title}</h3>
               <p>{w.desc}</p>
             </div>
-          ))}
+          )}
         </div>
         <div className="why-row">
           {[
-            { icon: "fa-solid fa-mobile-screen", title: "Wide Selection", desc: "All major platforms covered" },
-            { icon: "fa-solid fa-shield", title: "Privacy Protected", desc: "Your data always stays safe" },
-            { icon: "fa-solid fa-thumbs-up", title: "Trusted by Thousands", desc: "Proven track record since 2020" },
-          ].map((w, i) => (
-            <div className={`why-mini reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={w.title}>
+          { icon: "fa-solid fa-mobile-screen", title: "Wide Selection", desc: "All major platforms covered" },
+          { icon: "fa-solid fa-shield", title: "Privacy Protected", desc: "Your data always stays safe" },
+          { icon: "fa-solid fa-thumbs-up", title: "Trusted by Thousands", desc: "Proven track record since 2020" }].
+          map((w, i) =>
+          <div className={`why-mini reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={w.title}>
               <div className="why-mini-icon"><i className={w.icon} /></div>
               <div><h4>{w.title}</h4><p>{w.desc}</p></div>
             </div>
-          ))}
+          )}
         </div>
       </section>
 
@@ -292,12 +292,12 @@ const LandingPage = () => {
         </div>
         <div className="testimonials-grid">
           {[
-            { initials: "SJ", name: "Sarah Johnson", role: "Content Creator", text: '"Purchased an Instagram account with 100K followers. The account was exactly as described, verified, and the transfer was seamless. Best investment I\'ve made for my business!"', platform: "Instagram", platformIcon: "fa-brands fa-instagram", stat: "100K Followers" },
-            { initials: "MC", name: "Michael Chen", role: "Digital Marketer", text: '"Goodluck Store made it incredibly easy to jumpstart my social media presence. The account had real engagement and authentic followers. Customer support was absolutely amazing!"', platform: "TikTok", platformIcon: "fa-brands fa-tiktok", stat: "250K Followers" },
-            { initials: "ER", name: "Emily Rodriguez", role: "Business Owner", text: '"I was skeptical at first, but Goodluck Store exceeded all expectations. Instant delivery, secure payment, and the account metrics were 100% accurate. Highly recommend!"', platform: "YouTube", platformIcon: "fa-brands fa-youtube", stat: "180K Subscribers" },
-            { initials: "DK", name: "David Kim", role: "Influencer", text: '"The quality of accounts here is unmatched. Real followers, great engagement rates, and the verification badge was fully intact. Worth every single penny spent!"', platform: "Twitter/X", platformIcon: "fa-brands fa-x-twitter", stat: "75K Followers" },
-          ].map((t, i) => (
-            <div className={`testimonial-card reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={t.name}>
+          { initials: "SJ", name: "Sarah Johnson", role: "Content Creator", text: '"Purchased an Instagram account with 100K followers. The account was exactly as described, verified, and the transfer was seamless. Best investment I\'ve made for my business!"', platform: "Instagram", platformIcon: "fa-brands fa-instagram", stat: "100K Followers" },
+          { initials: "MC", name: "Michael Chen", role: "Digital Marketer", text: '"Goodluck Store made it incredibly easy to jumpstart my social media presence. The account had real engagement and authentic followers. Customer support was absolutely amazing!"', platform: "TikTok", platformIcon: "fa-brands fa-tiktok", stat: "250K Followers" },
+          { initials: "ER", name: "Emily Rodriguez", role: "Business Owner", text: '"I was skeptical at first, but Goodluck Store exceeded all expectations. Instant delivery, secure payment, and the account metrics were 100% accurate. Highly recommend!"', platform: "YouTube", platformIcon: "fa-brands fa-youtube", stat: "180K Subscribers" },
+          { initials: "DK", name: "David Kim", role: "Influencer", text: '"The quality of accounts here is unmatched. Real followers, great engagement rates, and the verification badge was fully intact. Worth every single penny spent!"', platform: "Twitter/X", platformIcon: "fa-brands fa-x-twitter", stat: "75K Followers" }].
+          map((t, i) =>
+          <div className={`testimonial-card reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={t.name}>
               <div className="stars">★★★★★</div>
               <p className="testimonial-text">{t.text}</p>
               <div className="testimonial-author">
@@ -309,15 +309,15 @@ const LandingPage = () => {
                 <span className="platform-stat">{t.stat}</span>
               </div>
             </div>
-          ))}
+          )}
         </div>
       </section>
 
       {/* TRUST BAR */}
       <div className="trust-bar reveal">
-        <div><div className="trust-num">10,000+</div><div className="trust-label">Happy Customers</div></div>
-        <div><div className="trust-num">4.9/5</div><div className="trust-label">Average Rating</div></div>
-        <div><div className="trust-num">98%</div><div className="trust-label">Satisfaction Rate</div></div>
+        <div className="text-primary-foreground"><div className="trust-num">10,000+</div><div className="trust-label">Happy Customers</div></div>
+        <div className="text-primary-foreground"><div className="trust-num">4.9/5</div><div className="trust-label">Average Rating</div></div>
+        <div className="text-primary-foreground"><div className="trust-num">98%</div><div className="trust-label">Satisfaction Rate</div></div>
       </div>
 
       {/* FAQ */}
@@ -329,15 +329,15 @@ const LandingPage = () => {
             <p className="section-sub">Everything you need to know about buying social media accounts from Goodluck StoreAccounts.</p>
           </div>
           <div className="faq-list reveal reveal-delay-1">
-            {faqItems.map((faq, i) => (
-              <div className={`faq-item${openFaq === i ? " open" : ""}`} key={i}>
+            {faqItems.map((faq, i) =>
+            <div className={`faq-item${openFaq === i ? " open" : ""}`} key={i}>
                 <button className="faq-q" onClick={() => toggleFaq(i)}>
                   {faq.q}
                   <div className="faq-icon">+</div>
                 </button>
                 <div className="faq-a">{faq.a}</div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -347,7 +347,7 @@ const LandingPage = () => {
         <h2>READY TO <em>BOOST</em><br />YOUR PRESENCE?</h2>
         <p>Join thousands of satisfied customers. Shop premium social media accounts now and start growing today.</p>
         <div className="cta-btns">
-          <button className="btn-dark">Shop Accounts →</button>
+          <button className="btn-dark text-primary-foreground">Shop Accounts →</button>
           <button className="btn-outline-dark">Contact Us</button>
         </div>
         <div className="cta-trust">
@@ -394,8 +394,8 @@ const LandingPage = () => {
           <div className="footer-legal"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Refund Policy</a></div>
         </div>
       </footer>
-    </div>
-  );
+    </div>);
+
 };
 
 export default LandingPage;
