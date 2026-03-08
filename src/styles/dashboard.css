@@ -1798,9 +1798,12 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
 }
 
 @media (max-width: 600px) {
+  .mobile-search-section { display: block; padding: 20px 16px 0; }
+  .desktop-filter-row { display: none !important; }
+  .recent-orders-section { margin: 24px 16px 0; }
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 16px 0; }
   .welcome-banner { padding: 16px 16px 0; }
-  .filter-row { padding: 14px 16px 0; gap: 8px; }
+  .filter-row { padding: 14px 0 0; gap: 8px; }
   .filter-pill { padding: 6px 12px; font-size: 11px; }
   .section-header { padding: 16px 16px 0; }
   .category-block { margin: 14px 16px 0; }
