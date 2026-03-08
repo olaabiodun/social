@@ -1914,7 +1914,7 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   display: flex;
   align-items: center;
   gap: 18px;
-  margin-bottom: 20px;
+  margin: 0 16px 20px;
 }
 
 .category-banner-icon {
