@@ -204,6 +204,7 @@ const PANEL_TITLES: Record<PanelName, string> = {
   profile: "My Profile",
   orders: "My Orders",
   "add-funds": "Add Funds",
+  "manual-payments": "Manual Payments",
   support: "Support Center",
 };
 
