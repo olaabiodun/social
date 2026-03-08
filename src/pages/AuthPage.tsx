@@ -244,19 +244,6 @@ const AuthPage = () => {
               
             </div>
           </div>
-          <div className="left-reviews">
-            <div className="review-card">
-              <div className="review-text">"The best decision I made for my brand. Instant access, real followers — couldn't be happier."</div>
-              <div className="review-author">
-                <div className="review-avatar">SJ</div>
-                <div>
-                  <div className="review-name">Sarah Johnson</div>
-                  <div className="review-role">Content Creator · Instagram 100K</div>
-                  <div className="review-stars">★★★★★</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* RIGHT PANEL */}
