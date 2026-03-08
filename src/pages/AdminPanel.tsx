@@ -138,6 +138,19 @@ export default function AdminPanel() {
   };
 
   const isUserAdmin = (userId: string) => roles.some((r) => r.user_id === userId && r.role === "admin");
+  const isUserBlocked = (userId: string) => profiles.find((p) => p.user_id === userId)?.is_blocked || false;
+
+  const toggleBlockUser = async (userId: string) => {
+    const profile = profiles.find((p) => p.user_id === userId);
+    if (!profile) return;
+    const newStatus = !profile.is_blocked;
+    const { error } = await supabase.from("profiles").update({ is_blocked: newStatus }).eq("user_id", userId);
+    if (error) { toast.error("Failed to update user"); return; }
+    toast.success(newStatus ? "User blocked" : "User unblocked");
+    // Update local state
+    setProfiles(profiles.map((p) => p.user_id === userId ? { ...p, is_blocked: newStatus } : p));
+    if (selectedUser?.user_id === userId) setSelectedUser({ ...selectedUser, is_blocked: newStatus });
+  };
 
   const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total_price), 0);
   const pendingOrders = orders.filter((o) => o.status === "pending").length;
