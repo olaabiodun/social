@@ -11,6 +11,7 @@ interface Profile {
   user_id: string;
   username: string | null;
   created_at: string;
+  is_blocked: boolean;
 }
 
 interface Wallet {
@@ -137,6 +138,19 @@ export default function AdminPanel() {
   };
 
   const isUserAdmin = (userId: string) => roles.some((r) => r.user_id === userId && r.role === "admin");
+  const isUserBlocked = (userId: string) => profiles.find((p) => p.user_id === userId)?.is_blocked || false;
+
+  const toggleBlockUser = async (userId: string) => {
+    const profile = profiles.find((p) => p.user_id === userId);
+    if (!profile) return;
+    const newStatus = !profile.is_blocked;
+    const { error } = await supabase.from("profiles").update({ is_blocked: newStatus }).eq("user_id", userId);
+    if (error) { toast.error("Failed to update user"); return; }
+    toast.success(newStatus ? "User blocked" : "User unblocked");
+    // Update local state
+    setProfiles(profiles.map((p) => p.user_id === userId ? { ...p, is_blocked: newStatus } : p));
+    if (selectedUser?.user_id === userId) setSelectedUser({ ...selectedUser, is_blocked: newStatus });
+  };
 
   const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total_price), 0);
   const pendingOrders = orders.filter((o) => o.status === "pending").length;
@@ -560,8 +574,9 @@ export default function AdminPanel() {
                           <div className="admin-user-detail-id">{selectedUser.user_id}</div>
                         </div>
                       </div>
-                      <div>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                         {isUserAdmin(selectedUser.user_id) && <span className="admin-status admin-status-active">Admin</span>}
+                        {selectedUser.is_blocked && <span className="admin-status admin-status-blocked">Blocked</span>}
                       </div>
                     </div>
                     <div className="admin-user-detail-stats">
@@ -588,6 +603,12 @@ export default function AdminPanel() {
                       </button>
                       <button className="admin-btn admin-btn-danger" onClick={() => { setWalletAction("debit"); setWalletAmount(""); }}>
                         💸 Debit Wallet
+                      </button>
+                      <button
+                        className={`admin-btn ${selectedUser.is_blocked ? "admin-btn-success" : "admin-btn-danger"}`}
+                        onClick={() => toggleBlockUser(selectedUser.user_id)}
+                      >
+                        {selectedUser.is_blocked ? "✅ Unblock User" : "🚫 Block User"}
                       </button>
                     </div>
                   </div>
@@ -675,19 +696,23 @@ export default function AdminPanel() {
                       <div className="admin-table-title">All Users ({filteredProfiles.length})</div>
                     </div>
                     <table className="admin-table">
-                      <thead><tr><th>Username</th><th>Balance</th><th>Orders</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+                      <thead><tr><th>Username</th><th>Balance</th><th>Orders</th><th>Status</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
                       <tbody>
                         {filteredProfiles.map((p) => (
                           <tr key={p.id}>
                             <td style={{ fontWeight: 600 }}>{p.username || "—"}</td>
                             <td style={{ fontWeight: 700 }}>₦{getWalletBalance(p.user_id).toLocaleString()}</td>
                             <td>{getUserOrders(p.user_id).length}</td>
+                            <td>{p.is_blocked ? <span className="admin-status admin-status-blocked">Blocked</span> : <span className="admin-status admin-status-active">Active</span>}</td>
                             <td>{isUserAdmin(p.user_id) ? <span className="admin-status admin-status-active">Admin</span> : <span className="admin-status">User</span>}</td>
                             <td>{new Date(p.created_at).toLocaleDateString()}</td>
                             <td>
-                              <button className="admin-btn admin-btn-primary admin-btn-sm" onClick={() => setSelectedUser(p)}>
-                                View
-                              </button>
+                              <div style={{ display: "flex", gap: 4 }}>
+                                <button className="admin-btn admin-btn-primary admin-btn-sm" onClick={() => setSelectedUser(p)}>View</button>
+                                <button className={`admin-btn admin-btn-sm ${p.is_blocked ? "admin-btn-success" : "admin-btn-danger"}`} onClick={() => toggleBlockUser(p.user_id)}>
+                                  {p.is_blocked ? "Unblock" : "Block"}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -708,7 +733,8 @@ export default function AdminPanel() {
                             <div style={{ fontWeight: 700, fontSize: 14 }}>{p.username || "—"}</div>
                             <div style={{ fontSize: 11, color: "hsl(220 10% 50%)" }}>{new Date(p.created_at).toLocaleDateString()}</div>
                           </div>
-                          <div style={{ marginLeft: "auto" }}>
+                          <div style={{ marginLeft: "auto", display: "flex", gap: 6, alignItems: "center" }}>
+                            {p.is_blocked && <span className="admin-status admin-status-blocked">Blocked</span>}
                             {isUserAdmin(p.user_id) && <span className="admin-status admin-status-active">Admin</span>}
                           </div>
                         </div>
