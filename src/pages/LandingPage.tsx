@@ -160,7 +160,7 @@ const LandingPage = () => {
         <div className="about-content reveal">
           <div className="section-tag text-primary-foreground">Who We Are</div>
           <h2 className="section-title">The Premier<br /><span style={{ color: "var(--blue)" }}>Social Media</span><br />Marketplace</h2>
-          <p className="section-sub">Goodluck StoreAccounts is a premier provider of established social media accounts across all major platforms. We specialize in delivering authentic, ready-to-use accounts with real followers, genuine engagement, and verified status options.</p>
+          <p className="section-sub"><p className="section-sub">Goodluck Store is a premier provider of established social media accounts across all major platforms. We specialize in delivering authentic, ready-to-use accounts with real followers, genuine engagement, and verified status options.</p> of established social media accounts across all major platforms. We specialize in delivering authentic, ready-to-use accounts with real followers, genuine engagement, and verified status options.</p>
           <div className="platforms-showcase">
             {[
             { icon: "fa-brands fa-instagram", name: "Instagram" },
