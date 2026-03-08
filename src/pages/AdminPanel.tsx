@@ -123,7 +123,10 @@ export default function AdminPanel() {
   useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
-    const [p, w, o, pr, c, t, r] = await Promise.all([
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) setAdminUserId(user.id);
+
+    const [p, w, o, pr, c, t, r, m] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("wallets").select("*"),
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
@@ -131,6 +134,7 @@ export default function AdminPanel() {
       supabase.from("categories").select("*").order("display_order"),
       supabase.from("transactions").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("*").order("created_at", { ascending: false }),
+      supabase.from("messages").select("*").order("created_at", { ascending: true }),
     ]);
     if (p.data) setProfiles(p.data as Profile[]);
     if (w.data) setWallets(w.data as Wallet[]);
@@ -139,6 +143,51 @@ export default function AdminPanel() {
     if (c.data) setCategories(c.data as Category[]);
     if (t.data) setTransactions(t.data as Transaction[]);
     if (r.data) setRoles(r.data as UserRole[]);
+    if (m.data) setAllMessages(m.data as Message[]);
+  };
+
+  // Realtime messages for admin
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        setAllMessages(prev => [...prev, payload.new as Message]);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const getChatUsers = () => {
+    const userIds = new Set(allMessages.map(m => m.sender_id === adminUserId ? m.receiver_id : m.sender_id));
+    userIds.delete("00000000-0000-0000-0000-000000000000");
+    userIds.delete(adminUserId);
+    // Also add users who sent messages to the placeholder
+    allMessages.forEach(m => {
+      if (m.receiver_id === "00000000-0000-0000-0000-000000000000") userIds.add(m.sender_id);
+    });
+    return Array.from(userIds);
+  };
+
+  const getChatMessages = (chatUserId: string) => {
+    return allMessages.filter(m =>
+      (m.sender_id === chatUserId) ||
+      (m.receiver_id === chatUserId) ||
+      (m.sender_id === chatUserId && m.receiver_id === "00000000-0000-0000-0000-000000000000")
+    );
+  };
+
+  const sendAdminMessage = async () => {
+    if (!adminMsgInput.trim() || !selectedChatUser || !adminUserId) return;
+    const { error } = await supabase.from("messages").insert({
+      sender_id: adminUserId,
+      receiver_id: selectedChatUser,
+      content: adminMsgInput.trim(),
+    });
+    if (error) {
+      toast.error("Failed to send");
+    } else {
+      setAdminMsgInput("");
+    }
   };
 
   const getWalletBalance = (userId: string) => {
