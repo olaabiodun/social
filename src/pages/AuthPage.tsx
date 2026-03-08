@@ -17,8 +17,7 @@ const AuthPage = () => {
   const [showLoginPw, setShowLoginPw] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const [suFname, setSuFname] = useState("");
-  const [suLname, setSuLname] = useState("");
+  const [suUsername, setSuUsername] = useState("");
   const [suEmail, setSuEmail] = useState("");
   const [suEmailErr, setSuEmailErr] = useState(false);
   const [suPw, setSuPw] = useState("");
@@ -94,18 +93,14 @@ const AuthPage = () => {
     simulateLoading(() => showToast("✅ Welcome back! Redirecting..."));
   };
 
-  // Signup step 1
-  const handleSignupStep1 = () => {
+  // Signup submit
+  const handleSignupSubmit = () => {
+    if (!suUsername.trim()) { showToast("⚠ Please enter a username"); return; }
     if (!validateEmail(suEmail)) { setSuEmailErr(true); return; }
-    simulateLoading(() => setSignupStep(2));
-  };
-
-  // Signup step 2
-  const handleSignupStep2 = () => {
     if (suPw.length < 6) { setSuPwErr(true); setSuPwErrMsg("⚠ Password must be at least 6 characters"); return; }
     if (suPw !== suPw2) { setSuPwErr(true); setSuPwErrMsg("⚠ Passwords do not match"); return; }
     if (!termsChecked) { showToast("⚠ Please accept the terms to continue"); return; }
-    simulateLoading(() => setSignupStep(3));
+    simulateLoading(() => setSignupStep(2));
   };
 
   // OTP handler
@@ -307,10 +302,10 @@ const AuthPage = () => {
             {/* SIGNUP */}
             <div className={`auth-page-view${currentPage === "signup" ? " active" : ""}`}>
               <div className="progress-dots">
-                {[1, 2, 3].map((n) => <div key={n} className={`pdot${n <= signupStep ? " active" : ""}`} />)}
+                {[1, 2].map((n) => <div key={n} className={`pdot${n <= signupStep ? " active" : ""}`} />)}
               </div>
 
-              {/* Step 1 */}
+              {/* Step 1 - All fields */}
               {signupStep === 1 && (
                 <div>
                   <div className="form-header">
@@ -323,17 +318,10 @@ const AuthPage = () => {
                     <button className="social-auth-btn" onClick={() => handleSocial("Twitter")}><span>𝕏</span> Twitter</button>
                   </div>
                   <div className="divider"><span>or register with email</span></div>
-                  <div className="name-grid">
-                    <div className="input-group">
-                      <label className="input-label">First Name</label>
-                      <div className="input-wrap"><span className="input-icon">👤</span><input type="text" className="input-field" value={suFname} onChange={(e) => setSuFname(e.target.value)} placeholder="John" /></div>
-                    </div>
-                    <div className="input-group">
-                      <label className="input-label">Last Name</label>
-                      <div className="input-wrap"><span className="input-icon">👤</span><input type="text" className="input-field" value={suLname} onChange={(e) => setSuLname(e.target.value)} placeholder="Doe" /></div>
-                    </div>
+                  <div className="input-group">
+                    <label className="input-label">Username</label>
+                    <div className="input-wrap"><span className="input-icon">👤</span><input type="text" className="input-field" value={suUsername} onChange={(e) => setSuUsername(e.target.value)} placeholder="Choose a username" /></div>
                   </div>
-                  <div style={{ height: 18 }} />
                   <div className="input-group">
                     <label className="input-label">Email Address</label>
                     <div className="input-wrap">
@@ -341,20 +329,6 @@ const AuthPage = () => {
                       <input type="email" className={`input-field${suEmailErr ? " error" : ""}`} value={suEmail} onChange={(e) => { setSuEmail(e.target.value); setSuEmailErr(false); }} placeholder="you@example.com" />
                     </div>
                     <div className={`input-error${suEmailErr ? " show" : ""}`}>⚠ Please enter a valid email</div>
-                  </div>
-                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleSignupStep1} disabled={loading}>
-                    <span className="btn-text">Continue →</span>
-                  </button>
-                </div>
-              )}
-
-              {/* Step 2 */}
-              {signupStep === 2 && (
-                <div>
-                  <BackButton onClick={() => setSignupStep(1)} />
-                  <div className="form-header">
-                    <div className="form-tag">Secure Your Account</div>
-                    <h2 className="form-title">SET<br />PASSWORD</h2>
                   </div>
                   <div className="input-group">
                     <label className="input-label">Password</label>
@@ -380,16 +354,16 @@ const AuthPage = () => {
                       I agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>
                     </label>
                   </div>
-                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleSignupStep2} disabled={loading}>
+                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleSignupSubmit} disabled={loading}>
                     <span className="btn-text">Create Account →</span>
                   </button>
                 </div>
               )}
 
-              {/* Step 3 - Verify */}
-              {signupStep === 3 && (
+              {/* Step 2 - Verify */}
+              {signupStep === 2 && (
                 <div>
-                  <BackButton onClick={() => setSignupStep(2)} />
+                  <BackButton onClick={() => setSignupStep(1)} />
                   <div className="form-header">
                     <div className="form-tag">Almost There</div>
                     <h2 className="form-title">VERIFY<br />EMAIL</h2>
