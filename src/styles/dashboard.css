@@ -1888,6 +1888,7 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   gap: 8px;
   font-size: 13px;
   margin-bottom: 16px;
+  padding: 0 16px;
   color: hsl(var(--db-text-muted));
 }
 
@@ -1913,7 +1914,7 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   display: flex;
   align-items: center;
   gap: 18px;
-  margin-bottom: 20px;
+  margin: 0 16px 20px;
 }
 
 .category-banner-icon {
@@ -1955,6 +1956,7 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
+  padding: 0 16px;
 }
 
 .category-filters .filter-label {
@@ -1984,6 +1986,7 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   align-items: center;
   gap: 8px;
   margin-bottom: 16px;
+  padding: 0 16px;
 }
 
 .view-toggle {
