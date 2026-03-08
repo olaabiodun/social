@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import "../styles/dashboard.css";
 
 type PanelName = "home" | "orders" | "profile" | "add-funds" | "support";
@@ -13,65 +14,70 @@ interface ModalData {
   price: string;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  emoji: string | null;
+  icon_url: string | null;
+}
+
+interface Product {
+  id: string;
+  category_id: string;
+  title: string;
+  description: string;
+  price: number;
+  stock: number;
+  platform: string;
+}
+
+interface Order {
+  id: string;
+  product_title: string;
+  product_platform: string;
+  total_price: number;
+  status: string;
+  created_at: string;
+}
+
+// Static fallback data
 const ACCOUNTS_DATA = [
   {
     category: "facebook",
-    catTitle: "Random Country Facebook",
+    catTitle: "Random Country Facebook 🇬🇧 🇨🇱 🇩🇪",
+    catEmoji: "",
     catIcon: "fa-brands fa-facebook",
     catTags: ["GB", "CL", "DE", "US"],
     items: [
-      { desc: "High quality Facebook with 200–5,000 friends (sharp friends) · Active marketplace · 90% have profile · Few posts", tags: [{ label: "High Quality", type: "quality" }, { label: "Intl", type: "region" }, { label: "Active Marketplace", type: "note" }], stock: 81, stockClass: "", price: "NGN 4,000", modalTitle: "Facebook Account", modalDesc: "High quality Facebook with 200–5,000 friends" },
-      { desc: "2–10 Years Old Europe Facebook · HIGH FRIENDS · Active marketplace · 60% have profile · Get started dating ❤ (NO 2FA)", tags: [{ label: "2–10 Yrs Old", type: "age" }, { label: "Europe", type: "region" }, { label: "High Friends", type: "quality" }, { label: "No 2FA", type: "note" }], stock: 49, stockClass: "", price: "NGN 5,500", modalTitle: "Europe Facebook", modalDesc: "2–10 Years Old Europe Facebook with High Friends" },
-      { desc: "Facebook 2–15 High Quality · 30–1K friends · Many accounts have profile · Quality is very sharp 💯", tags: [{ label: "Premium", type: "quality" }, { label: "2–15 Yrs", type: "age" }, { label: "Profile Complete", type: "note" }], stock: 0, stockClass: "zero", price: "NGN 5,500", modalTitle: "", modalDesc: "" },
-    ],
-  },
-  {
-    category: "instagram",
-    catTitle: "Premium Instagram Accounts",
-    catIcon: "fa-brands fa-instagram",
-    catTags: ["VERIFIED", "10K+", "REAL"],
-    items: [
-      { desc: "Instagram Verified · 10K–50K Followers · High engagement · Business-ready · Email access included", tags: [{ label: "Verified ✓", type: "quality" }, { label: "Global", type: "region" }, { label: "Email Access", type: "note" }], stock: 34, stockClass: "", price: "NGN 8,500", modalTitle: "Instagram Account", modalDesc: "Verified Instagram with 10K–50K real followers" },
-      { desc: "Instagram 100K+ Followers · USA/UK · Female niche · Lifestyle content · Original email available", tags: [{ label: "100K+", type: "quality" }, { label: "USA/UK", type: "region" }, { label: "Female Niche", type: "age" }], stock: 7, stockClass: "low", price: "NGN 22,000", modalTitle: "Instagram 100K+", modalDesc: "USA/UK Instagram with 100K+ real followers" },
+      { desc: "High quality 🇩🇪 🇬🇧 🇨🇦 Facebook with 200-5,000 friends (sharp friends) Active marketplace, 90% has create profile Few has post", tags: [{ label: "High Quality", type: "quality" }], stock: 29, stockClass: "", price: "NGN 4,000.00", modalTitle: "Facebook Account", modalDesc: "High quality Facebook with 200–5,000 friends" },
+      { desc: "2-10 YEARS OLD EUROPE 🇮🇹🇩🇪🇫🇷 FACEBOOK WITH HIGH FRIENDS Active marketplace 60% have create profile Few has Get started dating ❤️(NO 2FA)", tags: [{ label: "Europe", type: "region" }, { label: "No 2FA", type: "note" }], stock: 47, stockClass: "", price: "NGN 5,500.00", modalTitle: "Europe Facebook", modalDesc: "2–10 Years Old Europe Facebook with High Friends" },
+      { desc: "facebook:2–15 High Quality 🇺🇸🇬🇧🇩🇪🇫🇷 🇨🇦 FACEBOOK ( 30-1k friend) many accounts here have create profile this quality is very sharp 💯💯", tags: [{ label: "Premium", type: "quality" }], stock: 33, stockClass: "", price: "NGN 5,500.00", modalTitle: "Facebook Premium", modalDesc: "High Quality Facebook 30-1K friends" },
     ],
   },
   {
     category: "tiktok",
-    catTitle: "TikTok Accounts",
+    catTitle: "Country TIK tok",
+    catEmoji: "",
     catIcon: "",
-    catEmoji: "🎵",
-    catTags: ["AGED", "MONETIZED"],
+    catTags: ["VERIFIED", "AGED"],
     items: [
-      { desc: "TikTok Monetized · 100K+ Followers · Aged 2+ years · Original email · Already has TikTok Shop access", tags: [{ label: "Monetized", type: "quality" }, { label: "2+ Yrs Old", type: "age" }, { label: "TikTok Shop", type: "note" }], stock: 22, stockClass: "", price: "NGN 15,000", modalTitle: "TikTok Monetized", modalDesc: "TikTok with 100K+ followers and monetization enabled" },
-      { desc: "TikTok 250K+ Followers · Mixed niches · High engagement rate · Email + phone access · Clean account history", tags: [{ label: "250K+", type: "quality" }, { label: "Mixed Niche", type: "region" }, { label: "Clean History", type: "note" }], stock: 4, stockClass: "low", price: "NGN 35,000", modalTitle: "TikTok 250K+", modalDesc: "TikTok with 250K+ followers, mixed niches" },
+      { desc: "GERMANY 🇩🇪 TIKTOK 100+ FOLLOWERS (5+ Old posts) | Verified by (2fa | Mail ) (4yrs)", tags: [{ label: "Germany", type: "region" }, { label: "Verified", type: "quality" }], stock: 33, stockClass: "", price: "NGN 2,800.00", modalTitle: "Germany TikTok", modalDesc: "Germany TikTok 100+ Followers" },
+      { desc: "Uk 🇬🇧 TIKTOK 100+ FOLLOWERS (5+ Old posts) | Verified by (2fa | Mail ) (4yrs)", tags: [{ label: "UK", type: "region" }, { label: "Verified", type: "quality" }], stock: 0, stockClass: "zero", price: "NGN 2,800.00", modalTitle: "UK TikTok", modalDesc: "UK TikTok 100+ Followers" },
+      { desc: "CANADA 🇨🇦 TIKTOK 100+ FOLLOWERS (5+ Old posts) | Verified by (2fa | Mail ) (4yrs)", tags: [{ label: "Canada", type: "region" }, { label: "Verified", type: "quality" }], stock: 176, stockClass: "", price: "NGN 2,800.00", modalTitle: "Canada TikTok", modalDesc: "Canada TikTok 100+ Followers" },
+      { desc: "FRANCE 🇫🇷 TIKTOK 100+ FOLLOWERS (5+ Old posts) | Verified by (2fa | Mail ) (4yrs)", tags: [{ label: "France", type: "region" }, { label: "Verified", type: "quality" }], stock: 251, stockClass: "", price: "NGN 2,800.00", modalTitle: "France TikTok", modalDesc: "France TikTok 100+ Followers" },
     ],
   },
   {
-    category: "youtube",
-    catTitle: "YouTube Channels",
-    catIcon: "",
-    catEmoji: "▶️",
-    catTags: ["MONETIZED", "AGED"],
+    category: "facebook-usa",
+    catTitle: "USA 🇺🇸 FACEBOOK",
+    catEmoji: "",
+    catIcon: "fa-brands fa-facebook",
+    catTags: ["USA", "PREMIUM"],
     items: [
-      { desc: "YouTube Monetized · 1K+ Subscribers · 4,000 watch hours · AdSense ready · Tech/Gaming niche", tags: [{ label: "Monetized", type: "quality" }, { label: "AdSense Ready", type: "age" }, { label: "Tech/Gaming", type: "note" }], stock: 18, stockClass: "", price: "NGN 12,000", modalTitle: "YouTube Channel", modalDesc: "Monetized YouTube channel with 1K+ subscribers" },
+      { desc: "4-6 YEARS USA 🇺🇸 faceb00k (100+ FRIENDS)(real+fake friendss mix) (sharp friends) (ALMOST ALL HAVE SWITCH PROFILE)", tags: [{ label: "USA", type: "region" }, { label: "4-6 Yrs", type: "age" }], stock: 10, stockClass: "low", price: "NGN 13,000.00", modalTitle: "USA Facebook", modalDesc: "4-6 Years USA Facebook 100+ Friends" },
     ],
   },
-];
-
-const ORDERS = [
-  { id: "#ORD001", name: "High Quality Facebook", desc: "200–5K Friends · Intl", icon: "fa-brands fa-facebook", platform: "Facebook", price: "NGN 4,000", date: "Mar 5, 2026", status: "completed" },
-  { id: "#ORD002", name: "Instagram Verified", desc: "10K–50K Followers", icon: "fa-brands fa-instagram", platform: "Instagram", price: "NGN 8,500", date: "Mar 4, 2026", status: "completed" },
-  { id: "#ORD003", name: "TikTok Monetized", desc: "100K+ · TikTok Shop", icon: "", emoji: "🎵", platform: "TikTok", price: "NGN 15,000", date: "Mar 6, 2026", status: "pending" },
-  { id: "#ORD004", name: "YouTube Channel", desc: "1K Sub · Monetized", icon: "", emoji: "▶️", platform: "YouTube", price: "NGN 12,000", date: "Mar 6, 2026", status: "processing" },
-  { id: "#ORD005", name: "Europe Facebook", desc: "2–10 Yrs · High Friends", icon: "fa-brands fa-facebook", platform: "Facebook", price: "NGN 5,500", date: "Feb 28, 2026", status: "completed" },
-];
-
-const TRANSACTIONS = [
-  { name: "Wallet Top-Up", date: "Mar 5, 2026 · Bank Transfer", amount: "+NGN 20,000", type: "in", icon: "💰" },
-  { name: "Purchase: Facebook Account", date: "Mar 5, 2026 · Order #ORD001", amount: "-NGN 4,000", type: "out", icon: "🛒" },
-  { name: "Purchase: Instagram 10K+", date: "Mar 4, 2026 · Order #ORD002", amount: "-NGN 8,500", type: "out", icon: "🛒" },
-  { name: "Wallet Top-Up", date: "Feb 28, 2026 · Crypto", amount: "+NGN 30,000", type: "in", icon: "💰" },
-  { name: "Purchase: TikTok 100K", date: "Feb 28, 2026 · Order #ORD003", amount: "-NGN 15,000", type: "out", icon: "🛒" },
 ];
 
 type NavSection = { label: string; type: "section" };
@@ -82,18 +88,17 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Main", type: "section" },
   { label: "Home", icon: "fa-solid fa-house", panel: "home" },
   { label: "Profile", icon: "fa-solid fa-user", panel: "profile" },
-  { label: "My Orders", icon: "fa-solid fa-box", panel: "orders", badge: "3" },
+  { label: "My Orders", icon: "fa-solid fa-box", panel: "orders" },
   { label: "Finance", type: "section" },
   { label: "Add Funds", icon: "fa-solid fa-credit-card", panel: "add-funds" },
   { label: "Manual Payments", icon: "fa-solid fa-money-bill", panel: "add-funds" },
   { label: "Info", type: "section" },
   { label: "Rules", icon: "fa-solid fa-file-lines", action: () => toast("Rules page coming soon") },
   { label: "Support", icon: "fa-solid fa-comments", panel: "support" },
-  { label: "Buy Numbers", icon: "fa-solid fa-phone", action: () => toast("Buy Numbers feature coming soon"), ext: true },
 ];
 
 const PANEL_TITLES: Record<PanelName, string> = {
-  home: "Goodluck Store",
+  home: "Goodluckstore",
   profile: "My Profile",
   orders: "My Orders",
   "add-funds": "Add Funds",
@@ -110,19 +115,67 @@ export default function Dashboard() {
   const [selectedPreset, setSelectedPreset] = useState("NGN 5,000");
   const [selectedPayment, setSelectedPayment] = useState(0);
 
+  // User data
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [balance, setBalance] = useState(0);
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    setEmail(user.email || "");
+
+    // Load profile
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("user_id", user.id)
+      .single();
+    if (profile?.username) setUsername(profile.username);
+
+    // Load wallet
+    const { data: wallet } = await supabase
+      .from("wallets")
+      .select("balance")
+      .eq("user_id", user.id)
+      .single();
+    if (wallet) setBalance(Number(wallet.balance));
+
+    // Load orders
+    const { data: userOrders } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    if (userOrders) setOrders(userOrders as Order[]);
+  };
+
   const switchPanel = useCallback((panel: PanelName) => {
     setActivePanel(panel);
     setSidebarOpen(false);
   }, []);
 
   const filteredAccounts = ACCOUNTS_DATA.filter(
-    (cat) => activeFilter === "all" || cat.category === activeFilter
+    (cat) => activeFilter === "all" || cat.category === activeFilter || cat.category.startsWith(activeFilter)
   );
 
   const filterBySearch = (desc: string) => {
     if (!searchQuery) return true;
     return desc.toLowerCase().includes(searchQuery.toLowerCase());
   };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
+
+  const initials = username ? username.slice(0, 2).toUpperCase() : email ? email.slice(0, 2).toUpperCase() : "U";
+  const formattedBalance = `NGN ${balance.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
 
   return (
     <div className="dashboard-layout">
@@ -146,7 +199,7 @@ export default function Dashboard() {
             </div>
             <div className="modal-detail-row">
               <span className="mdr-label">Your Balance</span>
-              <span className="mdr-val" style={{ color: "hsl(48 100% 50%)" }}>NGN 0.00</span>
+              <span className="mdr-val" style={{ color: "hsl(220 70% 35%)" }}>{formattedBalance}</span>
             </div>
             <div className="modal-total">
               <span className="mt-label">Total Cost</span>
@@ -167,14 +220,14 @@ export default function Dashboard() {
         <div className="sidebar-logo">
           <div className="logo-mark">
             <div className="logo-icon">G</div>
-            Goodluck Store
+            Goodluckstore
           </div>
         </div>
 
         <div className="sidebar-balance">
           <div>
             <div className="balance-label">Wallet Balance</div>
-            <div className="balance-val">0.00</div>
+            <div className="balance-val">{balance.toLocaleString("en-NG", { minimumFractionDigits: 2 })}</div>
             <div className="balance-currency">NGN</div>
           </div>
           <button className="add-funds-mini" onClick={() => switchPanel("add-funds")}>+</button>
@@ -206,13 +259,13 @@ export default function Dashboard() {
 
         <div className="sidebar-bottom">
           <div className="user-row" onClick={() => switchPanel("profile")}>
-            <div className="user-avatar">JD</div>
+            <div className="user-avatar">{initials}</div>
             <div className="user-info">
-              <div className="uname">John Doe</div>
-              <div className="uemail">john@example.com</div>
+              <div className="uname">{username || "User"}</div>
+              <div className="uemail">{email}</div>
             </div>
           </div>
-          <button className="signout-btn" onClick={() => { toast("Signing out..."); navigate("/auth"); }}>
+          <button className="signout-btn" onClick={handleSignOut}>
             <i className="fa-solid fa-arrow-right-from-bracket" /> Sign Out
           </button>
         </div>
@@ -228,18 +281,14 @@ export default function Dashboard() {
           <div className="topbar-title">{PANEL_TITLES[activePanel]}</div>
           <div className="topbar-search">
             <span className="s-icon"><i className="fa-solid fa-magnifying-glass" /></span>
-            <input type="text" placeholder="Search accounts, platforms..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <input type="text" placeholder="Search for products or categories..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
           <div className="topbar-right">
             <div className="topbar-balance" onClick={() => switchPanel("add-funds")}>
               <span className="bal-icon"><i className="fa-solid fa-wallet" /></span>
-              <span className="bal-text">NGN 0.00</span>
+              <span className="bal-text">{formattedBalance}</span>
             </div>
-            <div className="notif-btn" onClick={() => toast("No new notifications")}>
-              <i className="fa-solid fa-bell" />
-              <div className="notif-dot" />
-            </div>
-            <div className="topbar-avatar" onClick={() => switchPanel("profile")}>JD</div>
+            <div className="topbar-avatar" onClick={() => switchPanel("profile")}>{initials}</div>
           </div>
         </div>
 
@@ -252,12 +301,11 @@ export default function Dashboard() {
                 <div className="welcome-inner">
                   <div className="welcome-left">
                     <div className="wtag">● Premium Marketplace</div>
-                    <h2>FIND YOUR<br /><span>PERFECT</span><br />ACCOUNT</h2>
-                    <p>Browse thousands of verified social media accounts. Instant delivery guaranteed.</p>
+                    <h2>Do Not Miss<br />Any <span>Update</span></h2>
+                    <p>Join Our Telegram Group Today! Access premium accounts across all major platforms.</p>
                   </div>
                   <div className="welcome-right">
                     <div className="wstat"><div className="wstat-num">10K+</div><div className="wstat-label">Accounts</div></div>
-                    <div className="wstat"><div className="wstat-num">50K+</div><div className="wstat-label">Verified</div></div>
                     <div className="wstat"><div className="wstat-num">98%</div><div className="wstat-label">Satisfied</div></div>
                   </div>
                 </div>
@@ -265,15 +313,11 @@ export default function Dashboard() {
 
               <div className="filter-row">
                 <span className="filter-label">Popular:</span>
-                {[{ label: "All", value: "all" }, { label: "Facebook", value: "facebook", icon: "fa-brands fa-facebook" }, { label: "Instagram", value: "instagram", icon: "fa-brands fa-instagram" }, { label: "TikTok", value: "tiktok", icon: "fa-brands fa-tiktok" }, { label: "YouTube", value: "youtube", icon: "fa-brands fa-youtube" }, { label: "Twitter", value: "twitter", icon: "fa-brands fa-twitter" }].map((f) => (
+                {[{ label: "All", value: "all" }, { label: "Instagram", value: "instagram" }, { label: "TikTok", value: "tiktok" }, { label: "YouTube", value: "youtube" }, { label: "Twitter", value: "twitter" }, { label: "Facebook", value: "facebook" }].map((f) => (
                   <button key={f.value} className={`filter-pill ${activeFilter === f.value ? "active" : ""}`} onClick={() => setActiveFilter(f.value)}>
-                    {f.icon && <i className={f.icon} />} {f.label}
+                    {f.label}
                   </button>
                 ))}
-                <div className="filter-search-mini">
-                  <span className="si"><i className="fa-solid fa-magnifying-glass" /></span>
-                  <input type="text" placeholder="Search accounts..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                </div>
               </div>
 
               {filteredAccounts.map((cat) => {
@@ -284,13 +328,10 @@ export default function Dashboard() {
                     <div className="category-header">
                       <div className="cat-head-left">
                         <div className="cat-platform-icon">
-                          {cat.catIcon ? <i className={cat.catIcon} /> : (cat as any).catEmoji}
+                          {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
                         </div>
                         <div>
                           <div className="cat-title">{cat.catTitle}</div>
-                          <div className="cat-tags">
-                            {cat.catTags.map((t) => <span key={t} className="cat-tag">{t}</span>)}
-                          </div>
                         </div>
                       </div>
                       <button className="cat-see-more" onClick={() => toast(`Loading more ${cat.catTitle}...`)}>See More →</button>
@@ -298,28 +339,23 @@ export default function Dashboard() {
                     {visibleItems.map((item, j) => (
                       <div key={j} className="account-row">
                         <div className="acc-platform-icon">
-                          {cat.catIcon ? <i className={cat.catIcon} /> : (cat as any).catEmoji}
+                          {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
                         </div>
                         <div className="acc-info">
                           <div className="acc-desc">{item.desc}</div>
-                          <div className="acc-meta">
-                            {item.tags.map((t, k) => (
-                              <span key={k} className={`acc-tag tag-${t.type}`}>{t.label}</span>
-                            ))}
-                          </div>
                         </div>
                         <div className="acc-stock-price">
-                          <div className="stock-block" style={{ textAlign: "center" }}>
+                          <div style={{ textAlign: "center" }}>
                             <div className="stock-label">Stock</div>
                             <div className={`stock-num ${item.stockClass}`}>{item.stock}</div>
                           </div>
-                          <div className="price-block" style={{ textAlign: "center" }}>
+                          <div style={{ textAlign: "center" }}>
                             <div className="price-label">Price</div>
                             <div className="price-val">{item.price}</div>
                           </div>
                         </div>
                         {item.stock > 0 ? (
-                          <button className="buy-btn" onClick={() => setModal({ title: item.modalTitle, desc: item.modalDesc, platform: cat.catTitle.split(" ").pop() || "", stock: item.stock, price: item.price })}>
+                          <button className="buy-btn" onClick={() => setModal({ title: item.modalTitle, desc: item.modalDesc, platform: cat.catTitle, stock: item.stock, price: item.price })}>
                             <i className="fa-solid fa-cart-shopping" /> BUY
                           </button>
                         ) : (
@@ -337,59 +373,48 @@ export default function Dashboard() {
           {/* ORDERS */}
           {activePanel === "orders" && (
             <div className="dash-panel">
-              <div className="stats-grid">
-                {[
-                  { icon: "📦", val: "12", label: "Total Orders", change: "+3 this month", up: true },
-                  { icon: "✅", val: "9", label: "Completed", change: "75% rate", up: true },
-                  { icon: "⏳", val: "2", label: "Pending", change: "Processing", up: false },
-                  { icon: "💸", val: "47K", label: "Total Spent (NGN)", change: "This month", up: true },
-                ].map((s, i) => (
-                  <div key={i} className="stat-card">
-                    <div className="stat-card-icon">{s.icon}</div>
-                    <div className="stat-card-val">{s.val}</div>
-                    <div className="stat-card-label">{s.label}</div>
-                    <div className={`stat-card-change ${s.up ? "change-up" : "change-down"}`}>{s.change}</div>
-                  </div>
-                ))}
+              <div style={{ padding: "24px 24px 0" }}>
+                <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>My Orders</h2>
+                <p style={{ fontSize: 14, color: "hsl(220 10% 50%)", marginBottom: 16 }}>View and manage your purchased accounts</p>
+                <button className="btn-refresh" onClick={loadUserData}>
+                  <i className="fa-solid fa-rotate" /> Refresh
+                </button>
               </div>
-              <div className="orders-table-wrap">
-                <div className="section-header" style={{ padding: "20px 0 14px" }}>
-                  <div className="section-head-left">
-                    <div className="section-hl" />
-                    <span className="section-title">Order History</span>
-                    <span className="section-badge">12 Orders</span>
-                  </div>
+
+              {orders.length === 0 ? (
+                <div className="orders-empty">
+                  <div className="orders-empty-icon">🔒</div>
+                  <h3>No Orders Yet</h3>
+                  <p>You haven't made any purchases yet. Browse our collection of premium social media accounts to get started.</p>
+                  <button className="btn-browse" onClick={() => switchPanel("home")}>
+                    <i className="fa-solid fa-cart-shopping" /> Browse Products
+                  </button>
                 </div>
-                <div className="table-container">
-                  <table className="dash-table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th><th>Account</th><th>Platform</th><th>Price</th><th>Date</th><th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ORDERS.map((o) => (
-                        <tr key={o.id}>
-                          <td className="order-id">{o.id}</td>
-                          <td>
-                            <div className="order-name">{o.name}</div>
-                            <div className="order-desc">{o.desc}</div>
-                          </td>
-                          <td>
-                            <div className="order-platform">
-                              <span className="order-icon">{o.icon ? <i className={o.icon} /> : o.emoji}</span>
-                              {o.platform}
-                            </div>
-                          </td>
-                          <td className="order-price">{o.price}</td>
-                          <td className="order-date">{o.date}</td>
-                          <td><span className={`status-pill status-${o.status}`}>{o.status.charAt(0).toUpperCase() + o.status.slice(1)}</span></td>
+              ) : (
+                <div className="orders-table-wrap">
+                  <div className="table-container">
+                    <table className="dash-table">
+                      <thead>
+                        <tr>
+                          <th>Order ID</th><th>Account</th><th>Platform</th><th>Price</th><th>Date</th><th>Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {orders.map((o) => (
+                          <tr key={o.id}>
+                            <td className="order-id">#{o.id.slice(0, 6)}</td>
+                            <td><div className="order-name">{o.product_title}</div></td>
+                            <td>{o.product_platform}</td>
+                            <td className="order-price">NGN {Number(o.total_price).toLocaleString("en-NG", { minimumFractionDigits: 2 })}</td>
+                            <td className="order-date">{new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
+                            <td><span className={`status-pill status-${o.status}`}>{o.status.charAt(0).toUpperCase() + o.status.slice(1)}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -397,40 +422,51 @@ export default function Dashboard() {
           {activePanel === "profile" && (
             <div className="dash-panel">
               <div className="profile-panel-inner">
-                <div className="profile-card-top">
-                  <div className="profile-avatar-big">JD</div>
-                  <div className="profile-info">
-                    <div className="pname">John Doe</div>
-                    <div className="pemail">john.doe@example.com</div>
-                    <div className="profile-badges">
-                      <span className="profile-badge badge-verified">✓ Verified</span>
-                      <span className="profile-badge badge-premium">⭐ Premium</span>
+                <div className="profile-form">
+                  <div className="form-section-title">Profile Information</div>
+                  <div className="form-grid">
+                    <div className="form-group full">
+                      <label className="form-label">Username</label>
+                      <div className="dash-form-input" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <i className="fa-solid fa-user" style={{ color: "hsl(220 10% 50%)" }} />
+                        {username || "—"}
+                      </div>
+                    </div>
+                    <div className="form-group full">
+                      <label className="form-label">Email Address</label>
+                      <div className="dash-form-input" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <i className="fa-solid fa-envelope" style={{ color: "hsl(220 10% 50%)" }} />
+                        {email}
+                      </div>
+                    </div>
+                    <div className="form-group full">
+                      <label className="form-label">Account Balance</label>
+                      <div className="dash-form-input" style={{ display: "flex", alignItems: "center", gap: 10, background: "hsl(0 80% 55% / 0.06)", borderColor: "hsl(0 80% 55% / 0.15)" }}>
+                        <i className="fa-solid fa-wallet" style={{ color: "hsl(0 80% 55%)" }} />
+                        <span style={{ fontWeight: 700 }}>{formattedBalance}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="profile-stats-row">
-                  <div className="profile-stat-card"><div className="profile-stat-val">12</div><div className="profile-stat-label">Orders Made</div></div>
-                  <div className="profile-stat-card"><div className="profile-stat-val">47K</div><div className="profile-stat-label">NGN Spent</div></div>
-                  <div className="profile-stat-card"><div className="profile-stat-val">0.00</div><div className="profile-stat-label">Balance (NGN)</div></div>
-                </div>
-                <div className="profile-form">
-                  <div className="form-section-title">Personal Information</div>
-                  <div className="form-grid">
-                    <div className="form-group"><label className="form-label">First Name</label><input type="text" className="dash-form-input" defaultValue="John" /></div>
-                    <div className="form-group"><label className="form-label">Last Name</label><input type="text" className="dash-form-input" defaultValue="Doe" /></div>
-                    <div className="form-group full"><label className="form-label">Email Address</label><input type="email" className="dash-form-input" defaultValue="john.doe@example.com" /></div>
-                    <div className="form-group"><label className="form-label">Phone Number</label><input type="tel" className="dash-form-input" placeholder="+234 000 000 0000" /></div>
-                    <div className="form-group"><label className="form-label">Country</label><input type="text" className="dash-form-input" placeholder="Nigeria" /></div>
-                  </div>
+
                   <div className="form-section-title" style={{ marginTop: 28 }}>Change Password</div>
+                  <p style={{ fontSize: 13, color: "hsl(220 10% 50%)", marginBottom: 20, marginTop: -10 }}>Update your password to keep your account secure</p>
                   <div className="form-grid">
-                    <div className="form-group full"><label className="form-label">Current Password</label><input type="password" className="dash-form-input" placeholder="••••••••" /></div>
-                    <div className="form-group"><label className="form-label">New Password</label><input type="password" className="dash-form-input" placeholder="••••••••" /></div>
-                    <div className="form-group"><label className="form-label">Confirm Password</label><input type="password" className="dash-form-input" placeholder="••••••••" /></div>
+                    <div className="form-group full">
+                      <label className="form-label">Current Password</label>
+                      <input type="password" className="dash-form-input" placeholder="Enter current password" />
+                    </div>
+                    <div className="form-group full">
+                      <label className="form-label">New Password</label>
+                      <input type="password" className="dash-form-input" placeholder="Enter new password" />
+                      <span style={{ fontSize: 11, color: "hsl(220 10% 50%)", marginTop: 4, display: "block" }}>Password must be at least 8 characters long</span>
+                    </div>
+                    <div className="form-group full">
+                      <label className="form-label">Confirm New Password</label>
+                      <input type="password" className="dash-form-input" placeholder="Confirm new password" />
+                    </div>
                   </div>
                   <div className="form-actions">
-                    <button className="btn-save" onClick={() => toast.success("Profile updated successfully!")}>Save Changes</button>
-                    <button className="btn-cancel">Cancel</button>
+                    <button className="btn-save" onClick={() => toast.success("Password updated successfully!")}>Update Password</button>
                   </div>
                 </div>
               </div>
@@ -454,7 +490,7 @@ export default function Dashboard() {
                       <div className="amount-presets">
                         {["NGN 1,000", "NGN 5,000", "NGN 10,000", "NGN 20,000", "NGN 50,000", "NGN 100,000"].map((amt) => (
                           <button key={amt} className={`preset-btn ${selectedPreset === amt ? "selected" : ""}`} onClick={() => setSelectedPreset(amt)}>
-                            {amt.replace(",000", "K").replace(",00", "K")}
+                            {amt}
                           </button>
                         ))}
                       </div>
@@ -481,18 +517,10 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <div className="funds-card">
-                      <div className="funds-card-title">Transaction History</div>
-                      <div className="trans-list">
-                        {TRANSACTIONS.map((t, i) => (
-                          <div key={i} className="trans-item">
-                            <div className={`trans-icon ${t.type}`}>{t.icon}</div>
-                            <div className="trans-desc">
-                              <div className="trans-name">{t.name}</div>
-                              <div className="trans-date">{t.date}</div>
-                            </div>
-                            <div className={`trans-amount ${t.type}`}>{t.amount}</div>
-                          </div>
-                        ))}
+                      <div className="funds-card-title">Current Balance</div>
+                      <div style={{ textAlign: "center", padding: "20px 0" }}>
+                        <div style={{ fontSize: 36, fontWeight: 800, color: "hsl(220 70% 25%)" }}>{formattedBalance}</div>
+                        <div style={{ fontSize: 13, color: "hsl(220 10% 50%)", marginTop: 4 }}>Available Balance</div>
                       </div>
                     </div>
                   </div>
@@ -540,7 +568,7 @@ export default function Dashboard() {
                       <label className="form-label">Message</label>
                       <textarea className="dash-form-input" placeholder="Describe your issue in detail..." />
                     </div>
-                    <button className="btn-submit-funds" onClick={() => toast.success("Support ticket submitted! We'll respond within 24hrs")}>Submit Ticket →</button>
+                    <button className="btn-submit-funds" onClick={() => toast.success("Support ticket submitted!")}>Submit Ticket →</button>
                   </div>
                   <div className="funds-card">
                     <div className="funds-card-title">Quick Contact</div>
