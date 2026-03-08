@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
