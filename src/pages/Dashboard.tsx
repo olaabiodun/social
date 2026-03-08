@@ -217,6 +217,7 @@ export default function Dashboard() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [modal, setModal] = useState<ModalData | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [selectedPreset, setSelectedPreset] = useState("NGN 5,000");
   const [selectedPayment, setSelectedPayment] = useState(0);
 
