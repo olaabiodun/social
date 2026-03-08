@@ -361,6 +361,49 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* CATEGORIES */}
+          {activePanel === "categories" && (
+            <div className="dash-panel">
+              <div className="category-breadcrumb">
+                <span className="breadcrumb-link" onClick={() => setActivePanel("home")}>Dashboard</span>
+                <span className="breadcrumb-sep">›</span>
+                <span className="breadcrumb-current">Categories</span>
+              </div>
+
+              <div className="categories-search-wrap">
+                <i className="fa-solid fa-magnifying-glass" />
+                <input
+                  type="text"
+                  placeholder="Search categories..."
+                  value={categorySearch}
+                  onChange={(e) => setCategorySearch(e.target.value)}
+                />
+              </div>
+
+              <div className="categories-grid">
+                {ACCOUNTS_DATA
+                  .filter((cat) => cat.catTitle.toLowerCase().includes(categorySearch.toLowerCase()))
+                  .map((cat, i) => (
+                    <div
+                      key={i}
+                      className="category-card"
+                      onClick={() => {
+                        setSelectedCategory(cat);
+                        setActivePanel("home");
+                        setCategorySearch("");
+                      }}
+                    >
+                      <div className="category-card-icon">
+                        {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
+                      </div>
+                      <div className="category-card-title">{cat.catTitle}</div>
+                      <div className="category-card-count">{cat.items.length} products</div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
           {/* HOME */}
           {activePanel === "home" && !selectedCategory && (
             <div className="dash-panel">
