@@ -1693,6 +1693,8 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
 /* Rules Modal */
 .rules-modal {
   max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
 }
 
 .rules-header {
