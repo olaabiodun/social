@@ -160,7 +160,7 @@ const LandingPage = () => {
         <div className="about-content reveal">
           <div className="section-tag text-primary-foreground">Who We Are</div>
           <h2 className="section-title">The Premier<br /><span style={{ color: "var(--blue)" }}>Social Media</span><br />Marketplace</h2>
-          <p className="section-sub">Goodluck StoreAccounts is a premier provider of established social media accounts across all major platforms. We specialize in delivering authentic, ready-to-use accounts with real followers, genuine engagement, and verified status options.</p>
+          <p className="section-sub"><p className="section-sub">Goodluck Store is a premier provider of established social media accounts across all major platforms. We specialize in delivering authentic, ready-to-use accounts with real followers, genuine engagement, and verified status options.</p> of established social media accounts across all major platforms. We specialize in delivering authentic, ready-to-use accounts with real followers, genuine engagement, and verified status options.</p>
           <div className="platforms-showcase">
             {[
             { icon: "fa-brands fa-instagram", name: "Instagram" },
@@ -288,7 +288,7 @@ const LandingPage = () => {
         <div className="testimonials-header reveal">
           <div className="section-tag">Customer Success Stories</div>
           <h2 className="section-title">What Our <span style={{ color: "var(--blue)" }}>Customers</span> Say</h2>
-          <p className="section-sub">Join thousands of satisfied customers who trusted Goodluck StoreAccounts to grow their social presence.</p>
+          <p className="section-sub">Join thousands of satisfied customers who <p className="section-sub">Join thousands of satisfied customers who trusted Goodluck Store to grow their social presence.</p> their social presence.</p>
         </div>
         <div className="testimonials-grid">
           {[
@@ -326,7 +326,7 @@ const LandingPage = () => {
           <div className="reveal">
             <div className="section-tag">Got Questions?</div>
             <h2 className="section-title">Frequently<br />Asked<br /><span style={{ color: "var(--blue)" }}>Questions</span></h2>
-            <p className="section-sub">Everything you need to know about buying social media accounts from Goodluck StoreAccounts.</p>
+            <p className="section-sub">Everything you need to know about <p className="section-sub">Everything you need to know about buying social media accounts from Goodluck Store.</p></p>
           </div>
           <div className="faq-list reveal reveal-delay-1">
             {faqItems.map((faq, i) =>
@@ -390,7 +390,7 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="footer-bottom">
-          <div className="footer-copy">© 2025 Goodluck StoreAccounts. All rights reserved.</div>
+          <div className="footer-copy"><div className="footer-copy">© 2025 Goodluck Store. All rights reserved.</div></div>
           <div className="footer-legal"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Refund Policy</a></div>
         </div>
       </footer>
