@@ -854,6 +854,81 @@ export default function Dashboard() {
             </div>
           )}
 
+          {/* MANUAL PAYMENTS */}
+          {activePanel === "manual-payments" && (
+            <div className="dash-panel">
+              <div className="funds-panel">
+                <div className="section-header" style={{ padding: "0 0 20px" }}>
+                  <div className="section-head-left">
+                    <div className="section-hl" />
+                    <span className="section-title">Manual Payments</span>
+                  </div>
+                </div>
+                <div className="funds-grid">
+                  <div>
+                    <div className="funds-card">
+                      <div className="funds-card-title">Bank Transfer Details</div>
+                      <p style={{ fontSize: 13, color: "hsl(220 10% 50%)", marginBottom: 16 }}>Send payment to any of the accounts below and submit proof of payment</p>
+
+                      <div className="manual-bank-card">
+                        <div className="manual-bank-name">🏦 First Bank of Nigeria</div>
+                        <div className="manual-bank-detail"><span>Account Name:</span> <strong>Goodluckstore Ltd</strong></div>
+                        <div className="manual-bank-detail"><span>Account Number:</span> <strong>0123456789</strong></div>
+                      </div>
+
+                      <div className="manual-bank-card">
+                        <div className="manual-bank-name">🏦 GTBank</div>
+                        <div className="manual-bank-detail"><span>Account Name:</span> <strong>Goodluckstore Ltd</strong></div>
+                        <div className="manual-bank-detail"><span>Account Number:</span> <strong>9876543210</strong></div>
+                      </div>
+
+                      <div className="manual-bank-card">
+                        <div className="manual-bank-name">₿ Cryptocurrency</div>
+                        <div className="manual-bank-detail"><span>BTC:</span> <strong style={{ fontSize: 11, wordBreak: "break-all" }}>bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</strong></div>
+                        <div className="manual-bank-detail"><span>USDT (TRC20):</span> <strong style={{ fontSize: 11, wordBreak: "break-all" }}>TN7x3fKr8oPcEqS5...</strong></div>
+                      </div>
+
+                      <div className="form-section-title" style={{ marginTop: 20 }}>Submit Proof of Payment</div>
+                      <div className="form-group" style={{ marginBottom: 14 }}>
+                        <label className="form-label">Amount Sent (NGN)</label>
+                        <input type="number" className="dash-form-input" placeholder="e.g. 5000" />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 14 }}>
+                        <label className="form-label">Transaction Reference</label>
+                        <input type="text" className="dash-form-input" placeholder="Bank reference or TX hash" />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 14 }}>
+                        <label className="form-label">Payment Method Used</label>
+                        <select className="dash-form-input">
+                          <option>Bank Transfer - First Bank</option>
+                          <option>Bank Transfer - GTBank</option>
+                          <option>Cryptocurrency - BTC</option>
+                          <option>Cryptocurrency - USDT</option>
+                        </select>
+                      </div>
+                      <button className="btn-submit-funds" onClick={() => toast.success("Payment proof submitted! We'll verify within 30 minutes.")}>Submit Payment Proof →</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="funds-card">
+                      <div className="funds-card-title">Current Balance</div>
+                      <div style={{ textAlign: "center", padding: "20px 0" }}>
+                        <div style={{ fontSize: 36, fontWeight: 800, color: "hsl(220 70% 25%)" }}>{formattedBalance}</div>
+                        <div style={{ fontSize: 13, color: "hsl(220 10% 50%)", marginTop: 4 }}>Available Balance</div>
+                      </div>
+                    </div>
+                    <div className="funds-card" style={{ marginTop: 16 }}>
+                      <div className="funds-card-title">⏳ Processing Times</div>
+                      <div className="manual-bank-detail"><span>Bank Transfer:</span> <strong>15-30 minutes</strong></div>
+                      <div className="manual-bank-detail"><span>Cryptocurrency:</span> <strong>5-15 minutes</strong></div>
+                      <div style={{ fontSize: 12, color: "hsl(220 10% 50%)", marginTop: 12 }}>Payments are verified manually. Contact support if not credited within 1 hour.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* SUPPORT */}
           {activePanel === "support" && (
             <div className="dash-panel">
