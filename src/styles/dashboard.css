@@ -1887,6 +1887,7 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   align-items: center;
   gap: 8px;
   font-size: 13px;
+  margin-top: 16px;
   margin-bottom: 16px;
   padding: 0 16px;
   color: hsl(var(--db-text-muted));
@@ -1949,6 +1950,12 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   flex-direction: column;
   gap: 12px;
   padding: 0 16px;
+}
+
+.category-detail-list .account-row {
+  border-radius: 10px;
+  border: 1px solid hsl(var(--db-border));
+  border-bottom: 1px solid hsl(var(--db-border));
 }
 
 /* Category detail filters */
