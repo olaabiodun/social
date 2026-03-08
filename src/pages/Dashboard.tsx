@@ -319,6 +319,71 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Rules Modal */}
+      {rulesOpen && (
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setRulesOpen(false); }}>
+          <div className="modal rules-modal">
+            <button className="modal-close" onClick={() => setRulesOpen(false)}>✕</button>
+            <div className="rules-header">
+              <div className="rules-icon">📋</div>
+              <h2 className="modal-title-text">RULES & GUIDELINES</h2>
+              <p className="modal-desc-text">Please read carefully before using purchased accounts</p>
+            </div>
+
+            <div className="rules-section">
+              <div className="rules-section-icon">🌐</div>
+              <div>
+                <h3 className="rules-section-title">Change of UserAgent</h3>
+                <p className="rules-section-text">Change of UserAgent in the browser and other actions with the browser. Use special browsers that change device fingerprints automatically.</p>
+              </div>
+            </div>
+
+            <div className="rules-section">
+              <div className="rules-section-icon">⏱️</div>
+              <div>
+                <h3 className="rules-section-title">Observe Limits</h3>
+                <p className="rules-section-text">Observe limits and conduct human-like activities. Avoid mass actions immediately after purchase.</p>
+              </div>
+            </div>
+
+            <div className="rules-section warning">
+              <div className="rules-section-icon">⚠️</div>
+              <div>
+                <h3 className="rules-section-title">Problem</h3>
+                <p className="rules-section-text">If you immediately start actively working with accounts (mass likes, mass messaging, etc.), your accounts can be quickly blocked.</p>
+              </div>
+            </div>
+
+            <div className="rules-section success">
+              <div className="rules-section-icon">✅</div>
+              <div>
+                <h3 className="rules-section-title">Solution</h3>
+                <p className="rules-section-text">For safe work with accounts, it is recommended to first perform some of the usual actions that a real user usually does when registering.</p>
+              </div>
+            </div>
+
+            <div className="rules-section">
+              <div className="rules-section-icon">💡</div>
+              <div>
+                <h3 className="rules-section-title">Example</h3>
+                <p className="rules-section-text">Fill out a profile, subscribe to several users, leave a few likes, add a few photos, make reposts, comments, etc.</p>
+              </div>
+            </div>
+
+            <div className="rules-disclaimer">
+              <strong>Important:</strong> We are not responsible for developers of programs, services and proxy providers. All accounts registered by us or our partners are created using private software and proxy servers not available to the public.
+            </div>
+            <div className="rules-disclaimer" style={{ marginTop: 8 }}>
+              By using our services, you agree to comply with all rules and regulations. Violation may result in account suspension or permanent ban without refund.
+            </div>
+
+            <button className="btn-confirm" onClick={() => setRulesOpen(false)}>
+              I Understand & Close
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar overlay */}
       {sidebarOpen && <div className="sidebar-overlay show" onClick={() => setSidebarOpen(false)} />}
 
