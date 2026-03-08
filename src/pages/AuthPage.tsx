@@ -310,17 +310,10 @@ const AuthPage = () => {
                     <button className="social-auth-btn" onClick={() => handleSocial("Twitter")}><span>𝕏</span> Twitter</button>
                   </div>
                   <div className="divider"><span>or register with email</span></div>
-                  <div className="name-grid">
-                    <div className="input-group">
-                      <label className="input-label">First Name</label>
-                      <div className="input-wrap"><span className="input-icon">👤</span><input type="text" className="input-field" value={suFname} onChange={(e) => setSuFname(e.target.value)} placeholder="John" /></div>
-                    </div>
-                    <div className="input-group">
-                      <label className="input-label">Last Name</label>
-                      <div className="input-wrap"><span className="input-icon">👤</span><input type="text" className="input-field" value={suLname} onChange={(e) => setSuLname(e.target.value)} placeholder="Doe" /></div>
-                    </div>
+                  <div className="input-group">
+                    <label className="input-label">Username</label>
+                    <div className="input-wrap"><span className="input-icon">👤</span><input type="text" className="input-field" value={suFname} onChange={(e) => setSuFname(e.target.value)} placeholder="johndoe" /></div>
                   </div>
-                  <div style={{ height: 18 }} />
                   <div className="input-group">
                     <label className="input-label">Email Address</label>
                     <div className="input-wrap">
@@ -328,20 +321,6 @@ const AuthPage = () => {
                       <input type="email" className={`input-field${suEmailErr ? " error" : ""}`} value={suEmail} onChange={(e) => {setSuEmail(e.target.value);setSuEmailErr(false);}} placeholder="you@example.com" />
                     </div>
                     <div className={`input-error${suEmailErr ? " show" : ""}`}>⚠ Please enter a valid email</div>
-                  </div>
-                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleSignupStep1} disabled={loading}>
-                    <span className="btn-text">Continue →</span>
-                  </button>
-                </div>
-              }
-
-              {/* Step 2 */}
-              {signupStep === 2 &&
-              <div>
-                  <BackButton onClick={() => setSignupStep(1)} />
-                  <div className="form-header">
-                    <div className="form-tag">Secure Your Account</div>
-                    <h2 className="form-title">SET<br />PASSWORD</h2>
                   </div>
                   <div className="input-group">
                     <label className="input-label">Password</label>
@@ -351,15 +330,6 @@ const AuthPage = () => {
                       <button className="eye-toggle" onClick={() => setShowSuPw(!showSuPw)}>{showSuPw ? "🙈" : "👁"}</button>
                     </div>
                     {showPwStrength && <PasswordStrengthBars score={pwStrength} />}
-                  </div>
-                  <div className="input-group">
-                    <label className="input-label">Confirm Password</label>
-                    <div className="input-wrap">
-                      <span className="input-icon">🔒</span>
-                      <input type={showSuPw2 ? "text" : "password"} className={`input-field${suPwErr ? " error" : ""}`} value={suPw2} onChange={(e) => {setSuPw2(e.target.value);setSuPwErr(false);}} placeholder="Repeat your password" />
-                      <button className="eye-toggle" onClick={() => setShowSuPw2(!showSuPw2)}>{showSuPw2 ? "🙈" : "👁"}</button>
-                    </div>
-                    <div className={`input-error${suPwErr ? " show" : ""}`}>{suPwErrMsg}</div>
                   </div>
                   <div className="checkbox-group">
                     <div className={`custom-checkbox${termsChecked ? " checked" : ""}`} onClick={() => setTermsChecked(!termsChecked)} />
