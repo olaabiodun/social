@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import "../styles/dashboard.css";
 
-type PanelName = "home" | "orders" | "profile" | "add-funds" | "support";
+type PanelName = "home" | "orders" | "profile" | "add-funds" | "support" | "categories";
 
 interface ModalData {
   title: string;
