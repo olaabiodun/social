@@ -351,7 +351,8 @@ export default function Dashboard() {
                 key={i}
                 className={`dash-nav-item ${nav.panel && activePanel === nav.panel && !selectedCategory ? "active" : ""}`}
                 onClick={() => {
-                  if (nav.panel) switchPanel(nav.panel);
+                  if (nav.label === "Rules") { setRulesOpen(true); setSidebarOpen(false); }
+                  else if (nav.panel) switchPanel(nav.panel);
                   else if (nav.action) nav.action();
                 }}
               >
