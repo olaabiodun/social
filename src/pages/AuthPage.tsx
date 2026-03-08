@@ -17,7 +17,8 @@ const AuthPage = () => {
   const [showLoginPw, setShowLoginPw] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const [suUsername, setSuUsername] = useState("");
+  const [suFname, setSuFname] = useState("");
+  const [suLname, setSuLname] = useState("");
   const [suEmail, setSuEmail] = useState("");
   const [suEmailErr, setSuEmailErr] = useState(false);
   const [suPw, setSuPw] = useState("");
@@ -66,7 +67,7 @@ const AuthPage = () => {
 
   const simulateLoading = (cb: () => void) => {
     setLoading(true);
-    setTimeout(() => { setLoading(false); cb(); }, 1200 + Math.random() * 400);
+    setTimeout(() => {setLoading(false);cb();}, 1200 + Math.random() * 400);
   };
 
   const checkStrength = (pw: string) => {
@@ -87,20 +88,24 @@ const AuthPage = () => {
   // Login
   const handleLogin = () => {
     let valid = true;
-    if (!validateEmail(loginEmail)) { setLoginEmailErr(true); valid = false; }
-    if (loginPassword.length < 6) { setLoginPwErr(true); valid = false; }
+    if (!validateEmail(loginEmail)) {setLoginEmailErr(true);valid = false;}
+    if (loginPassword.length < 6) {setLoginPwErr(true);valid = false;}
     if (!valid) return;
     simulateLoading(() => showToast("✅ Welcome back! Redirecting..."));
   };
 
-  // Signup submit
-  const handleSignupSubmit = () => {
-    if (!suUsername.trim()) { showToast("⚠ Please enter a username"); return; }
-    if (!validateEmail(suEmail)) { setSuEmailErr(true); return; }
-    if (suPw.length < 6) { setSuPwErr(true); setSuPwErrMsg("⚠ Password must be at least 6 characters"); return; }
-    if (suPw !== suPw2) { setSuPwErr(true); setSuPwErrMsg("⚠ Passwords do not match"); return; }
-    if (!termsChecked) { showToast("⚠ Please accept the terms to continue"); return; }
+  // Signup step 1
+  const handleSignupStep1 = () => {
+    if (!validateEmail(suEmail)) {setSuEmailErr(true);return;}
     simulateLoading(() => setSignupStep(2));
+  };
+
+  // Signup step 2
+  const handleSignupStep2 = () => {
+    if (suPw.length < 6) {setSuPwErr(true);setSuPwErrMsg("⚠ Password must be at least 6 characters");return;}
+    if (suPw !== suPw2) {setSuPwErr(true);setSuPwErrMsg("⚠ Passwords do not match");return;}
+    if (!termsChecked) {showToast("⚠ Please accept the terms to continue");return;}
+    simulateLoading(() => setSignupStep(3));
   };
 
   // OTP handler
@@ -123,7 +128,7 @@ const AuthPage = () => {
 
   // Verify signup OTP
   const verifySignupOtp = () => {
-    if (signupOtp.join("").length < 6) { showToast("⚠ Please enter the full 6-digit code"); return; }
+    if (signupOtp.join("").length < 6) {showToast("⚠ Please enter the full 6-digit code");return;}
     simulateLoading(() => {
       showToast("✅ Account created! Welcome to Goodluck Store!");
       setTimeout(() => showPage("login"), 1800);
@@ -132,17 +137,17 @@ const AuthPage = () => {
 
   // Forgot password
   const sendReset = () => {
-    if (!validateEmail(forgotEmail)) { setForgotEmailErr(true); return; }
+    if (!validateEmail(forgotEmail)) {setForgotEmailErr(true);return;}
     simulateLoading(() => setForgotStep("B"));
   };
 
   const verifyResetOtp = () => {
-    if (forgotOtp.join("").length < 6) { showToast("⚠ Please enter the full 6-digit code"); return; }
+    if (forgotOtp.join("").length < 6) {showToast("⚠ Please enter the full 6-digit code");return;}
     simulateLoading(() => setForgotStep("C"));
   };
 
   const resetPassword = () => {
-    if (newPw.length < 6 || newPw !== newPw2) { setNewPwErr(true); return; }
+    if (newPw.length < 6 || newPw !== newPw2) {setNewPwErr(true);return;}
     simulateLoading(() => setForgotStep("D"));
   };
 
@@ -167,40 +172,40 @@ const AuthPage = () => {
   const strengthLevels = ["", "weak", "fair", "good", "strong"];
   const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
 
-  const BackButton = ({ onClick, label = "Back" }: { onClick: () => void; label?: string }) => (
-    <button className="back-btn" onClick={onClick}>
+  const BackButton = ({ onClick, label = "Back" }: {onClick: () => void;label?: string;}) =>
+  <button className="back-btn" onClick={onClick}>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
       {label}
-    </button>
-  );
+    </button>;
 
-  const OtpInputs = ({ otp, setOtp, refs }: { otp: string[]; setOtp: (v: string[]) => void; refs: React.MutableRefObject<(HTMLInputElement | null)[]> }) => (
-    <div className="otp-group">
-      {otp.map((v, i) => (
-        <input
-          key={i}
-          type="text"
-          maxLength={1}
-          className={`otp-input${v ? " filled" : ""}`}
-          value={v}
-          ref={(el) => { refs.current[i] = el; }}
-          onChange={(e) => handleOtp(otp, setOtp, refs, i, e.target.value)}
-          onKeyDown={(e) => handleOtpBack(otp, setOtp, refs, i, e)}
-        />
-      ))}
-    </div>
-  );
 
-  const PasswordStrengthBars = ({ score }: { score: number }) => (
-    <div className="pw-strength show">
+  const OtpInputs = ({ otp, setOtp, refs }: {otp: string[];setOtp: (v: string[]) => void;refs: React.MutableRefObject<(HTMLInputElement | null)[]>;}) =>
+  <div className="otp-group">
+      {otp.map((v, i) =>
+    <input
+      key={i}
+      type="text"
+      maxLength={1}
+      className={`otp-input${v ? " filled" : ""}`}
+      value={v}
+      ref={(el) => {refs.current[i] = el;}}
+      onChange={(e) => handleOtp(otp, setOtp, refs, i, e.target.value)}
+      onKeyDown={(e) => handleOtpBack(otp, setOtp, refs, i, e)} />
+
+    )}
+    </div>;
+
+
+  const PasswordStrengthBars = ({ score }: {score: number;}) =>
+  <div className="pw-strength show">
       <div className="pw-bars">
-        {[0, 1, 2, 3].map((i) => (
-          <div key={i} className={`pw-bar${i < score ? ` ${strengthLevels[score]}` : ""}`} />
-        ))}
+        {[0, 1, 2, 3].map((i) =>
+      <div key={i} className={`pw-bar${i < score ? ` ${strengthLevels[score]}` : ""}`} />
+      )}
       </div>
       <div className="pw-label">{score ? `${strengthLabels[score]} password` : "Enter your password"}</div>
-    </div>
-  );
+    </div>;
+
 
   return (
     <div className="auth-page-wrapper">
@@ -236,7 +241,7 @@ const AuthPage = () => {
             <div className="left-stats">
               <div className="lstat"><div className="lstat-num">10K+</div><div className="lstat-label">Accounts</div></div>
               <div className="lstat"><div className="lstat-num">98%</div><div className="lstat-label">Satisfied</div></div>
-              <div className="lstat"><div className="lstat-num">24/7</div><div className="lstat-label">Support</div></div>
+              
             </div>
           </div>
           <div className="left-reviews">
@@ -274,7 +279,7 @@ const AuthPage = () => {
                 <label className="input-label">Email Address</label>
                 <div className="input-wrap">
                   <span className="input-icon">✉</span>
-                  <input type="email" className={`input-field${loginEmailErr ? " error" : ""}`} value={loginEmail} onChange={(e) => { setLoginEmail(e.target.value); setLoginEmailErr(false); }} placeholder="you@example.com" />
+                  <input type="email" className={`input-field${loginEmailErr ? " error" : ""}`} value={loginEmail} onChange={(e) => {setLoginEmail(e.target.value);setLoginEmailErr(false);}} placeholder="you@example.com" />
                 </div>
                 <div className={`input-error${loginEmailErr ? " show" : ""}`}>⚠ Please enter a valid email</div>
               </div>
@@ -282,7 +287,7 @@ const AuthPage = () => {
                 <label className="input-label">Password</label>
                 <div className="input-wrap">
                   <span className="input-icon">🔒</span>
-                  <input type={showLoginPw ? "text" : "password"} className={`input-field${loginPwErr ? " error" : ""}`} value={loginPassword} onChange={(e) => { setLoginPassword(e.target.value); setLoginPwErr(false); }} placeholder="Enter your password" />
+                  <input type={showLoginPw ? "text" : "password"} className={`input-field${loginPwErr ? " error" : ""}`} value={loginPassword} onChange={(e) => {setLoginPassword(e.target.value);setLoginPwErr(false);}} placeholder="Enter your password" />
                   <button className="eye-toggle" onClick={() => setShowLoginPw(!showLoginPw)}>{showLoginPw ? "🙈" : "👁"}</button>
                 </div>
                 <div className={`input-error${loginPwErr ? " show" : ""}`}>⚠ Password must be at least 6 characters</div>
@@ -302,12 +307,12 @@ const AuthPage = () => {
             {/* SIGNUP */}
             <div className={`auth-page-view${currentPage === "signup" ? " active" : ""}`}>
               <div className="progress-dots">
-                {[1, 2].map((n) => <div key={n} className={`pdot${n <= signupStep ? " active" : ""}`} />)}
+                {[1, 2, 3].map((n) => <div key={n} className={`pdot${n <= signupStep ? " active" : ""}`} />)}
               </div>
 
-              {/* Step 1 - All fields */}
-              {signupStep === 1 && (
-                <div>
+              {/* Step 1 */}
+              {signupStep === 1 &&
+              <div>
                   <div className="form-header">
                     <div className="form-tag">Create Account</div>
                     <h2 className="form-title">GET STARTED</h2>
@@ -318,23 +323,44 @@ const AuthPage = () => {
                     <button className="social-auth-btn" onClick={() => handleSocial("Twitter")}><span>𝕏</span> Twitter</button>
                   </div>
                   <div className="divider"><span>or register with email</span></div>
-                  <div className="input-group">
-                    <label className="input-label">Username</label>
-                    <div className="input-wrap"><span className="input-icon">👤</span><input type="text" className="input-field" value={suUsername} onChange={(e) => setSuUsername(e.target.value)} placeholder="Choose a username" /></div>
+                  <div className="name-grid">
+                    <div className="input-group">
+                      <label className="input-label">First Name</label>
+                      <div className="input-wrap"><span className="input-icon">👤</span><input type="text" className="input-field" value={suFname} onChange={(e) => setSuFname(e.target.value)} placeholder="John" /></div>
+                    </div>
+                    <div className="input-group">
+                      <label className="input-label">Last Name</label>
+                      <div className="input-wrap"><span className="input-icon">👤</span><input type="text" className="input-field" value={suLname} onChange={(e) => setSuLname(e.target.value)} placeholder="Doe" /></div>
+                    </div>
                   </div>
+                  <div style={{ height: 18 }} />
                   <div className="input-group">
                     <label className="input-label">Email Address</label>
                     <div className="input-wrap">
                       <span className="input-icon">✉</span>
-                      <input type="email" className={`input-field${suEmailErr ? " error" : ""}`} value={suEmail} onChange={(e) => { setSuEmail(e.target.value); setSuEmailErr(false); }} placeholder="you@example.com" />
+                      <input type="email" className={`input-field${suEmailErr ? " error" : ""}`} value={suEmail} onChange={(e) => {setSuEmail(e.target.value);setSuEmailErr(false);}} placeholder="you@example.com" />
                     </div>
                     <div className={`input-error${suEmailErr ? " show" : ""}`}>⚠ Please enter a valid email</div>
+                  </div>
+                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleSignupStep1} disabled={loading}>
+                    <span className="btn-text">Continue →</span>
+                  </button>
+                </div>
+              }
+
+              {/* Step 2 */}
+              {signupStep === 2 &&
+              <div>
+                  <BackButton onClick={() => setSignupStep(1)} />
+                  <div className="form-header">
+                    <div className="form-tag">Secure Your Account</div>
+                    <h2 className="form-title">SET<br />PASSWORD</h2>
                   </div>
                   <div className="input-group">
                     <label className="input-label">Password</label>
                     <div className="input-wrap">
                       <span className="input-icon">🔒</span>
-                      <input type={showSuPw ? "text" : "password"} className="input-field" value={suPw} onChange={(e) => { setSuPw(e.target.value); const s = checkStrength(e.target.value); setPwStrength(s); setShowPwStrength(true); setSuPwErr(false); }} placeholder="Create a strong password" />
+                      <input type={showSuPw ? "text" : "password"} className="input-field" value={suPw} onChange={(e) => {setSuPw(e.target.value);const s = checkStrength(e.target.value);setPwStrength(s);setShowPwStrength(true);setSuPwErr(false);}} placeholder="Create a strong password" />
                       <button className="eye-toggle" onClick={() => setShowSuPw(!showSuPw)}>{showSuPw ? "🙈" : "👁"}</button>
                     </div>
                     {showPwStrength && <PasswordStrengthBars score={pwStrength} />}
@@ -343,7 +369,7 @@ const AuthPage = () => {
                     <label className="input-label">Confirm Password</label>
                     <div className="input-wrap">
                       <span className="input-icon">🔒</span>
-                      <input type={showSuPw2 ? "text" : "password"} className={`input-field${suPwErr ? " error" : ""}`} value={suPw2} onChange={(e) => { setSuPw2(e.target.value); setSuPwErr(false); }} placeholder="Repeat your password" />
+                      <input type={showSuPw2 ? "text" : "password"} className={`input-field${suPwErr ? " error" : ""}`} value={suPw2} onChange={(e) => {setSuPw2(e.target.value);setSuPwErr(false);}} placeholder="Repeat your password" />
                       <button className="eye-toggle" onClick={() => setShowSuPw2(!showSuPw2)}>{showSuPw2 ? "🙈" : "👁"}</button>
                     </div>
                     <div className={`input-error${suPwErr ? " show" : ""}`}>{suPwErrMsg}</div>
@@ -354,16 +380,16 @@ const AuthPage = () => {
                       I agree to the <a>Terms of Service</a> and <a>Privacy Policy</a>
                     </label>
                   </div>
-                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleSignupSubmit} disabled={loading}>
+                  <button className={`btn-submit${loading ? " loading" : ""}`} onClick={handleSignupStep2} disabled={loading}>
                     <span className="btn-text">Create Account →</span>
                   </button>
                 </div>
-              )}
+              }
 
-              {/* Step 2 - Verify */}
-              {signupStep === 2 && (
-                <div>
-                  <BackButton onClick={() => setSignupStep(1)} />
+              {/* Step 3 - Verify */}
+              {signupStep === 3 &&
+              <div>
+                  <BackButton onClick={() => setSignupStep(2)} />
                   <div className="form-header">
                     <div className="form-tag">Almost There</div>
                     <h2 className="form-title">VERIFY<br />EMAIL</h2>
@@ -378,15 +404,15 @@ const AuthPage = () => {
                     <button className="resend-btn" disabled={resendDisabled} onClick={resendCode}>{resendText}</button>
                   </div>
                 </div>
-              )}
+              }
             </div>
 
             {/* FORGOT PASSWORD */}
             <div className={`auth-page-view${currentPage === "forgot" ? " active" : ""}`}>
               <BackButton onClick={() => showPage("login")} label="Back to Sign In" />
 
-              {forgotStep === "A" && (
-                <div>
+              {forgotStep === "A" &&
+              <div>
                   <div className="form-header">
                     <div className="form-tag">Password Recovery</div>
                     <h2 className="form-title">FORGOT<br />PASSWORD?</h2>
@@ -396,7 +422,7 @@ const AuthPage = () => {
                     <label className="input-label">Email Address</label>
                     <div className="input-wrap">
                       <span className="input-icon">✉</span>
-                      <input type="email" className={`input-field${forgotEmailErr ? " error" : ""}`} value={forgotEmail} onChange={(e) => { setForgotEmail(e.target.value); setForgotEmailErr(false); }} placeholder="you@example.com" />
+                      <input type="email" className={`input-field${forgotEmailErr ? " error" : ""}`} value={forgotEmail} onChange={(e) => {setForgotEmail(e.target.value);setForgotEmailErr(false);}} placeholder="you@example.com" />
                     </div>
                     <div className={`input-error${forgotEmailErr ? " show" : ""}`}>⚠ Please enter a valid email</div>
                   </div>
@@ -404,10 +430,10 @@ const AuthPage = () => {
                     <span className="btn-text">Send Reset Code →</span>
                   </button>
                 </div>
-              )}
+              }
 
-              {forgotStep === "B" && (
-                <div>
+              {forgotStep === "B" &&
+              <div>
                   <div className="form-header">
                     <div className="form-tag">Check Your Email</div>
                     <h2 className="form-title">ENTER<br />CODE</h2>
@@ -422,10 +448,10 @@ const AuthPage = () => {
                     <button className="resend-btn" disabled={resendDisabled} onClick={resendCode}>{resendText}</button>
                   </div>
                 </div>
-              )}
+              }
 
-              {forgotStep === "C" && (
-                <div>
+              {forgotStep === "C" &&
+              <div>
                   <div className="form-header">
                     <div className="form-tag">Almost Done</div>
                     <h2 className="form-title">NEW<br />PASSWORD</h2>
@@ -435,7 +461,7 @@ const AuthPage = () => {
                     <label className="input-label">New Password</label>
                     <div className="input-wrap">
                       <span className="input-icon">🔒</span>
-                      <input type={showNewPw ? "text" : "password"} className="input-field" value={newPw} onChange={(e) => { setNewPw(e.target.value); setNewPwStrength(checkStrength(e.target.value)); setNewPwErr(false); }} placeholder="Create new password" />
+                      <input type={showNewPw ? "text" : "password"} className="input-field" value={newPw} onChange={(e) => {setNewPw(e.target.value);setNewPwStrength(checkStrength(e.target.value));setNewPwErr(false);}} placeholder="Create new password" />
                       <button className="eye-toggle" onClick={() => setShowNewPw(!showNewPw)}>{showNewPw ? "🙈" : "👁"}</button>
                     </div>
                     <PasswordStrengthBars score={newPwStrength} />
@@ -444,7 +470,7 @@ const AuthPage = () => {
                     <label className="input-label">Confirm New Password</label>
                     <div className="input-wrap">
                       <span className="input-icon">🔒</span>
-                      <input type={showNewPw2 ? "text" : "password"} className={`input-field${newPwErr ? " error" : ""}`} value={newPw2} onChange={(e) => { setNewPw2(e.target.value); setNewPwErr(false); }} placeholder="Repeat new password" />
+                      <input type={showNewPw2 ? "text" : "password"} className={`input-field${newPwErr ? " error" : ""}`} value={newPw2} onChange={(e) => {setNewPw2(e.target.value);setNewPwErr(false);}} placeholder="Repeat new password" />
                       <button className="eye-toggle" onClick={() => setShowNewPw2(!showNewPw2)}>{showNewPw2 ? "🙈" : "👁"}</button>
                     </div>
                     <div className={`input-error${newPwErr ? " show" : ""}`}>⚠ Passwords do not match</div>
@@ -453,10 +479,10 @@ const AuthPage = () => {
                     <span className="btn-text">Reset Password →</span>
                   </button>
                 </div>
-              )}
+              }
 
-              {forgotStep === "D" && (
-                <div className="success-msg show">
+              {forgotStep === "D" &&
+              <div className="success-msg show">
                   <div className="success-icon">✓</div>
                   <h3>PASSWORD RESET!</h3>
                   <p>Your password has been successfully updated. You can now sign in with your new password.</p>
@@ -464,13 +490,13 @@ const AuthPage = () => {
                     <span className="btn-text">Go to Sign In →</span>
                   </button>
                 </div>
-              )}
+              }
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default AuthPage;
