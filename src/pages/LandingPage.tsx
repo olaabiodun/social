@@ -326,7 +326,7 @@ const LandingPage = () => {
           <div className="reveal">
             <div className="section-tag">Got Questions?</div>
             <h2 className="section-title">Frequently<br />Asked<br /><span style={{ color: "var(--blue)" }}>Questions</span></h2>
-            <p className="section-sub">Everything you need to know about buying social media accounts from Goodluck StoreAccounts.</p>
+            <p className="section-sub">Everything you need to know about <p className="section-sub">Everything you need to know about buying social media accounts from Goodluck Store.</p></p>
           </div>
           <div className="faq-list reveal reveal-delay-1">
             {faqItems.map((faq, i) =>
