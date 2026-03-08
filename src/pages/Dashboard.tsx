@@ -228,7 +228,7 @@ const PANEL_TITLES: Record<PanelName, string> = {
 export default function Dashboard() {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<PanelName>("home");
-  const [selectedCategory, setSelectedCategory] = useState<typeof ACCOUNTS_DATA[0] | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [categorySearch, setCategorySearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
