@@ -62,6 +62,16 @@ interface Transaction {
   created_at: string;
 }
 
+interface Message {
+  id: string;
+  order_id: string | null;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 interface UserRole {
   id: string;
   user_id: string;
