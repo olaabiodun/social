@@ -1952,6 +1952,12 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   padding: 0 16px;
 }
 
+.category-detail-list .account-row {
+  border-radius: 10px;
+  border: 1px solid hsl(var(--db-border));
+  border-bottom: 1px solid hsl(var(--db-border));
+}
+
 /* Category detail filters */
 .category-filters {
   display: flex;
