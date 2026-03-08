@@ -304,7 +304,9 @@ export default function Dashboard() {
           {activePanel === "home" && selectedCategory && (
             <div className="dash-panel">
               <div className="category-breadcrumb">
-                <span className="breadcrumb-link" onClick={() => setSelectedCategory(null)}>Dashboard</span>
+                <span className="breadcrumb-link" onClick={() => { setSelectedCategory(null); setActivePanel("home"); }}>Dashboard</span>
+                <span className="breadcrumb-sep">›</span>
+                <span className="breadcrumb-link" onClick={() => { setSelectedCategory(null); setActivePanel("categories"); }}>Categories</span>
                 <span className="breadcrumb-sep">›</span>
                 <span className="breadcrumb-current">{selectedCategory.catTitle.toUpperCase()}</span>
               </div>
