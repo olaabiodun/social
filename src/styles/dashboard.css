@@ -1661,20 +1661,65 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
 @media (max-width: 600px) {
   .stats-grid { grid-template-columns: 1fr 1fr; gap: 12px; padding: 16px 16px 0; }
   .welcome-banner { padding: 16px 16px 0; }
-  .filter-row { padding: 14px 16px 0; }
+  .filter-row { padding: 14px 16px 0; gap: 8px; }
+  .filter-pill { padding: 6px 12px; font-size: 11px; }
   .section-header { padding: 16px 16px 0; }
   .category-block { margin: 14px 16px 0; }
   .funds-grid, .support-grid { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
   .form-group.full { grid-column: span 1; }
   .profile-stats-row { grid-template-columns: repeat(3, 1fr); }
-  .acc-stock-price { gap: 12px; }
   .amount-presets { grid-template-columns: 1fr 1fr; }
   .orders-table-wrap { overflow-x: auto; padding: 0 16px 16px; }
   .dash-table { min-width: 560px; }
   .profile-panel-inner, .funds-panel, .support-panel { padding: 16px; }
-  .acc-desc { white-space: normal; }
-  .account-row { flex-wrap: wrap; }
   .profile-card-top { flex-direction: column; text-align: center; }
   .profile-badges { justify-content: center; }
+
+  /* Card layout for account rows on mobile */
+  .account-row {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .acc-platform-icon {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+  }
+
+  .account-row {
+    position: relative;
+  }
+
+  .acc-info {
+    width: 100%;
+  }
+
+  .acc-desc {
+    white-space: normal;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .acc-stock-price {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+    padding-left: 56px;
+  }
+
+  .buy-btn {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    padding: 10px 20px;
+  }
+
+  .stock-num { font-size: 18px; }
+  .price-val { font-size: 13px; }
+
+  .support-topics { grid-template-columns: 1fr 1fr; }
 }
