@@ -382,6 +382,36 @@ export default function Dashboard() {
                   </div>
                 );
               })}
+              {/* Recent Orders Section */}
+              <div className="recent-orders-section">
+                <div className="recent-orders-header">
+                  <span className="recent-dot" /> RECENT ORDERS
+                </div>
+                <div className="recent-orders-table">
+                  <div className="recent-orders-th">
+                    <span>ITEM</span><span>TIME</span>
+                  </div>
+                  {[
+                    { user: "Phoenix.", product: "PRIVATE PROXIES", price: "₦4,000", time: "10 minutes ago" },
+                    { user: "Sage.", product: "MALE POF(NOT PAI...", price: "₦6,000", time: "Just now" },
+                    { user: "Cameron.", product: "POF AGED ACCOUNT", price: "₦4,500", time: "25 minutes ago" },
+                    { user: "Avery.", product: "DATACENTER PROXY", price: "₦3,500", time: "5 minutes ago" },
+                  ].map((r, i) => (
+                    <div key={i} className="recent-order-row">
+                      <div className="recent-order-info">
+                        <div><span className="recent-user">{r.user}</span> <span className="recent-bought">just bought</span></div>
+                        <div className="recent-product">{r.product}</div>
+                        <div className="recent-price">{r.price}</div>
+                      </div>
+                      <div className="recent-time">{r.time}</div>
+                    </div>
+                  ))}
+                  <div className="recent-orders-footer">
+                    <span className="recent-dot" /> Live updates · 5 recent orders
+                  </div>
+                </div>
+              </div>
+
               <div style={{ height: 28 }} />
             </div>
           )}
