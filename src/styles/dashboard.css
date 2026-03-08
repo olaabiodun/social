@@ -781,12 +781,23 @@
 
 .acc-info { flex: 1; min-width: 0; }
 
-.acc-desc {
+.acc-desc-title {
   font-size: 13px;
+  font-weight: 700;
   color: hsl(var(--db-text));
+  margin-bottom: 2px;
+}
+
+.acc-desc {
+  font-size: 11px;
+  color: hsl(var(--db-text-muted));
   font-weight: 400;
   margin-bottom: 5px;
-  line-height: 1.5;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .acc-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -1490,8 +1501,8 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   background: hsl(var(--db-white));
   border: 1px solid hsl(var(--db-border));
   border-radius: 16px;
-  padding: 32px;
-  width: 100%;
+  padding: 24px 18px;
+  width: calc(100% - 32px);
   max-width: 440px;
   animation: modalIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
   position: relative;
