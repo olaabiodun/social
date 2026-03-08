@@ -11,6 +11,7 @@ interface Profile {
   user_id: string;
   username: string | null;
   created_at: string;
+  is_blocked: boolean;
 }
 
 interface Wallet {
