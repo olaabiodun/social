@@ -244,6 +244,12 @@ export default function Dashboard() {
   const [email, setEmail] = useState("");
   const [balance, setBalance] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
+  const [dbProducts, setDbProducts] = useState<Product[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [msgInput, setMsgInput] = useState("");
+  const [userId, setUserId] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
   const { isAdmin } = useAdminCheck();
 
   useEffect(() => {
