@@ -315,6 +315,21 @@ export default function Dashboard() {
                 </div>
               </div>
 
+              <div className="category-filters">
+                <span className="filter-label">Filter by:</span>
+                <select className="filter-select"><option>Region</option><option>All Regions</option><option>Europe</option><option>USA</option><option>UK</option></select>
+                <select className="filter-select"><option>Price Range</option><option>All Prices</option><option>Under ₦5,000</option><option>₦5,000 - ₦10,000</option><option>Above ₦10,000</option></select>
+                <select className="filter-select"><option>Age</option><option>All Ages</option><option>1-3 Years</option><option>4-6 Years</option><option>7+ Years</option></select>
+              </div>
+
+              <div className="category-sort-row">
+                <div className="view-toggle">
+                  <button className="active"><i className="fa-solid fa-list" /></button>
+                  <button><i className="fa-solid fa-grip" /></button>
+                </div>
+                <select className="filter-select"><option>Sort: Newest</option><option>Price: Low to High</option><option>Price: High to Low</option><option>Stock: High to Low</option></select>
+              </div>
+
               <div className="category-detail-list">
                 {selectedCategory.items.map((item, j) => (
                   <div key={j} className="account-row">
