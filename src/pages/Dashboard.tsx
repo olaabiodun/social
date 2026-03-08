@@ -311,8 +311,13 @@ export default function Dashboard() {
             </div>
             <div className="modal-detail-row">
               <span className="mdr-label">Your Balance</span>
-              <span className="mdr-val" style={{ color: "hsl(220 70% 35%)" }}>{formattedBalance}</span>
+              <span className="mdr-val" style={{ color: (modal.priceNum && balance < modal.priceNum) ? "hsl(0 70% 50%)" : "hsl(220 70% 35%)" }}>{formattedBalance}</span>
             </div>
+            {modal.priceNum && balance < modal.priceNum && (
+              <div style={{ color: "hsl(0 70% 50%)", fontSize: 13, marginBottom: 8, fontWeight: 500 }}>
+                ⚠️ Insufficient balance. Please add funds first.
+              </div>
+            )}
             <div className="modal-total">
               <span className="mt-label">Total Cost</span>
               <span className="mt-val">{modal.price}</span>
