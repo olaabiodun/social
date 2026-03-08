@@ -176,6 +176,9 @@ const AuthPage = () => {
       <div className="auth-container">
         {/* LEFT — Branding */}
         <div className="auth-left">
+          <div className="auth-orb auth-orb-1" />
+          <div className="auth-orb auth-orb-2" />
+          <div className="auth-orb auth-orb-3" />
           <div className="auth-left-inner">
             <Link to="/" className="auth-logo">
               <div className="auth-logo-dot" />
@@ -240,6 +243,14 @@ const AuthPage = () => {
         {/* RIGHT — Form */}
         <div className="auth-right">
           <div className="auth-card">
+            {/* Mobile branding */}
+            <div className="auth-mobile-brand">
+              <Link to="/" className="auth-logo">
+                <div className="auth-logo-dot" />
+                <span>Goodluck<strong>Store</strong></span>
+              </Link>
+              <div className="auth-mobile-brand-tagline">Your premium digital marketplace</div>
+            </div>
             {/* LOGIN */}
             <div className={`auth-view${currentPage === "login" ? " active" : ""}`}>
               <div className="auth-form-header">
