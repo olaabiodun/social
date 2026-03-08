@@ -87,6 +87,7 @@ const NAV: { label: string; icon: string; tab: AdminTab }[] = [
   { label: "Categories", icon: "📁", tab: "categories" },
   { label: "Transactions", icon: "💰", tab: "transactions" },
   { label: "Admin Roles", icon: "🛡️", tab: "admins" },
+  { label: "Messages", icon: "💬", tab: "messages" },
 ];
 
 export default function AdminPanel() {
