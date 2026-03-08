@@ -1105,6 +1105,87 @@ export default function AdminPanel() {
               </div>
             </>
           )}
+
+          {/* MESSAGES */}
+          {tab === "messages" && (
+            <>
+              <h2 className="admin-section-title">💬 User Messages</h2>
+              <div style={{ display: "flex", gap: 16, minHeight: 400 }}>
+                {/* User list */}
+                <div style={{ width: 240, background: "hsl(220 20% 97%)", borderRadius: 12, padding: 12, overflowY: "auto" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "hsl(220 10% 50%)", marginBottom: 8, textTransform: "uppercase" }}>Conversations</div>
+                  {getChatUsers().length === 0 ? (
+                    <div style={{ color: "hsl(220 10% 60%)", fontSize: 13, padding: 12 }}>No messages yet</div>
+                  ) : (
+                    getChatUsers().map(uid => {
+                      const unread = allMessages.filter(m => m.sender_id === uid && !m.is_read).length;
+                      return (
+                        <div
+                          key={uid}
+                          onClick={() => setSelectedChatUser(uid)}
+                          style={{
+                            padding: "10px 12px", borderRadius: 8, cursor: "pointer", marginBottom: 4,
+                            background: selectedChatUser === uid ? "hsl(220 70% 50%)" : "transparent",
+                            color: selectedChatUser === uid ? "white" : "inherit",
+                          }}
+                        >
+                          <div style={{ fontWeight: 600, fontSize: 14 }}>{getUserName(uid)}</div>
+                          {unread > 0 && <span style={{ background: "hsl(0 70% 50%)", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>{unread}</span>}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Chat area */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "hsl(220 20% 97%)", borderRadius: 12, padding: 16 }}>
+                  {!selectedChatUser ? (
+                    <div style={{ textAlign: "center", color: "hsl(220 10% 60%)", padding: 60 }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>💬</div>
+                      <p>Select a conversation to view messages</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid hsl(220 20% 90%)" }}>
+                        Chat with {getUserName(selectedChatUser)}
+                      </div>
+                      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8, marginBottom: 12, maxHeight: 350 }}>
+                        {getChatMessages(selectedChatUser).map(msg => (
+                          <div
+                            key={msg.id}
+                            style={{
+                              alignSelf: msg.sender_id === adminUserId ? "flex-end" : "flex-start",
+                              background: msg.sender_id === adminUserId ? "hsl(220 70% 50%)" : "white",
+                              color: msg.sender_id === adminUserId ? "white" : "hsl(220 20% 20%)",
+                              padding: "10px 16px", borderRadius: 12, maxWidth: "70%", fontSize: 14,
+                              boxShadow: "0 1px 3px hsl(0 0% 0% / 0.08)",
+                            }}
+                          >
+                            <div>{msg.content}</div>
+                            <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
+                              {new Date(msg.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input
+                          type="text"
+                          className="admin-input"
+                          placeholder="Type a reply..."
+                          value={adminMsgInput}
+                          onChange={(e) => setAdminMsgInput(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") sendAdminMessage(); }}
+                          style={{ flex: 1 }}
+                        />
+                        <button className="admin-btn admin-btn-primary" onClick={sendAdminMessage}>Send</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
