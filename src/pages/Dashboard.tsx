@@ -205,6 +205,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Categories", icon: "fa-solid fa-layer-group", panel: "categories" },
   { label: "Profile", icon: "fa-solid fa-user", panel: "profile" },
   { label: "My Orders", icon: "fa-solid fa-box", panel: "orders" },
+  { label: "Messages", icon: "fa-solid fa-envelope", panel: "messages" },
   { label: "Finance", type: "section" },
   { label: "Add Funds", icon: "fa-solid fa-credit-card", panel: "add-funds" },
   { label: "Manual Payments", icon: "fa-solid fa-money-bill", panel: "manual-payments" },
