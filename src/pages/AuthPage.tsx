@@ -289,7 +289,7 @@ const AuthPage = () => {
             {/* SIGNUP */}
             <div className={`auth-page-view${currentPage === "signup" ? " active" : ""}`}>
               <div className="progress-dots">
-                {[1, 2, 3].map((n) => <div key={n} className={`pdot${n <= signupStep ? " active" : ""}`} />)}
+                {[1, 2].map((n) => <div key={n} className={`pdot${n <= signupStep ? " active" : ""}`} />)}
               </div>
 
               {/* Step 1 */}
