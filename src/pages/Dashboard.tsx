@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { Home, User, Package, CreditCard, FileText, MessageSquare, Phone, ExternalLink, LogOut, Search, Bell, Wallet, ShoppingCart } from "lucide-react";
 import "../styles/dashboard.css";
 
 type PanelName = "home" | "orders" | "profile" | "add-funds" | "support";
@@ -15,38 +16,56 @@ interface ModalData {
 const accountsData = {
   facebook: {
     catTitle: "Random Country Facebook",
-    catIcon: "📘",
-    catTags: ["GB", "CL", "DE", "US"],
+    catIcon: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1024px-Facebook_Logo_%282019%29.png",
+    catTags: ["GB", "CL", "DE"],
     accounts: [
-      { desc: "High quality Facebook with 200–5,000 friends (sharp friends) · Active marketplace · 90% have profile · Few posts", tags: [{ label: "High Quality", type: "quality" }, { label: "Intl", type: "region" }, { label: "Active Marketplace", type: "note" }], stock: 81, price: "NGN 4,000" },
-      { desc: "2–10 Years Old Europe Facebook · HIGH FRIENDS · Active marketplace · 60% have profile · Get started dating ❤ (NO 2FA)", tags: [{ label: "2–10 Yrs Old", type: "age" }, { label: "Europe", type: "region" }, { label: "High Friends", type: "quality" }, { label: "No 2FA", type: "note" }], stock: 49, price: "NGN 5,500" },
-      { desc: "Facebook 2–15 High Quality · 30–1K friends · Many accounts have profile · Quality is very sharp 💯", tags: [{ label: "Premium", type: "quality" }, { label: "2–15 Yrs", type: "age" }, { label: "Profile Complete", type: "note" }], stock: 0, price: "NGN 5,500" },
+      { desc: "High quality ES GA CA Facebook with 200-5,000 friends (sharp friends) Active marketplace, 90% has create profile Few has post", stock: 30, price: "NGN 4,000.00" },
+      { desc: "2-10 YEARS OLD EUROPE CMCNCZ FACEBOOK WITH HIGH FRIENDS Active marketplace 60% have create profile Few has Get started dating ❤ (NO 2FA)", stock: 47, price: "NGN 5,500.00" },
+      { desc: "facebook:2-15 High Quality USGBUATH MY FACEBOOK (30-1k friend) many accounts here have create profile this quality is very sharp 💯💯", stock: 33, price: "NGN 5,500.00" },
+    ],
+  },
+  vpn: {
+    catTitle: "VPN (For Laptop 💻) PC",
+    catIcon: "",
+    catTags: [],
+    accounts: [
+      { desc: "Express Vpn (Laptop)", stock: 22, price: "NGN 3,500.00", customIcon: "🛡️" },
+      { desc: "Hma Vpn Key 🔑 PC", stock: 19, price: "NGN 3,500.00", customIcon: "🛡️" },
+    ],
+  },
+  texting: {
+    catTitle: "TEXTING APP 💬📞",
+    catIcon: "",
+    catTags: [],
+    accounts: [
+      { desc: "Next plus", stock: 32, price: "NGN 1,800.00", customIcon: "📱" },
+      { desc: "Google Voice", stock: 15, price: "NGN 2,500.00", customIcon: "📱" },
     ],
   },
   instagram: {
     catTitle: "Premium Instagram Accounts",
-    catIcon: "📸",
+    catIcon: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/600px-Instagram_icon.png",
     catTags: ["VERIFIED", "10K+", "REAL"],
     accounts: [
-      { desc: "Instagram Verified · 10K–50K Followers · High engagement · Business-ready · Email access included", tags: [{ label: "Verified ✓", type: "quality" }, { label: "Global", type: "region" }, { label: "Email Access", type: "note" }], stock: 34, price: "NGN 8,500" },
-      { desc: "Instagram 100K+ Followers · USA/UK · Female niche · Lifestyle content · Original email available", tags: [{ label: "100K+", type: "quality" }, { label: "USA/UK", type: "region" }, { label: "Female Niche", type: "age" }], stock: 7, price: "NGN 22,000" },
+      { desc: "Instagram Verified · 10K–50K Followers · High engagement · Business-ready · Email access included", stock: 34, price: "NGN 8,500.00" },
+      { desc: "Instagram 100K+ Followers · USA/UK · Female niche · Lifestyle content · Original email available", stock: 7, price: "NGN 22,000.00" },
     ],
   },
   tiktok: {
     catTitle: "TikTok Accounts",
-    catIcon: "🎵",
+    catIcon: "",
     catTags: ["AGED", "MONETIZED"],
     accounts: [
-      { desc: "TikTok Monetized · 100K+ Followers · Aged 2+ years · Original email · Already has TikTok Shop access", tags: [{ label: "Monetized", type: "quality" }, { label: "2+ Yrs Old", type: "age" }, { label: "TikTok Shop", type: "note" }], stock: 22, price: "NGN 15,000" },
-      { desc: "TikTok 250K+ Followers · Mixed niches · High engagement rate · Email + phone access · Clean account history", tags: [{ label: "250K+", type: "quality" }, { label: "Mixed Niche", type: "region" }, { label: "Clean History", type: "note" }], stock: 4, price: "NGN 35,000" },
+      { desc: "TikTok Monetized · 100K+ Followers · Aged 2+ years · Original email · TikTok Shop access", stock: 22, price: "NGN 15,000.00" },
+      { desc: "TikTok 250K+ Followers · Mixed niches · High engagement rate · Email + phone access", stock: 4, price: "NGN 35,000.00" },
     ],
   },
   youtube: {
     catTitle: "YouTube Channels",
-    catIcon: "▶️",
+    catIcon: "",
     catTags: ["MONETIZED", "AGED"],
     accounts: [
-      { desc: "YouTube Monetized · 1K+ Subscribers · 4,000 watch hours · AdSense ready · Tech/Gaming niche", tags: [{ label: "Monetized", type: "quality" }, { label: "AdSense Ready", type: "age" }, { label: "Tech/Gaming", type: "note" }], stock: 18, price: "NGN 12,000" },
+      { desc: "YouTube Monetized · 1K+ Subscribers · 4,000 watch hours · AdSense ready · Tech/Gaming niche", stock: 18, price: "NGN 12,000.00" },
     ],
   },
 };
@@ -71,13 +90,11 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<PanelName>("home");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPreset, setSelectedPreset] = useState("NGN 5,000");
   const [selectedPayment, setSelectedPayment] = useState(0);
   const [modal, setModal] = useState<ModalData | null>(null);
 
-  // Toast
   const [toast, setToast] = useState({ show: false, msg: "" });
   const toastTimer = useRef<number>();
 
@@ -93,38 +110,16 @@ const Dashboard = () => {
   };
 
   const panelTitles: Record<PanelName, string> = {
-    home: "Goodluck Store",
+    home: "Goodluckstore",
     profile: "My Profile",
     orders: "My Orders",
     "add-funds": "Add Funds",
     support: "Support Center",
   };
 
-  const navItems: { label: string; icon: string; panel: PanelName; badge?: string }[] = [
-    { label: "Home", icon: "🏠", panel: "home" },
-    { label: "Profile", icon: "👤", panel: "profile" },
-    { label: "My Orders", icon: "📦", panel: "orders", badge: "3" },
-  ];
-
-  const financeItems: { label: string; icon: string; panel: PanelName }[] = [
-    { label: "Add Funds", icon: "💳", panel: "add-funds" },
-    { label: "Manual Payments", icon: "💵", panel: "add-funds" },
-  ];
-
-  const filterCategories = ["all", "facebook", "instagram", "tiktok", "youtube", "twitter"];
-
   const openModal = (title: string, desc: string, platform: string, stock: number, price: string) => {
     setModal({ title: title.toUpperCase(), desc, platform, stock, price });
   };
-
-  const tagClass = (type: string) => {
-    const map: Record<string, string> = { quality: "tag-quality", age: "tag-age", region: "tag-region", note: "tag-note" };
-    return `acc-tag ${map[type] || "tag-note"}`;
-  };
-
-  const filteredCategories = Object.entries(accountsData).filter(
-    ([key]) => activeFilter === "all" || key === activeFilter
-  );
 
   return (
     <div className="dashboard-wrapper">
@@ -153,7 +148,7 @@ const Dashboard = () => {
             </div>
             <div className="modal-detail-row">
               <span className="mdr-label">Your Balance</span>
-              <span className="mdr-val" style={{ color: "var(--yellow)" }}>NGN 0.00</span>
+              <span className="mdr-val" style={{ color: "var(--primary)" }}>NGN 0.00</span>
             </div>
             <div className="modal-total">
               <span className="mt-label">Total Cost</span>
@@ -173,59 +168,44 @@ const Dashboard = () => {
       <aside className={`dash-sidebar${sidebarOpen ? " open" : ""}`}>
         <div className="sidebar-logo">
           <div className="logo-mark">
-            <div className="logo-icon">G</div>
-            Goodluck Store
+            <span className="logo-good">Good</span>
+            <span className="logo-luck">luck</span>
+            <span className="logo-store">store</span>
           </div>
-        </div>
-
-        <div className="sidebar-balance">
-          <div>
-            <div className="balance-label">Wallet Balance</div>
-            <div className="balance-val">0.00</div>
-            <div className="balance-currency">NGN</div>
-          </div>
-          <button className="add-funds-mini" onClick={() => { switchPanel("add-funds"); showToast("💳 Add funds to your wallet"); }}>+</button>
+          <div className="logo-underline" />
         </div>
 
         <nav className="sidebar-nav">
-          <div className="nav-section-label">Main</div>
-          {navItems.map((item) => (
-            <button key={item.panel} className={`nav-item${activePanel === item.panel ? " active" : ""}`} onClick={() => switchPanel(item.panel)}>
-              <span className="nav-icon">{item.icon}</span> {item.label}
-              {item.badge && <span className="nav-badge">{item.badge}</span>}
-            </button>
-          ))}
-
-          <div className="nav-section-label">Finance</div>
-          {financeItems.map((item, i) => (
-            <button key={i} className={`nav-item${activePanel === item.panel && i === 0 ? " active" : ""}`} onClick={() => switchPanel(item.panel)}>
-              <span className="nav-icon">{item.icon}</span> {item.label}
-            </button>
-          ))}
-
-          <div className="nav-section-label">Info</div>
+          <button className={`nav-item${activePanel === "home" ? " active" : ""}`} onClick={() => switchPanel("home")}>
+            <span className="nav-icon"><Home size={18} /></span> Home
+          </button>
+          <button className={`nav-item${activePanel === "profile" ? " active" : ""}`} onClick={() => switchPanel("profile")}>
+            <span className="nav-icon"><User size={18} /></span> Profile
+          </button>
+          <button className={`nav-item${activePanel === "orders" ? " active" : ""}`} onClick={() => switchPanel("orders")}>
+            <span className="nav-icon"><Package size={18} /></span> My Orders
+          </button>
+          <button className={`nav-item${activePanel === "add-funds" ? " active" : ""}`} onClick={() => switchPanel("add-funds")}>
+            <span className="nav-icon"><CreditCard size={18} /></span> Add Funds
+          </button>
           <button className="nav-item" onClick={() => showToast("📄 Rules page coming soon")}>
-            <span className="nav-icon">📄</span> Rules
+            <span className="nav-icon"><FileText size={18} /></span> Rules
+          </button>
+          <button className="nav-item" onClick={() => switchPanel("add-funds")}>
+            <span className="nav-icon"><Wallet size={18} /></span> Manual Payments
           </button>
           <button className={`nav-item${activePanel === "support" ? " active" : ""}`} onClick={() => switchPanel("support")}>
-            <span className="nav-icon">💬</span> Support
+            <span className="nav-icon"><MessageSquare size={18} /></span> Support
           </button>
           <button className="nav-item" onClick={() => showToast("📱 Buy Numbers feature coming soon")}>
-            <span className="nav-icon">📱</span> Buy Numbers
-            <span className="nav-ext">↗</span>
+            <span className="nav-icon"><Phone size={18} /></span> Buy Numbers
+            <span className="nav-ext"><ExternalLink size={12} /></span>
           </button>
         </nav>
 
         <div className="sidebar-bottom">
-          <div className="user-row" onClick={() => switchPanel("profile")}>
-            <div className="user-avatar">JD</div>
-            <div className="user-info">
-              <div className="uname">John Doe</div>
-              <div className="uemail">john@example.com</div>
-            </div>
-          </div>
           <button className="signout-btn" onClick={() => { showToast("👋 Signing out..."); setTimeout(() => navigate("/auth"), 1500); }}>
-            🚪 Sign Out
+            <LogOut size={16} /> Sign Out
           </button>
         </div>
       </aside>
@@ -239,19 +219,17 @@ const Dashboard = () => {
           </button>
           <div className="topbar-title">{panelTitles[activePanel]}</div>
           <div className="topbar-search">
-            <span className="s-icon">🔍</span>
+            <span className="s-icon"><Search size={14} /></span>
             <input type="text" placeholder="Search accounts, platforms..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
           <div className="topbar-right">
             <div className="topbar-balance" onClick={() => switchPanel("add-funds")}>
-              <span className="bal-icon">💰</span>
-              <span className="bal-text">NGN 0.00</span>
+              <span className="bal-icon">🏷️</span>
+              <span className="bal-text">Balance: NGN 0.00</span>
             </div>
-            <div className="notif-btn" onClick={() => showToast("🔔 No new notifications")}>
-              🔔
-              <div className="notif-dot" />
+            <div className="topbar-avatar" onClick={() => switchPanel("profile")}>
+              <User size={18} />
             </div>
-            <div className="topbar-avatar" onClick={() => switchPanel("profile")}>JD</div>
           </div>
         </div>
 
@@ -259,46 +237,22 @@ const Dashboard = () => {
         <div className="dash-content">
 
           {/* HOME */}
-          <div className={`dash-panel${activePanel === "home" ? " active" : ""}`}>
-            <div className="welcome-banner">
-              <div className="welcome-inner">
-                <div className="welcome-left">
-                  <div className="wtag">● Premium Marketplace</div>
-                  <h2>FIND YOUR<br /><span>PERFECT</span><br />ACCOUNT</h2>
-                  <p>Browse thousands of verified social media accounts. Instant delivery guaranteed.</p>
-                </div>
-                <div className="welcome-right">
-                  <div className="wstat"><div className="wstat-num">10K+</div><div className="wstat-label">Accounts</div></div>
-                  <div className="wstat"><div className="wstat-num">50K+</div><div className="wstat-label">Verified</div></div>
-                  <div className="wstat"><div className="wstat-num">98%</div><div className="wstat-label">Satisfied</div></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="filter-row">
-              <span className="filter-label">Popular:</span>
-              {filterCategories.map((cat) => (
-                <button key={cat} className={`filter-pill${activeFilter === cat ? " active" : ""}`} onClick={() => setActiveFilter(cat)}>
-                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </button>
-              ))}
-              <div className="filter-search-mini">
-                <span className="si">🔍</span>
-                <input type="text" placeholder="Search accounts..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-              </div>
-            </div>
-
-            {filteredCategories.map(([key, cat]) => (
-              <div key={key} className="category-block" style={key === "youtube" ? { marginBottom: 28 } : undefined}>
+          <div className={`dash-panel${activePanel === "home" ? " active" : ""}`} style={{ paddingBottom: 24 }}>
+            {Object.entries(accountsData)
+              .filter(([, cat]) => {
+                if (!searchQuery) return true;
+                return cat.accounts.some(a => a.desc.toLowerCase().includes(searchQuery.toLowerCase()));
+              })
+              .map(([key, cat]) => (
+              <div key={key} className="category-block">
                 <div className="category-header">
                   <div className="cat-head-left">
-                    <div className="cat-platform-icon">{cat.catIcon}</div>
-                    <div>
-                      <div className="cat-title">{cat.catTitle}</div>
+                    <div className="cat-title">{cat.catTitle}</div>
+                    {cat.catTags.length > 0 && (
                       <div className="cat-tags">
                         {cat.catTags.map((t) => <span key={t} className="cat-tag">{t}</span>)}
                       </div>
-                    </div>
+                    )}
                   </div>
                   <button className="cat-see-more" onClick={() => showToast(`Loading more ${key} accounts...`)}>See More →</button>
                 </div>
@@ -306,12 +260,15 @@ const Dashboard = () => {
                   .filter((acc) => !searchQuery || acc.desc.toLowerCase().includes(searchQuery.toLowerCase()))
                   .map((acc, i) => (
                     <div key={i} className="account-row">
-                      <div className="acc-platform-icon">{cat.catIcon}</div>
+                      <div className="acc-platform-icon">
+                        {cat.catIcon ? (
+                          <img src={cat.catIcon} alt={key} />
+                        ) : (
+                          <span style={{ fontSize: 24 }}>{(acc as any).customIcon || "📦"}</span>
+                        )}
+                      </div>
                       <div className="acc-info">
                         <div className="acc-desc">{acc.desc}</div>
-                        <div className="acc-meta">
-                          {acc.tags.map((tag, j) => <span key={j} className={tagClass(tag.type)}>{tag.label}</span>)}
-                        </div>
                       </div>
                       <div className="acc-stock-price">
                         <div className="stock-block">
@@ -323,8 +280,8 @@ const Dashboard = () => {
                           <div className="price-val">{acc.price}</div>
                         </div>
                       </div>
-                      <button className="buy-btn" disabled={acc.stock === 0} onClick={() => acc.stock > 0 && openModal(`${key} Account`, acc.desc.split("·")[0], key.charAt(0).toUpperCase() + key.slice(1), acc.stock, acc.price)}>
-                        <span>{acc.stock === 0 ? "Out of Stock" : "🛒 BUY"}</span>
+                      <button className="buy-btn" disabled={acc.stock === 0} onClick={() => acc.stock > 0 && openModal(`${key} Account`, acc.desc, key.charAt(0).toUpperCase() + key.slice(1), acc.stock, acc.price)}>
+                        <ShoppingCart size={14} /> <span>{acc.stock === 0 ? "OUT" : "BUY"}</span>
                       </button>
                     </div>
                   ))}
@@ -356,11 +313,11 @@ const Dashboard = () => {
                   <tbody>
                     {orders.map((o) => (
                       <tr key={o.id}>
-                        <td style={{ fontFamily: "var(--font-d)", color: "var(--yellow)", fontSize: 15 }}>{o.id}</td>
+                        <td className="order-id-cell">{o.id}</td>
                         <td><div className="order-name">{o.name}</div><div className="order-desc">{o.desc}</div></td>
                         <td><div className="order-platform"><span className="order-icon">{o.icon}</span>{o.platform}</div></td>
                         <td className="order-price">{o.price}</td>
-                        <td style={{ color: "var(--muted)", fontSize: 12 }}>{o.date}</td>
+                        <td style={{ color: "var(--text-muted)", fontSize: 12 }}>{o.date}</td>
                         <td><span className={`status-pill status-${o.status}`}>{o.status.charAt(0).toUpperCase() + o.status.slice(1)}</span></td>
                       </tr>
                     ))}
@@ -428,7 +385,7 @@ const Dashboard = () => {
                     <div className="amount-presets">
                       {["NGN 1,000", "NGN 5,000", "NGN 10,000", "NGN 20,000", "NGN 50,000", "NGN 100,000"].map((amt) => (
                         <button key={amt} className={`preset-btn${selectedPreset === amt ? " selected" : ""}`} onClick={() => setSelectedPreset(amt)}>
-                          {amt.replace(",000", "K").replace(",00", "")}
+                          {amt.replace(",000", "K")}
                         </button>
                       ))}
                     </div>
@@ -509,7 +466,7 @@ const Dashboard = () => {
                     <label className="form-label">Message</label>
                     <textarea className="form-input" placeholder="Describe your issue in detail..." />
                   </div>
-                  <button className="btn-submit-funds" onClick={() => showToast("✅ Support ticket submitted! We'll respond within 24hrs")}>Submit Ticket →</button>
+                  <button className="btn-submit-funds" onClick={() => showToast("✅ Support ticket submitted!")}>Submit Ticket →</button>
                 </div>
                 <div className="funds-card">
                   <div className="funds-card-title">Quick Contact</div>
@@ -525,9 +482,9 @@ const Dashboard = () => {
                       </div>
                     ))}
                   </div>
-                  <div style={{ marginTop: 20, padding: 16, background: "rgba(255,208,0,0.05)", border: "1px solid rgba(255,208,0,0.15)", borderRadius: 8 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase" as const, color: "var(--yellow)", marginBottom: 8 }}>Response Times</div>
-                    <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.7, fontWeight: 300 }}>
+                  <div style={{ marginTop: 20, padding: 16, background: "rgba(26,46,90,0.04)", border: "1px solid rgba(26,46,90,0.1)", borderRadius: 6 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase" as const, color: "var(--primary)", marginBottom: 8 }}>Response Times</div>
+                    <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.7 }}>
                       🟢 Telegram: ~5 minutes<br />
                       🟡 Live Chat: ~15 minutes<br />
                       🔵 Email: ~24 hours
