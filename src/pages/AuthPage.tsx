@@ -17,8 +17,7 @@ const AuthPage = () => {
   const [showLoginPw, setShowLoginPw] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const [suFname, setSuFname] = useState("");
-  const [suLname, setSuLname] = useState("");
+  const [suUsername, setSuUsername] = useState("");
   const [suEmail, setSuEmail] = useState("");
   const [suEmailErr, setSuEmailErr] = useState(false);
   const [suPw, setSuPw] = useState("");
