@@ -240,7 +240,7 @@ const LandingPage = () => {
           { num: 3, icon: "fa-solid fa-envelope", title: "Instant Access", desc: "Receive account credentials instantly via email. Login and start using your new account immediately — no waiting." }].
           map((s, i) =>
           <div className={`step reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={s.num}>
-              <div className="step-num">{s.num}</div>
+              <div className="step-num text-primary-foreground">{s.num}</div>
               <div className="step-icon"><i className={s.icon} /></div>
               <h3>{s.title}</h3>
               <p>{s.desc}</p>
