@@ -316,8 +316,39 @@ export default function Dashboard() {
               <span className="mt-label">Total Cost</span>
               <span className="mt-val">{modal.price}</span>
             </div>
-            <button className="btn-confirm" onClick={() => { setModal(null); toast.success("Order placed! Check My Orders for status."); }}>
-              Confirm Purchase →
+            <button
+              className={`btn-confirm${loading ? " loading" : ""}`}
+              disabled={loading}
+              onClick={async () => {
+                if (!modal.product_id) {
+                  toast.error("This product is not available for purchase yet.");
+                  return;
+                }
+                const priceNum = modal.priceNum || 0;
+                if (balance < priceNum) {
+                  toast.error("Insufficient balance. Please add funds first.");
+                  return;
+                }
+                setLoading(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke("purchase", {
+                    body: { product_id: modal.product_id, quantity: 1 },
+                  });
+                  if (error || !data?.success) {
+                    toast.error(data?.error || error?.message || "Purchase failed");
+                  } else {
+                    toast.success("✅ Purchase successful! Check My Orders.");
+                    setBalance(data.new_balance);
+                    await loadUserData();
+                  }
+                } catch (e: any) {
+                  toast.error("Purchase failed. Please try again.");
+                }
+                setLoading(false);
+                setModal(null);
+              }}
+            >
+              {loading ? "Processing..." : "Confirm Purchase →"}
             </button>
           </div>
         </div>
