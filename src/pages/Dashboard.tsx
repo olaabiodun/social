@@ -57,7 +57,7 @@ const ACCOUNTS_DATA = [
   },
   {
     category: "tiktok",
-    catTitle: "Country TIK tok",
+    catTitle: "Country TikTok 🎵",
     catEmoji: "",
     catIcon: "",
     catTags: ["VERIFIED", "AGED"],
@@ -76,6 +76,106 @@ const ACCOUNTS_DATA = [
     catTags: ["USA", "PREMIUM"],
     items: [
       { desc: "4-6 YEARS USA 🇺🇸 faceb00k (100+ FRIENDS)(real+fake friendss mix) (sharp friends) (ALMOST ALL HAVE SWITCH PROFILE)", tags: [{ label: "USA", type: "region" }, { label: "4-6 Yrs", type: "age" }], stock: 10, stockClass: "low", price: "NGN 13,000.00", modalTitle: "USA Facebook", modalDesc: "4-6 Years USA Facebook 100+ Friends" },
+    ],
+  },
+  {
+    category: "instagram",
+    catTitle: "Instagram Accounts 📷",
+    catEmoji: "",
+    catIcon: "fa-brands fa-instagram",
+    catTags: ["AGED", "FOLLOWERS"],
+    items: [
+      { desc: "USA 🇺🇸 Instagram 500+ Followers | Aged 2-5 Years | Email Verified | Profile Picture Set", tags: [{ label: "USA", type: "region" }, { label: "500+ Followers", type: "quality" }], stock: 64, stockClass: "", price: "NGN 3,500.00", modalTitle: "USA Instagram", modalDesc: "USA Instagram 500+ Followers Aged 2-5 Years" },
+      { desc: "UK 🇬🇧 Instagram 1K+ Followers | Aged 3+ Years | Active Posts | Email + Phone Verified", tags: [{ label: "UK", type: "region" }, { label: "1K+ Followers", type: "quality" }], stock: 22, stockClass: "", price: "NGN 6,000.00", modalTitle: "UK Instagram", modalDesc: "UK Instagram 1K+ Followers Aged 3+ Years" },
+      { desc: "Random Country Instagram 200-1K Followers | Created 2020-2023 | No 2FA | Ready to use", tags: [{ label: "Random", type: "region" }, { label: "No 2FA", type: "note" }], stock: 118, stockClass: "", price: "NGN 2,500.00", modalTitle: "Random Instagram", modalDesc: "Random Country Instagram 200-1K Followers" },
+    ],
+  },
+  {
+    category: "twitter",
+    catTitle: "Twitter / X Accounts 🐦",
+    catEmoji: "",
+    catIcon: "fa-brands fa-x-twitter",
+    catTags: ["VERIFIED", "AGED"],
+    items: [
+      { desc: "USA 🇺🇸 Twitter/X Aged 2-6 Years | 100+ Followers | Email Verified | Phone Verified", tags: [{ label: "USA", type: "region" }, { label: "Aged", type: "age" }], stock: 41, stockClass: "", price: "NGN 4,500.00", modalTitle: "USA Twitter/X", modalDesc: "USA Twitter/X Aged 2-6 Years 100+ Followers" },
+      { desc: "Europe 🇩🇪🇫🇷🇬🇧 Twitter/X Aged 1-3 Years | 50+ Followers | Email Verified | Bio Set", tags: [{ label: "Europe", type: "region" }, { label: "Bio Set", type: "quality" }], stock: 58, stockClass: "", price: "NGN 3,000.00", modalTitle: "Europe Twitter/X", modalDesc: "Europe Twitter/X Aged 1-3 Years 50+ Followers" },
+    ],
+  },
+  {
+    category: "youtube",
+    catTitle: "YouTube Accounts ▶️",
+    catEmoji: "",
+    catIcon: "fa-brands fa-youtube",
+    catTags: ["MONETIZED", "AGED"],
+    items: [
+      { desc: "YouTube Channel Aged 3+ Years | 1K+ Subscribers | Monetization Eligible | Clean Strike History", tags: [{ label: "1K+ Subs", type: "quality" }, { label: "Monetizable", type: "quality" }], stock: 8, stockClass: "low", price: "NGN 45,000.00", modalTitle: "YouTube Monetizable", modalDesc: "YouTube Channel 1K+ Subs Monetization Eligible" },
+      { desc: "YouTube Fresh Channel | Aged 1-2 Years | Brand Account | 0 Strikes | Ready for Upload", tags: [{ label: "Fresh", type: "quality" }, { label: "No Strikes", type: "note" }], stock: 35, stockClass: "", price: "NGN 5,000.00", modalTitle: "YouTube Fresh", modalDesc: "YouTube Fresh Channel Aged 1-2 Years" },
+    ],
+  },
+  {
+    category: "snapchat",
+    catTitle: "Snapchat Accounts 👻",
+    catEmoji: "",
+    catIcon: "fa-brands fa-snapchat",
+    catTags: ["AGED", "SCORE"],
+    items: [
+      { desc: "USA 🇺🇸 Snapchat 10K+ Score | Aged 2+ Years | Email Verified | Memories Enabled", tags: [{ label: "USA", type: "region" }, { label: "10K+ Score", type: "quality" }], stock: 27, stockClass: "", price: "NGN 3,200.00", modalTitle: "USA Snapchat", modalDesc: "USA Snapchat 10K+ Score Aged 2+ Years" },
+      { desc: "Random Country Snapchat 5K+ Score | Aged 1+ Year | Ready to use | No bans", tags: [{ label: "Random", type: "region" }, { label: "Clean", type: "note" }], stock: 89, stockClass: "", price: "NGN 1,800.00", modalTitle: "Random Snapchat", modalDesc: "Random Country Snapchat 5K+ Score" },
+    ],
+  },
+  {
+    category: "linkedin",
+    catTitle: "LinkedIn Accounts 💼",
+    catEmoji: "",
+    catIcon: "fa-brands fa-linkedin",
+    catTags: ["PROFESSIONAL", "CONNECTIONS"],
+    items: [
+      { desc: "USA 🇺🇸 LinkedIn 500+ Connections | Complete Profile | Aged 3+ Years | Email Verified", tags: [{ label: "USA", type: "region" }, { label: "500+ Connections", type: "quality" }], stock: 15, stockClass: "", price: "NGN 8,000.00", modalTitle: "USA LinkedIn", modalDesc: "USA LinkedIn 500+ Connections Complete Profile" },
+      { desc: "Europe 🇬🇧🇩🇪 LinkedIn 100+ Connections | Aged 1-3 Years | Profile Picture | Bio Set", tags: [{ label: "Europe", type: "region" }, { label: "Complete Profile", type: "quality" }], stock: 30, stockClass: "", price: "NGN 5,500.00", modalTitle: "Europe LinkedIn", modalDesc: "Europe LinkedIn 100+ Connections" },
+    ],
+  },
+  {
+    category: "discord",
+    catTitle: "Discord Accounts 🎮",
+    catEmoji: "",
+    catIcon: "fa-brands fa-discord",
+    catTags: ["AGED", "NITRO"],
+    items: [
+      { desc: "Discord Aged 2+ Years | Email + Phone Verified | Avatar Set | Nitro Ready | No Bans", tags: [{ label: "Aged", type: "age" }, { label: "Verified", type: "quality" }], stock: 120, stockClass: "", price: "NGN 2,000.00", modalTitle: "Discord Aged", modalDesc: "Discord Aged 2+ Years Email + Phone Verified" },
+      { desc: "Discord Token Aged 6+ Months | HQ Server Boost Eligible | Email Verified", tags: [{ label: "Token", type: "quality" }, { label: "Boost Ready", type: "note" }], stock: 200, stockClass: "", price: "NGN 1,200.00", modalTitle: "Discord Token", modalDesc: "Discord Token Aged 6+ Months" },
+    ],
+  },
+  {
+    category: "gmail",
+    catTitle: "Gmail / Google Accounts 📧",
+    catEmoji: "",
+    catIcon: "fa-brands fa-google",
+    catTags: ["FRESH", "AGED"],
+    items: [
+      { desc: "Gmail Aged 2+ Years | Phone Verified | Recovery Email Set | USA IP Created 🇺🇸", tags: [{ label: "USA", type: "region" }, { label: "Aged", type: "age" }], stock: 95, stockClass: "", price: "NGN 2,500.00", modalTitle: "USA Gmail", modalDesc: "Gmail Aged 2+ Years Phone Verified USA" },
+      { desc: "Fresh Gmail 2024 | Phone Verified | Clean | No Suspensions | Bulk Available", tags: [{ label: "Fresh", type: "quality" }, { label: "Bulk", type: "note" }], stock: 500, stockClass: "", price: "NGN 800.00", modalTitle: "Fresh Gmail", modalDesc: "Fresh Gmail 2024 Phone Verified Clean" },
+    ],
+  },
+  {
+    category: "telegram",
+    catTitle: "Telegram Accounts ✈️",
+    catEmoji: "",
+    catIcon: "fa-brands fa-telegram",
+    catTags: ["AGED", "SESSION"],
+    items: [
+      { desc: "Telegram Aged 1+ Year | Phone Verified | TDATA Session | No Spam Block | Ready to Use", tags: [{ label: "Aged", type: "age" }, { label: "TDATA", type: "quality" }], stock: 73, stockClass: "", price: "NGN 3,000.00", modalTitle: "Telegram Aged", modalDesc: "Telegram Aged 1+ Year Phone Verified TDATA" },
+      { desc: "Telegram Fresh | Created 2024 | Phone Number Included | Clean History | No Restrictions", tags: [{ label: "Fresh", type: "quality" }, { label: "With Phone", type: "note" }], stock: 150, stockClass: "", price: "NGN 1,500.00", modalTitle: "Telegram Fresh", modalDesc: "Telegram Fresh 2024 With Phone Number" },
+    ],
+  },
+  {
+    category: "proxies",
+    catTitle: "Private Proxies 🔒",
+    catEmoji: "",
+    catIcon: "fa-solid fa-shield-halved",
+    catTags: ["RESIDENTIAL", "DATACENTER"],
+    items: [
+      { desc: "USA Residential Proxy | Rotating IP | Unlimited Bandwidth | 30 Day Access | SOCKS5 + HTTP", tags: [{ label: "USA", type: "region" }, { label: "Residential", type: "quality" }], stock: 999, stockClass: "", price: "NGN 7,000.00", modalTitle: "USA Residential Proxy", modalDesc: "USA Residential Rotating Proxy 30 Day Access" },
+      { desc: "Datacenter Proxy Pack (10 IPs) | USA/EU Mix | Static IP | 30 Day Access | Fast Speed", tags: [{ label: "10 Pack", type: "quality" }, { label: "Static", type: "note" }], stock: 50, stockClass: "", price: "NGN 4,000.00", modalTitle: "Datacenter Proxy Pack", modalDesc: "Datacenter Proxy 10 IPs USA/EU 30 Days" },
     ],
   },
 ];
