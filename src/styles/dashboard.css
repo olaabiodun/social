@@ -1888,6 +1888,7 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   gap: 8px;
   font-size: 13px;
   margin-bottom: 16px;
+  padding: 0 16px;
   color: hsl(var(--db-text-muted));
 }
 
