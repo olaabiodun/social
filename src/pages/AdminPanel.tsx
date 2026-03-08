@@ -116,7 +116,10 @@ export default function AdminPanel() {
   const [productForm, setProductForm] = useState({ title: "", description: "", price: 0, stock: 0, platform: "", category_id: "", currency: "NGN" });
   const [categoryForm, setCategoryForm] = useState({ name: "", slug: "", emoji: "", display_order: 0 });
   const [adminEmail, setAdminEmail] = useState("");
-
+  const [allMessages, setAllMessages] = useState<Message[]>([]);
+  const [selectedChatUser, setSelectedChatUser] = useState<string | null>(null);
+  const [adminMsgInput, setAdminMsgInput] = useState("");
+  const [adminUserId, setAdminUserId] = useState("");
   useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
