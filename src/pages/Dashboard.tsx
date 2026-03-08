@@ -182,22 +182,23 @@ export default function Dashboard() {
 
         <nav className="sidebar-nav">
           {NAV_ITEMS.map((item, i) => {
-            if (item.type === "section") {
+            if ("type" in item && item.type === "section") {
               return <div key={i} className="nav-section-label">{item.label}</div>;
             }
+            const nav = item as NavLink;
             return (
               <button
                 key={i}
-                className={`dash-nav-item ${item.panel && activePanel === item.panel ? "active" : ""}`}
+                className={`dash-nav-item ${nav.panel && activePanel === nav.panel ? "active" : ""}`}
                 onClick={() => {
-                  if (item.panel) switchPanel(item.panel);
-                  else if (item.action) item.action();
+                  if (nav.panel) switchPanel(nav.panel);
+                  else if (nav.action) nav.action();
                 }}
               >
-                <span className="nav-icon"><i className={item.icon} /></span>
-                {item.label}
-                {item.badge && <span className="nav-badge">{item.badge}</span>}
-                {item.ext && <span className="nav-ext"><i className="fa-solid fa-arrow-up-right-from-square" /></span>}
+                <span className="nav-icon"><i className={nav.icon} /></span>
+                {nav.label}
+                {nav.badge && <span className="nav-badge">{nav.badge}</span>}
+                {nav.ext && <span className="nav-ext"><i className="fa-solid fa-arrow-up-right-from-square" /></span>}
               </button>
             );
           })}
