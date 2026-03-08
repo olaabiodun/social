@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, User, ArrowLeft, ArrowRight, Shield, Zap, Star, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+
 import "../styles/auth.css";
 
 type AuthView = "login" | "signup" | "forgot";
@@ -135,10 +135,13 @@ const AuthPage = () => {
   };
 
   const handleGoogleLogin = async () => {
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
     });
-    if (error) showToast(`❌ ${(error as Error).message}`);
+    if (error) showToast(`❌ ${error.message}`);
   };
 
   const strengthLevels = ["", "weak", "fair", "good", "strong"];
