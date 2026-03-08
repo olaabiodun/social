@@ -1,14 +1,16 @@
 /* ── AUTH PAGE STYLES ── */
 .auth-page-wrapper {
-  --yellow: #FFD000;
-  --yellow-light: #FFE44D;
-  --yellow-dark: #C9A800;
+  --yellow: #0047AB;
+  --yellow-light: #336BBA;
+  --yellow-dark: #003080;
   --auth-black: #0A0A0A;
   --auth-dark: #111111;
   --auth-dark2: #1A1A1A;
   --auth-dark3: #222222;
   --auth-white: #FAFAFA;
   --auth-gray: #555;
+  --auth-radius: 12px;
+  --auth-radius-sm: 8px;
   --font-display: 'Bebas Neue', sans-serif;
   --font-head: 'DM Sans', sans-serif;
   --font-body: 'DM Sans', sans-serif;
