@@ -288,7 +288,7 @@ const LandingPage = () => {
         <div className="testimonials-header reveal">
           <div className="section-tag">Customer Success Stories</div>
           <h2 className="section-title">What Our <span style={{ color: "var(--blue)" }}>Customers</span> Say</h2>
-          <p className="section-sub">Join thousands of satisfied customers who trusted Goodluck StoreAccounts to grow their social presence.</p>
+          <p className="section-sub">Join thousands of satisfied customers who <p className="section-sub">Join thousands of satisfied customers who trusted Goodluck Store to grow their social presence.</p> their social presence.</p>
         </div>
         <div className="testimonials-grid">
           {[
