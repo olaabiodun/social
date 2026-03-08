@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -226,6 +227,7 @@ export default function Dashboard() {
   const [email, setEmail] = useState("");
   const [balance, setBalance] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
+  const { isAdmin } = useAdminCheck();
 
   useEffect(() => {
     loadUserData();
@@ -429,6 +431,15 @@ export default function Dashboard() {
             );
           })}
 
+          {isAdmin && (
+            <>
+              <div className="nav-section-label">Admin</div>
+              <button className="dash-nav-item" onClick={() => navigate("/admin")}>
+                <span className="nav-icon"><i className="fa-solid fa-shield-halved" /></span>
+                Admin Panel
+              </button>
+            </>
+          )}
         </nav>
 
         <div className="sidebar-bottom">
