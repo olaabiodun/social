@@ -338,10 +338,10 @@ const AuthPage = () => {
                 </div>
               }
 
-              {/* Step 3 - Verify */}
-              {signupStep === 3 &&
+              {/* Step 2 - Verify */}
+              {signupStep === 2 &&
               <div>
-                  <BackButton onClick={() => setSignupStep(2)} />
+                  <BackButton onClick={() => setSignupStep(1)} />
                   <div className="form-header">
                     <div className="form-tag">Almost There</div>
                     <h2 className="form-title">VERIFY<br />EMAIL</h2>
