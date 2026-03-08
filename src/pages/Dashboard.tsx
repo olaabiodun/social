@@ -311,7 +311,23 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="filter-row">
+              {/* Mobile search bar */}
+              <div className="mobile-search-section">
+                <div className="mobile-search-wrap">
+                  <i className="fa-solid fa-magnifying-glass" />
+                  <input type="text" placeholder="Search for products or categories..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                </div>
+                <div className="filter-row" style={{ padding: 0, marginTop: 12 }}>
+                  <span className="filter-label">Popular:</span>
+                  {[{ label: "Instagram", value: "instagram" }, { label: "TikTok", value: "tiktok" }, { label: "YouTube", value: "youtube" }, { label: "Twitter", value: "twitter" }].map((f) => (
+                    <button key={f.value} className={`filter-pill ${activeFilter === f.value ? "active" : ""}`} onClick={() => setActiveFilter(f.value)}>
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="filter-row desktop-filter-row">
                 <span className="filter-label">Popular:</span>
                 {[{ label: "All", value: "all" }, { label: "Instagram", value: "instagram" }, { label: "TikTok", value: "tiktok" }, { label: "YouTube", value: "youtube" }, { label: "Twitter", value: "twitter" }, { label: "Facebook", value: "facebook" }].map((f) => (
                   <button key={f.value} className={`filter-pill ${activeFilter === f.value ? "active" : ""}`} onClick={() => setActiveFilter(f.value)}>
