@@ -1956,6 +1956,7 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   align-items: center;
   gap: 8px;
   margin-bottom: 12px;
+  padding: 0 16px;
 }
 
 .category-filters .filter-label {
