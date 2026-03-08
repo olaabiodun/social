@@ -13,6 +13,8 @@ interface ModalData {
   platform: string;
   stock: number;
   price: string;
+  product_id?: string;
+  priceNum?: number;
 }
 
 interface Category {
