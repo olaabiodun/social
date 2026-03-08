@@ -87,6 +87,7 @@ type NavItem = NavSection | NavLink;
 const NAV_ITEMS: NavItem[] = [
   { label: "Main", type: "section" },
   { label: "Home", icon: "fa-solid fa-house", panel: "home" },
+  { label: "Categories", icon: "fa-solid fa-layer-group", panel: "categories" },
   { label: "Profile", icon: "fa-solid fa-user", panel: "profile" },
   { label: "My Orders", icon: "fa-solid fa-box", panel: "orders" },
   { label: "Finance", type: "section" },
