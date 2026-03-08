@@ -390,7 +390,7 @@ const LandingPage = () => {
           </div>
         </div>
         <div className="footer-bottom">
-          <div className="footer-copy">© 2025 Goodluck StoreAccounts. All rights reserved.</div>
+          <div className="footer-copy"><div className="footer-copy">© 2025 Goodluck Store. All rights reserved.</div></div>
           <div className="footer-legal"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Refund Policy</a></div>
         </div>
       </footer>
