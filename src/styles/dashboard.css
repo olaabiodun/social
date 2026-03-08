@@ -1490,8 +1490,8 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   background: hsl(var(--db-white));
   border: 1px solid hsl(var(--db-border));
   border-radius: 16px;
-  padding: 32px;
-  width: 100%;
+  padding: 24px 18px;
+  width: calc(100% - 32px);
   max-width: 440px;
   animation: modalIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
   position: relative;

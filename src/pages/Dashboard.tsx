@@ -358,6 +358,7 @@ export default function Dashboard() {
                           {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
                         </div>
                         <div className="acc-info">
+                          <div className="acc-desc-title">{item.modalTitle}</div>
                           <div className="acc-desc">{item.desc}</div>
                         </div>
                         <div className="acc-stock-price">
