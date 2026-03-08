@@ -260,6 +260,7 @@ export default function Dashboard() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setEmail(user.email || "");
+    setUserId(user.id);
 
     // Load profile
     const { data: profile } = await supabase
@@ -284,6 +285,64 @@ export default function Dashboard() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     if (userOrders) setOrders(userOrders as Order[]);
+
+    // Load categories
+    const { data: cats } = await supabase
+      .from("categories")
+      .select("*")
+      .order("display_order", { ascending: true });
+    if (cats) setDbCategories(cats as Category[]);
+
+    // Load products
+    const { data: prods } = await supabase
+      .from("products")
+      .select("*")
+      .eq("is_active", true);
+    if (prods) setDbProducts(prods as Product[]);
+
+    // Load messages
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("*")
+      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .order("created_at", { ascending: true });
+    if (msgs) {
+      setMessages(msgs as Message[]);
+      setUnreadCount((msgs as Message[]).filter(m => m.receiver_id === user.id && !m.is_read).length);
+    }
+  };
+
+  // Realtime messages
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel('user-messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        const msg = payload.new as Message;
+        if (msg.sender_id === userId || msg.receiver_id === userId) {
+          setMessages(prev => [...prev, msg]);
+          if (msg.receiver_id === userId) setUnreadCount(prev => prev + 1);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
+  const sendMessage = async (orderId?: string) => {
+    if (!msgInput.trim() || !userId) return;
+    // Find an admin user_id to send to - we'll use a placeholder; admin will see all via RLS
+    const { error } = await supabase.from("messages").insert({
+      sender_id: userId,
+      receiver_id: "00000000-0000-0000-0000-000000000000", // placeholder, admin sees all via RLS
+      content: msgInput.trim(),
+      order_id: orderId || null,
+    });
+    if (error) {
+      toast.error("Failed to send message");
+    } else {
+      setMsgInput("");
+      toast.success("Message sent!");
+    }
   };
 
   const switchPanel = useCallback((panel: PanelName) => {
