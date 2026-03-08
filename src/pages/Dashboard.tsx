@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import "../styles/dashboard.css";
 
-type PanelName = "home" | "orders" | "profile" | "add-funds" | "manual-payments" | "support" | "categories";
+type PanelName = "home" | "orders" | "profile" | "add-funds" | "manual-payments" | "support" | "categories" | "messages";
 
 interface ModalData {
   title: string;
@@ -33,6 +33,7 @@ interface Product {
   price: number;
   stock: number;
   platform: string;
+  currency: string;
 }
 
 interface Order {
@@ -41,6 +42,17 @@ interface Order {
   product_platform: string;
   total_price: number;
   status: string;
+  created_at: string;
+  account_details: string | null;
+}
+
+interface Message {
+  id: string;
+  order_id: string | null;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  is_read: boolean;
   created_at: string;
 }
 
@@ -193,6 +205,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Categories", icon: "fa-solid fa-layer-group", panel: "categories" },
   { label: "Profile", icon: "fa-solid fa-user", panel: "profile" },
   { label: "My Orders", icon: "fa-solid fa-box", panel: "orders" },
+  { label: "Messages", icon: "fa-solid fa-envelope", panel: "messages" },
   { label: "Finance", type: "section" },
   { label: "Add Funds", icon: "fa-solid fa-credit-card", panel: "add-funds" },
   { label: "Manual Payments", icon: "fa-solid fa-money-bill", panel: "manual-payments" },
@@ -209,12 +222,13 @@ const PANEL_TITLES: Record<PanelName, string> = {
   "add-funds": "Add Funds",
   "manual-payments": "Manual Payments",
   support: "Support Center",
+  messages: "Messages",
 };
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [activePanel, setActivePanel] = useState<PanelName>("home");
-  const [selectedCategory, setSelectedCategory] = useState<typeof ACCOUNTS_DATA[0] | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [categorySearch, setCategorySearch] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("all");
@@ -230,6 +244,12 @@ export default function Dashboard() {
   const [email, setEmail] = useState("");
   const [balance, setBalance] = useState(0);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
+  const [dbProducts, setDbProducts] = useState<Product[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [msgInput, setMsgInput] = useState("");
+  const [userId, setUserId] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
   const { isAdmin } = useAdminCheck();
 
   useEffect(() => {
@@ -240,6 +260,7 @@ export default function Dashboard() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     setEmail(user.email || "");
+    setUserId(user.id);
 
     // Load profile
     const { data: profile } = await supabase
@@ -264,6 +285,64 @@ export default function Dashboard() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
     if (userOrders) setOrders(userOrders as Order[]);
+
+    // Load categories
+    const { data: cats } = await supabase
+      .from("categories")
+      .select("*")
+      .order("display_order", { ascending: true });
+    if (cats) setDbCategories(cats as Category[]);
+
+    // Load products
+    const { data: prods } = await supabase
+      .from("products")
+      .select("*")
+      .eq("is_active", true);
+    if (prods) setDbProducts(prods as Product[]);
+
+    // Load messages
+    const { data: msgs } = await supabase
+      .from("messages")
+      .select("*")
+      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .order("created_at", { ascending: true });
+    if (msgs) {
+      setMessages(msgs as Message[]);
+      setUnreadCount((msgs as Message[]).filter(m => m.receiver_id === user.id && !m.is_read).length);
+    }
+  };
+
+  // Realtime messages
+  useEffect(() => {
+    if (!userId) return;
+    const channel = supabase
+      .channel('user-messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        const msg = payload.new as Message;
+        if (msg.sender_id === userId || msg.receiver_id === userId) {
+          setMessages(prev => [...prev, msg]);
+          if (msg.receiver_id === userId) setUnreadCount(prev => prev + 1);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
+  const sendMessage = async (orderId?: string) => {
+    if (!msgInput.trim() || !userId) return;
+    // Find an admin user_id to send to - we'll use a placeholder; admin will see all via RLS
+    const { error } = await supabase.from("messages").insert({
+      sender_id: userId,
+      receiver_id: "00000000-0000-0000-0000-000000000000", // placeholder, admin sees all via RLS
+      content: msgInput.trim(),
+      order_id: orderId || null,
+    });
+    if (error) {
+      toast.error("Failed to send message");
+    } else {
+      setMsgInput("");
+      toast.success("Message sent!");
+    }
   };
 
   const switchPanel = useCallback((panel: PanelName) => {
@@ -272,13 +351,30 @@ export default function Dashboard() {
     setSelectedCategory(null);
   }, []);
 
-  const filteredAccounts = ACCOUNTS_DATA.filter(
-    (cat) => activeFilter === "all" || cat.category === activeFilter || cat.category.startsWith(activeFilter)
-  );
+  const getProductsForCategory = (catId: string) => dbProducts.filter(p => p.category_id === catId);
 
-  const filterBySearch = (desc: string) => {
+  const platformIconMap: Record<string, string> = {
+    Facebook: "fa-brands fa-facebook", Instagram: "fa-brands fa-instagram",
+    TikTok: "fa-brands fa-tiktok", "Twitter/X": "fa-brands fa-x-twitter",
+    YouTube: "fa-brands fa-youtube", Snapchat: "fa-brands fa-snapchat",
+    LinkedIn: "fa-brands fa-linkedin", Discord: "fa-brands fa-discord",
+    Gmail: "fa-brands fa-google", Telegram: "fa-brands fa-telegram",
+  };
+  const getCatIcon = (cat: Category) => {
+    const prods = getProductsForCategory(cat.id);
+    if (prods.length > 0 && platformIconMap[prods[0].platform]) return platformIconMap[prods[0].platform];
+    return "";
+  };
+
+  const filteredDbCategories = dbCategories.filter(cat => {
+    if (activeFilter === "all") return true;
+    const prods = getProductsForCategory(cat.id);
+    return prods.some(p => p.platform.toLowerCase().includes(activeFilter));
+  });
+
+  const filterBySearch = (text: string) => {
     if (!searchQuery) return true;
-    return desc.toLowerCase().includes(searchQuery.toLowerCase());
+    return text.toLowerCase().includes(searchQuery.toLowerCase());
   };
 
   const handleSignOut = async () => {
@@ -526,48 +622,41 @@ export default function Dashboard() {
                 <span className="breadcrumb-sep">›</span>
                 <span className="breadcrumb-link" onClick={() => { setSelectedCategory(null); setActivePanel("categories"); }}>Categories</span>
                 <span className="breadcrumb-sep">›</span>
-                <span className="breadcrumb-current">{selectedCategory.catTitle.toUpperCase()}</span>
+                <span className="breadcrumb-current">{selectedCategory.name.toUpperCase()}</span>
               </div>
 
               <div className="category-banner">
                 <div className="category-banner-icon">
-                  {selectedCategory.catIcon ? <i className={selectedCategory.catIcon} /> : "🎵"}
+                  {getCatIcon(selectedCategory) ? <i className={getCatIcon(selectedCategory)} /> : (selectedCategory.emoji || "📦")}
                 </div>
                 <div>
-                  <h2 className="category-banner-title">{selectedCategory.catTitle.toUpperCase()}</h2>
-                  <p className="category-banner-count">{selectedCategory.items.length} products available</p>
+                  <h2 className="category-banner-title">{selectedCategory.name.toUpperCase()}</h2>
+                  <p className="category-banner-count">{getProductsForCategory(selectedCategory.id).length} products available</p>
                 </div>
-              </div>
-
-              <div className="category-filters">
-                <span className="filter-label">Filter by:</span>
-                <select className="filter-select"><option>Region</option><option>All Regions</option><option>Europe</option><option>USA</option><option>UK</option></select>
-                <select className="filter-select"><option>Price Range</option><option>All Prices</option><option>Under ₦5,000</option><option>₦5,000 - ₦10,000</option><option>Above ₦10,000</option></select>
-                <select className="filter-select"><option>Age</option><option>All Ages</option><option>1-3 Years</option><option>4-6 Years</option><option>7+ Years</option></select>
-                <select className="filter-select"><option>Sort: Newest</option><option>Price: Low to High</option><option>Price: High to Low</option><option>Stock: High to Low</option></select>
               </div>
 
               <div className="category-detail-list">
-                {selectedCategory.items.map((item, j) => (
-                  <div key={j} className="account-row">
+                {getProductsForCategory(selectedCategory.id).filter(p => filterBySearch(p.title + p.description)).map((product) => (
+                  <div key={product.id} className="account-row">
                     <div className="acc-platform-icon">
-                      {selectedCategory.catIcon ? <i className={selectedCategory.catIcon} /> : "🎵"}
+                      {platformIconMap[product.platform] ? <i className={platformIconMap[product.platform]} /> : (selectedCategory.emoji || "📦")}
                     </div>
                     <div className="acc-info">
-                      <div className="acc-desc" style={{ WebkitLineClamp: 'unset', display: 'block' }}>{item.desc}</div>
+                      <div className="acc-desc-title">{product.title}</div>
+                      <div className="acc-desc" style={{ WebkitLineClamp: 'unset', display: 'block' }}>{product.description}</div>
                     </div>
                     <div className="acc-stock-price">
                       <div style={{ textAlign: "center" }}>
                         <div className="stock-label">Stock</div>
-                        <div className={`stock-num ${item.stockClass}`}>{item.stock}</div>
+                        <div className={`stock-num ${product.stock === 0 ? "zero" : product.stock < 10 ? "low" : ""}`}>{product.stock}</div>
                       </div>
                       <div style={{ textAlign: "center" }}>
                         <div className="price-label">Price</div>
-                        <div className="price-val">{item.price}</div>
+                        <div className="price-val">{product.currency} {product.price.toLocaleString("en-NG")}</div>
                       </div>
                     </div>
-                    {item.stock > 0 ? (
-                      <button className="buy-btn" onClick={() => setModal({ title: item.modalTitle, desc: item.modalDesc, platform: selectedCategory.catTitle, stock: item.stock, price: item.price })}>
+                    {product.stock > 0 ? (
+                      <button className="buy-btn" onClick={() => setModal({ title: product.title, desc: product.description, platform: product.platform, stock: product.stock, price: `${product.currency} ${product.price.toLocaleString("en-NG")}`, product_id: product.id, priceNum: product.price })}>
                         <i className="fa-solid fa-cart-shopping" /> BUY
                       </button>
                     ) : (
@@ -599,11 +688,11 @@ export default function Dashboard() {
               </div>
 
               <div className="categories-grid">
-                {ACCOUNTS_DATA
-                  .filter((cat) => cat.catTitle.toLowerCase().includes(categorySearch.toLowerCase()))
-                  .map((cat, i) => (
+                {dbCategories
+                  .filter((cat) => cat.name.toLowerCase().includes(categorySearch.toLowerCase()))
+                  .map((cat) => (
                     <div
-                      key={i}
+                      key={cat.id}
                       className="category-card"
                       onClick={() => {
                         setSelectedCategory(cat);
@@ -612,10 +701,10 @@ export default function Dashboard() {
                       }}
                     >
                       <div className="category-card-icon">
-                        {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
+                        {getCatIcon(cat) ? <i className={getCatIcon(cat)} /> : (cat.emoji || "📦")}
                       </div>
-                      <div className="category-card-title">{cat.catTitle}</div>
-                      <div className="category-card-count">{cat.items.length} products</div>
+                      <div className="category-card-title">{cat.name}</div>
+                      <div className="category-card-count">{getProductsForCategory(cat.id).length} products</div>
                     </div>
                   ))}
               </div>
@@ -664,43 +753,44 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {filteredAccounts.map((cat) => {
-                const visibleItems = cat.items.filter((item) => filterBySearch(item.desc));
-                if (visibleItems.length === 0) return null;
+              {filteredDbCategories.map((cat) => {
+                const prods = getProductsForCategory(cat.id).filter(p => filterBySearch(p.title + p.description));
+                if (prods.length === 0) return null;
+                const icon = getCatIcon(cat);
                 return (
-                  <div key={cat.category} className="category-block">
+                  <div key={cat.id} className="category-block">
                     <div className="category-header">
                       <div className="cat-head-left">
                         <div className="cat-platform-icon">
-                          {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
+                          {icon ? <i className={icon} /> : (cat.emoji || "📦")}
                         </div>
                         <div>
-                          <div className="cat-title">{cat.catTitle}</div>
+                          <div className="cat-title">{cat.name}</div>
                         </div>
                       </div>
                       <button className="cat-see-more" onClick={() => setSelectedCategory(cat)}>See More →</button>
                     </div>
-                    {visibleItems.map((item, j) => (
-                      <div key={j} className="account-row">
+                    {prods.map((product) => (
+                      <div key={product.id} className="account-row">
                         <div className="acc-platform-icon">
-                          {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
+                          {platformIconMap[product.platform] ? <i className={platformIconMap[product.platform]} /> : (cat.emoji || "📦")}
                         </div>
                         <div className="acc-info">
-                          <div className="acc-desc-title">{item.modalTitle}</div>
-                          <div className="acc-desc">{item.desc}</div>
+                          <div className="acc-desc-title">{product.title}</div>
+                          <div className="acc-desc">{product.description}</div>
                         </div>
                         <div className="acc-stock-price">
                           <div style={{ textAlign: "center" }}>
                             <div className="stock-label">Stock</div>
-                            <div className={`stock-num ${item.stockClass}`}>{item.stock}</div>
+                            <div className={`stock-num ${product.stock === 0 ? "zero" : product.stock < 10 ? "low" : ""}`}>{product.stock}</div>
                           </div>
                           <div style={{ textAlign: "center" }}>
                             <div className="price-label">Price</div>
-                            <div className="price-val">{item.price}</div>
+                            <div className="price-val">{product.currency} {product.price.toLocaleString("en-NG")}</div>
                           </div>
                         </div>
-                        {item.stock > 0 ? (
-                          <button className="buy-btn" onClick={() => setModal({ title: item.modalTitle, desc: item.modalDesc, platform: cat.catTitle, stock: item.stock, price: item.price })}>
+                        {product.stock > 0 ? (
+                          <button className="buy-btn" onClick={() => setModal({ title: product.title, desc: product.description, platform: product.platform, stock: product.stock, price: `${product.currency} ${product.price.toLocaleString("en-NG")}`, product_id: product.id, priceNum: product.price })}>
                             <i className="fa-solid fa-cart-shopping" /> BUY
                           </button>
                         ) : (
@@ -1043,6 +1133,66 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* MESSAGES */}
+          {activePanel === "messages" && (
+            <div className="dash-panel">
+              <div style={{ padding: "24px 24px 0" }}>
+                <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Messages</h2>
+                <p style={{ fontSize: 14, color: "hsl(220 10% 50%)", marginBottom: 16 }}>Chat with support about your orders</p>
+              </div>
+
+              <div style={{ padding: "0 24px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
+                {/* Messages list */}
+                <div style={{ background: "hsl(220 20% 97%)", borderRadius: 12, padding: 16, minHeight: 300, maxHeight: 500, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+                  {messages.length === 0 ? (
+                    <div style={{ textAlign: "center", color: "hsl(220 10% 60%)", padding: 40 }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>💬</div>
+                      <p>No messages yet. Send a message to get started!</p>
+                    </div>
+                  ) : (
+                    messages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        style={{
+                          alignSelf: msg.sender_id === userId ? "flex-end" : "flex-start",
+                          background: msg.sender_id === userId ? "hsl(220 70% 50%)" : "hsl(0 0% 100%)",
+                          color: msg.sender_id === userId ? "white" : "hsl(220 20% 20%)",
+                          padding: "10px 16px",
+                          borderRadius: 12,
+                          maxWidth: "75%",
+                          fontSize: 14,
+                          boxShadow: "0 1px 3px hsl(0 0% 0% / 0.08)",
+                        }}
+                      >
+                        <div>{msg.content}</div>
+                        <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
+                          {new Date(msg.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                          {msg.sender_id !== userId && " · Admin"}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Message input */}
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    type="text"
+                    className="dash-form-input"
+                    placeholder="Type your message..."
+                    value={msgInput}
+                    onChange={(e) => setMsgInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") sendMessage(); }}
+                    style={{ flex: 1 }}
+                  />
+                  <button className="btn-save" onClick={() => sendMessage()} style={{ whiteSpace: "nowrap" }}>
+                    Send <i className="fa-solid fa-paper-plane" />
+                  </button>
                 </div>
               </div>
             </div>

@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import "../styles/admin.css";
 
-type AdminTab = "overview" | "users" | "orders" | "products" | "categories" | "transactions" | "admins";
+type AdminTab = "overview" | "users" | "orders" | "products" | "categories" | "transactions" | "admins" | "messages";
 
 interface Profile {
   id: string;
@@ -62,6 +62,16 @@ interface Transaction {
   created_at: string;
 }
 
+interface Message {
+  id: string;
+  order_id: string | null;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 interface UserRole {
   id: string;
   user_id: string;
@@ -77,6 +87,7 @@ const NAV: { label: string; icon: string; tab: AdminTab }[] = [
   { label: "Categories", icon: "📁", tab: "categories" },
   { label: "Transactions", icon: "💰", tab: "transactions" },
   { label: "Admin Roles", icon: "🛡️", tab: "admins" },
+  { label: "Messages", icon: "💬", tab: "messages" },
 ];
 
 export default function AdminPanel() {
@@ -105,11 +116,17 @@ export default function AdminPanel() {
   const [productForm, setProductForm] = useState({ title: "", description: "", price: 0, stock: 0, platform: "", category_id: "", currency: "NGN" });
   const [categoryForm, setCategoryForm] = useState({ name: "", slug: "", emoji: "", display_order: 0 });
   const [adminEmail, setAdminEmail] = useState("");
-
+  const [allMessages, setAllMessages] = useState<Message[]>([]);
+  const [selectedChatUser, setSelectedChatUser] = useState<string | null>(null);
+  const [adminMsgInput, setAdminMsgInput] = useState("");
+  const [adminUserId, setAdminUserId] = useState("");
   useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
-    const [p, w, o, pr, c, t, r] = await Promise.all([
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) setAdminUserId(user.id);
+
+    const [p, w, o, pr, c, t, r, m] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("wallets").select("*"),
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
@@ -117,6 +134,7 @@ export default function AdminPanel() {
       supabase.from("categories").select("*").order("display_order"),
       supabase.from("transactions").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("*").order("created_at", { ascending: false }),
+      supabase.from("messages").select("*").order("created_at", { ascending: true }),
     ]);
     if (p.data) setProfiles(p.data as Profile[]);
     if (w.data) setWallets(w.data as Wallet[]);
@@ -125,6 +143,51 @@ export default function AdminPanel() {
     if (c.data) setCategories(c.data as Category[]);
     if (t.data) setTransactions(t.data as Transaction[]);
     if (r.data) setRoles(r.data as UserRole[]);
+    if (m.data) setAllMessages(m.data as Message[]);
+  };
+
+  // Realtime messages for admin
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin-messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        setAllMessages(prev => [...prev, payload.new as Message]);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
+  const getChatUsers = () => {
+    const userIds = new Set(allMessages.map(m => m.sender_id === adminUserId ? m.receiver_id : m.sender_id));
+    userIds.delete("00000000-0000-0000-0000-000000000000");
+    userIds.delete(adminUserId);
+    // Also add users who sent messages to the placeholder
+    allMessages.forEach(m => {
+      if (m.receiver_id === "00000000-0000-0000-0000-000000000000") userIds.add(m.sender_id);
+    });
+    return Array.from(userIds);
+  };
+
+  const getChatMessages = (chatUserId: string) => {
+    return allMessages.filter(m =>
+      (m.sender_id === chatUserId) ||
+      (m.receiver_id === chatUserId) ||
+      (m.sender_id === chatUserId && m.receiver_id === "00000000-0000-0000-0000-000000000000")
+    );
+  };
+
+  const sendAdminMessage = async () => {
+    if (!adminMsgInput.trim() || !selectedChatUser || !adminUserId) return;
+    const { error } = await supabase.from("messages").insert({
+      sender_id: adminUserId,
+      receiver_id: selectedChatUser,
+      content: adminMsgInput.trim(),
+    });
+    if (error) {
+      toast.error("Failed to send");
+    } else {
+      setAdminMsgInput("");
+    }
   };
 
   const getWalletBalance = (userId: string) => {
@@ -1039,6 +1102,87 @@ export default function AdminPanel() {
                     <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => removeAdmin(r.id)}>🗑️ Remove Admin</button>
                   </div>
                 ))}
+              </div>
+            </>
+          )}
+
+          {/* MESSAGES */}
+          {tab === "messages" && (
+            <>
+              <h2 className="admin-section-title">💬 User Messages</h2>
+              <div style={{ display: "flex", gap: 16, minHeight: 400 }}>
+                {/* User list */}
+                <div style={{ width: 240, background: "hsl(220 20% 97%)", borderRadius: 12, padding: 12, overflowY: "auto" }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "hsl(220 10% 50%)", marginBottom: 8, textTransform: "uppercase" }}>Conversations</div>
+                  {getChatUsers().length === 0 ? (
+                    <div style={{ color: "hsl(220 10% 60%)", fontSize: 13, padding: 12 }}>No messages yet</div>
+                  ) : (
+                    getChatUsers().map(uid => {
+                      const unread = allMessages.filter(m => m.sender_id === uid && !m.is_read).length;
+                      return (
+                        <div
+                          key={uid}
+                          onClick={() => setSelectedChatUser(uid)}
+                          style={{
+                            padding: "10px 12px", borderRadius: 8, cursor: "pointer", marginBottom: 4,
+                            background: selectedChatUser === uid ? "hsl(220 70% 50%)" : "transparent",
+                            color: selectedChatUser === uid ? "white" : "inherit",
+                          }}
+                        >
+                          <div style={{ fontWeight: 600, fontSize: 14 }}>{getUserName(uid)}</div>
+                          {unread > 0 && <span style={{ background: "hsl(0 70% 50%)", color: "white", borderRadius: 10, padding: "1px 8px", fontSize: 11, fontWeight: 700 }}>{unread}</span>}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Chat area */}
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "hsl(220 20% 97%)", borderRadius: 12, padding: 16 }}>
+                  {!selectedChatUser ? (
+                    <div style={{ textAlign: "center", color: "hsl(220 10% 60%)", padding: 60 }}>
+                      <div style={{ fontSize: 32, marginBottom: 8 }}>💬</div>
+                      <p>Select a conversation to view messages</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12, paddingBottom: 12, borderBottom: "1px solid hsl(220 20% 90%)" }}>
+                        Chat with {getUserName(selectedChatUser)}
+                      </div>
+                      <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8, marginBottom: 12, maxHeight: 350 }}>
+                        {getChatMessages(selectedChatUser).map(msg => (
+                          <div
+                            key={msg.id}
+                            style={{
+                              alignSelf: msg.sender_id === adminUserId ? "flex-end" : "flex-start",
+                              background: msg.sender_id === adminUserId ? "hsl(220 70% 50%)" : "white",
+                              color: msg.sender_id === adminUserId ? "white" : "hsl(220 20% 20%)",
+                              padding: "10px 16px", borderRadius: 12, maxWidth: "70%", fontSize: 14,
+                              boxShadow: "0 1px 3px hsl(0 0% 0% / 0.08)",
+                            }}
+                          >
+                            <div>{msg.content}</div>
+                            <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
+                              {new Date(msg.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input
+                          type="text"
+                          className="admin-input"
+                          placeholder="Type a reply..."
+                          value={adminMsgInput}
+                          onChange={(e) => setAdminMsgInput(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") sendAdminMessage(); }}
+                          style={{ flex: 1 }}
+                        />
+                        <button className="admin-btn admin-btn-primary" onClick={sendAdminMessage}>Send</button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </>
           )}
