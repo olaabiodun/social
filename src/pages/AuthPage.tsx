@@ -224,7 +224,7 @@ const AuthPage = () => {
       <div className="auth-layout">
         {/* LEFT PANEL */}
         <div className="left-panel">
-          <div className="left-panel-bg-text">GOODLUCK ACCOUNTS</div>
+          
           <Link to="/" className="left-logo">
             <div className="dot" />
             Goodluck Store<span style={{ opacity: 0.5 }}>Accounts</span>
