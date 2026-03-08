@@ -261,36 +261,6 @@ export default function Dashboard() {
             );
           })}
 
-          <div className="nav-section-label">Categories</div>
-          <div className="sidebar-cat-search">
-            <i className="fa-solid fa-magnifying-glass" />
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={categorySearch}
-              onChange={(e) => setCategorySearch(e.target.value)}
-            />
-          </div>
-          {ACCOUNTS_DATA
-            .filter((cat) => cat.catTitle.toLowerCase().includes(categorySearch.toLowerCase()))
-            .map((cat, i) => (
-              <button
-                key={`cat-${i}`}
-                className={`dash-nav-item ${selectedCategory?.category === cat.category ? "active" : ""}`}
-                onClick={() => {
-                  setActivePanel("home");
-                  setSelectedCategory(cat);
-                  setSidebarOpen(false);
-                  setCategorySearch("");
-                }}
-              >
-                <span className="nav-icon">
-                  {cat.catIcon ? <i className={cat.catIcon} /> : "🎵"}
-                </span>
-                <span className="nav-cat-label">{cat.catTitle}</span>
-                <span className="nav-badge">{cat.items.length}</span>
-              </button>
-            ))}
         </nav>
 
         <div className="sidebar-bottom">
