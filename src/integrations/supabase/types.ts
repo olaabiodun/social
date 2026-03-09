@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_logs: {
+        Row: {
+          created_at: string
+          id: string
+          is_sold: boolean
+          login: string
+          order_id: string | null
+          password: string
+          product_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_sold?: boolean
+          login: string
+          order_id?: string | null
+          password: string
+          product_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_sold?: boolean
+          login?: string
+          order_id?: string | null
+          password?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_logs_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_logs_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
