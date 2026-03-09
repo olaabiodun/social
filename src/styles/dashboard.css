@@ -2159,3 +2159,19 @@ textarea.dash-form-input { min-height: 120px; resize: vertical; }
   font-weight: 500;
 }
 
+/* ═══ SCROLL ANIMATIONS ═══ */
+.slide-from-left {
+  opacity: 0;
+  transform: translateX(-60px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.slide-from-right {
+  opacity: 0;
+  transform: translateX(60px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.slide-from-left.slide-visible,
+.slide-from-right.slide-visible {
+  opacity: 1;
+  transform: translateX(0);
+}
