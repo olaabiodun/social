@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ interface Product {
   stock: number;
   platform: string;
   currency: string;
+  image_url: string | null;
 }
 
 interface Order {
@@ -56,145 +57,6 @@ interface Message {
   created_at: string;
 }
 
-// Static fallback data
-const ACCOUNTS_DATA = [
-  {
-    category: "facebook",
-    catTitle: "Random Facebook 🇬🇧 🇨🇱 🇩🇪",
-    catEmoji: "",
-    catIcon: "fa-brands fa-facebook",
-    catTags: ["GB", "CL", "DE", "US"],
-    items: [
-      { desc: "High quality 🇩🇪 🇬🇧 🇨🇦 Facebook with 200-5,000 friends (sharp friends) Active marketplace, 90% has create profile Few has post", tags: [{ label: "High Quality", type: "quality" }], stock: 29, stockClass: "", price: "NGN 4,000.00", modalTitle: "Facebook Account", modalDesc: "High quality Facebook with 200–5,000 friends" },
-      { desc: "2-10 YEARS OLD EUROPE 🇮🇹🇩🇪🇫🇷 FACEBOOK WITH HIGH FRIENDS Active marketplace 60% have create profile Few has Get started dating ❤️(NO 2FA)", tags: [{ label: "Europe", type: "region" }, { label: "No 2FA", type: "note" }], stock: 47, stockClass: "", price: "NGN 5,500.00", modalTitle: "Europe Facebook", modalDesc: "2–10 Years Old Europe Facebook with High Friends" },
-      { desc: "facebook:2–15 High Quality 🇺🇸🇬🇧🇩🇪🇫🇷 🇨🇦 FACEBOOK ( 30-1k friend) many accounts here have create profile this quality is very sharp 💯💯", tags: [{ label: "Premium", type: "quality" }], stock: 33, stockClass: "", price: "NGN 5,500.00", modalTitle: "Facebook Premium", modalDesc: "High Quality Facebook 30-1K friends" },
-    ],
-  },
-  {
-    category: "tiktok",
-    catTitle: "Country TikTok 🎵",
-    catEmoji: "",
-    catIcon: "",
-    catTags: ["VERIFIED", "AGED"],
-    items: [
-      { desc: "GERMANY 🇩🇪 TIKTOK 100+ FOLLOWERS (5+ Old posts) | Verified by (2fa | Mail ) (4yrs)", tags: [{ label: "Germany", type: "region" }, { label: "Verified", type: "quality" }], stock: 33, stockClass: "", price: "NGN 2,800.00", modalTitle: "Germany TikTok", modalDesc: "Germany TikTok 100+ Followers" },
-      { desc: "Uk 🇬🇧 TIKTOK 100+ FOLLOWERS (5+ Old posts) | Verified by (2fa | Mail ) (4yrs)", tags: [{ label: "UK", type: "region" }, { label: "Verified", type: "quality" }], stock: 0, stockClass: "zero", price: "NGN 2,800.00", modalTitle: "UK TikTok", modalDesc: "UK TikTok 100+ Followers" },
-      { desc: "CANADA 🇨🇦 TIKTOK 100+ FOLLOWERS (5+ Old posts) | Verified by (2fa | Mail ) (4yrs)", tags: [{ label: "Canada", type: "region" }, { label: "Verified", type: "quality" }], stock: 176, stockClass: "", price: "NGN 2,800.00", modalTitle: "Canada TikTok", modalDesc: "Canada TikTok 100+ Followers" },
-      { desc: "FRANCE 🇫🇷 TIKTOK 100+ FOLLOWERS (5+ Old posts) | Verified by (2fa | Mail ) (4yrs)", tags: [{ label: "France", type: "region" }, { label: "Verified", type: "quality" }], stock: 251, stockClass: "", price: "NGN 2,800.00", modalTitle: "France TikTok", modalDesc: "France TikTok 100+ Followers" },
-    ],
-  },
-  {
-    category: "facebook-usa",
-    catTitle: "USA 🇺🇸 FACEBOOK",
-    catEmoji: "",
-    catIcon: "fa-brands fa-facebook",
-    catTags: ["USA", "PREMIUM"],
-    items: [
-      { desc: "4-6 YEARS USA 🇺🇸 faceb00k (100+ FRIENDS)(real+fake friendss mix) (sharp friends) (ALMOST ALL HAVE SWITCH PROFILE)", tags: [{ label: "USA", type: "region" }, { label: "4-6 Yrs", type: "age" }], stock: 10, stockClass: "low", price: "NGN 13,000.00", modalTitle: "USA Facebook", modalDesc: "4-6 Years USA Facebook 100+ Friends" },
-    ],
-  },
-  {
-    category: "instagram",
-    catTitle: "Instagram Accounts 📷",
-    catEmoji: "",
-    catIcon: "fa-brands fa-instagram",
-    catTags: ["AGED", "FOLLOWERS"],
-    items: [
-      { desc: "USA 🇺🇸 Instagram 500+ Followers | Aged 2-5 Years | Email Verified | Profile Picture Set", tags: [{ label: "USA", type: "region" }, { label: "500+ Followers", type: "quality" }], stock: 64, stockClass: "", price: "NGN 3,500.00", modalTitle: "USA Instagram", modalDesc: "USA Instagram 500+ Followers Aged 2-5 Years" },
-      { desc: "UK 🇬🇧 Instagram 1K+ Followers | Aged 3+ Years | Active Posts | Email + Phone Verified", tags: [{ label: "UK", type: "region" }, { label: "1K+ Followers", type: "quality" }], stock: 22, stockClass: "", price: "NGN 6,000.00", modalTitle: "UK Instagram", modalDesc: "UK Instagram 1K+ Followers Aged 3+ Years" },
-      { desc: "Random Country Instagram 200-1K Followers | Created 2020-2023 | No 2FA | Ready to use", tags: [{ label: "Random", type: "region" }, { label: "No 2FA", type: "note" }], stock: 118, stockClass: "", price: "NGN 2,500.00", modalTitle: "Random Instagram", modalDesc: "Random Country Instagram 200-1K Followers" },
-    ],
-  },
-  {
-    category: "twitter",
-    catTitle: "Twitter / X Accounts 🐦",
-    catEmoji: "",
-    catIcon: "fa-brands fa-x-twitter",
-    catTags: ["VERIFIED", "AGED"],
-    items: [
-      { desc: "USA 🇺🇸 Twitter/X Aged 2-6 Years | 100+ Followers | Email Verified | Phone Verified", tags: [{ label: "USA", type: "region" }, { label: "Aged", type: "age" }], stock: 41, stockClass: "", price: "NGN 4,500.00", modalTitle: "USA Twitter/X", modalDesc: "USA Twitter/X Aged 2-6 Years 100+ Followers" },
-      { desc: "Europe 🇩🇪🇫🇷🇬🇧 Twitter/X Aged 1-3 Years | 50+ Followers | Email Verified | Bio Set", tags: [{ label: "Europe", type: "region" }, { label: "Bio Set", type: "quality" }], stock: 58, stockClass: "", price: "NGN 3,000.00", modalTitle: "Europe Twitter/X", modalDesc: "Europe Twitter/X Aged 1-3 Years 50+ Followers" },
-    ],
-  },
-  {
-    category: "youtube",
-    catTitle: "YouTube Accounts ▶️",
-    catEmoji: "",
-    catIcon: "fa-brands fa-youtube",
-    catTags: ["MONETIZED", "AGED"],
-    items: [
-      { desc: "YouTube Channel Aged 3+ Years | 1K+ Subscribers | Monetization Eligible | Clean Strike History", tags: [{ label: "1K+ Subs", type: "quality" }, { label: "Monetizable", type: "quality" }], stock: 8, stockClass: "low", price: "NGN 45,000.00", modalTitle: "YouTube Monetizable", modalDesc: "YouTube Channel 1K+ Subs Monetization Eligible" },
-      { desc: "YouTube Fresh Channel | Aged 1-2 Years | Brand Account | 0 Strikes | Ready for Upload", tags: [{ label: "Fresh", type: "quality" }, { label: "No Strikes", type: "note" }], stock: 35, stockClass: "", price: "NGN 5,000.00", modalTitle: "YouTube Fresh", modalDesc: "YouTube Fresh Channel Aged 1-2 Years" },
-    ],
-  },
-  {
-    category: "snapchat",
-    catTitle: "Snapchat Accounts 👻",
-    catEmoji: "",
-    catIcon: "fa-brands fa-snapchat",
-    catTags: ["AGED", "SCORE"],
-    items: [
-      { desc: "USA 🇺🇸 Snapchat 10K+ Score | Aged 2+ Years | Email Verified | Memories Enabled", tags: [{ label: "USA", type: "region" }, { label: "10K+ Score", type: "quality" }], stock: 27, stockClass: "", price: "NGN 3,200.00", modalTitle: "USA Snapchat", modalDesc: "USA Snapchat 10K+ Score Aged 2+ Years" },
-      { desc: "Random Country Snapchat 5K+ Score | Aged 1+ Year | Ready to use | No bans", tags: [{ label: "Random", type: "region" }, { label: "Clean", type: "note" }], stock: 89, stockClass: "", price: "NGN 1,800.00", modalTitle: "Random Snapchat", modalDesc: "Random Country Snapchat 5K+ Score" },
-    ],
-  },
-  {
-    category: "linkedin",
-    catTitle: "LinkedIn Accounts 💼",
-    catEmoji: "",
-    catIcon: "fa-brands fa-linkedin",
-    catTags: ["PROFESSIONAL", "CONNECTIONS"],
-    items: [
-      { desc: "USA 🇺🇸 LinkedIn 500+ Connections | Complete Profile | Aged 3+ Years | Email Verified", tags: [{ label: "USA", type: "region" }, { label: "500+ Connections", type: "quality" }], stock: 15, stockClass: "", price: "NGN 8,000.00", modalTitle: "USA LinkedIn", modalDesc: "USA LinkedIn 500+ Connections Complete Profile" },
-      { desc: "Europe 🇬🇧🇩🇪 LinkedIn 100+ Connections | Aged 1-3 Years | Profile Picture | Bio Set", tags: [{ label: "Europe", type: "region" }, { label: "Complete Profile", type: "quality" }], stock: 30, stockClass: "", price: "NGN 5,500.00", modalTitle: "Europe LinkedIn", modalDesc: "Europe LinkedIn 100+ Connections" },
-    ],
-  },
-  {
-    category: "discord",
-    catTitle: "Discord Accounts 🎮",
-    catEmoji: "",
-    catIcon: "fa-brands fa-discord",
-    catTags: ["AGED", "NITRO"],
-    items: [
-      { desc: "Discord Aged 2+ Years | Email + Phone Verified | Avatar Set | Nitro Ready | No Bans", tags: [{ label: "Aged", type: "age" }, { label: "Verified", type: "quality" }], stock: 120, stockClass: "", price: "NGN 2,000.00", modalTitle: "Discord Aged", modalDesc: "Discord Aged 2+ Years Email + Phone Verified" },
-      { desc: "Discord Token Aged 6+ Months | HQ Server Boost Eligible | Email Verified", tags: [{ label: "Token", type: "quality" }, { label: "Boost Ready", type: "note" }], stock: 200, stockClass: "", price: "NGN 1,200.00", modalTitle: "Discord Token", modalDesc: "Discord Token Aged 6+ Months" },
-    ],
-  },
-  {
-    category: "gmail",
-    catTitle: "Gmail / Google Accounts 📧",
-    catEmoji: "",
-    catIcon: "fa-brands fa-google",
-    catTags: ["FRESH", "AGED"],
-    items: [
-      { desc: "Gmail Aged 2+ Years | Phone Verified | Recovery Email Set | USA IP Created 🇺🇸", tags: [{ label: "USA", type: "region" }, { label: "Aged", type: "age" }], stock: 95, stockClass: "", price: "NGN 2,500.00", modalTitle: "USA Gmail", modalDesc: "Gmail Aged 2+ Years Phone Verified USA" },
-      { desc: "Fresh Gmail 2024 | Phone Verified | Clean | No Suspensions | Bulk Available", tags: [{ label: "Fresh", type: "quality" }, { label: "Bulk", type: "note" }], stock: 500, stockClass: "", price: "NGN 800.00", modalTitle: "Fresh Gmail", modalDesc: "Fresh Gmail 2024 Phone Verified Clean" },
-    ],
-  },
-  {
-    category: "telegram",
-    catTitle: "Telegram Accounts ✈️",
-    catEmoji: "",
-    catIcon: "fa-brands fa-telegram",
-    catTags: ["AGED", "SESSION"],
-    items: [
-      { desc: "Telegram Aged 1+ Year | Phone Verified | TDATA Session | No Spam Block | Ready to Use", tags: [{ label: "Aged", type: "age" }, { label: "TDATA", type: "quality" }], stock: 73, stockClass: "", price: "NGN 3,000.00", modalTitle: "Telegram Aged", modalDesc: "Telegram Aged 1+ Year Phone Verified TDATA" },
-      { desc: "Telegram Fresh | Created 2024 | Phone Number Included | Clean History | No Restrictions", tags: [{ label: "Fresh", type: "quality" }, { label: "With Phone", type: "note" }], stock: 150, stockClass: "", price: "NGN 1,500.00", modalTitle: "Telegram Fresh", modalDesc: "Telegram Fresh 2024 With Phone Number" },
-    ],
-  },
-  {
-    category: "proxies",
-    catTitle: "Private Proxies 🔒",
-    catEmoji: "",
-    catIcon: "fa-solid fa-shield-halved",
-    catTags: ["RESIDENTIAL", "DATACENTER"],
-    items: [
-      { desc: "USA Residential Proxy | Rotating IP | Unlimited Bandwidth | 30 Day Access | SOCKS5 + HTTP", tags: [{ label: "USA", type: "region" }, { label: "Residential", type: "quality" }], stock: 999, stockClass: "", price: "NGN 7,000.00", modalTitle: "USA Residential Proxy", modalDesc: "USA Residential Rotating Proxy 30 Day Access" },
-      { desc: "Datacenter Proxy Pack (10 IPs) | USA/EU Mix | Static IP | 30 Day Access | Fast Speed", tags: [{ label: "10 Pack", type: "quality" }, { label: "Static", type: "note" }], stock: 50, stockClass: "", price: "NGN 4,000.00", modalTitle: "Datacenter Proxy Pack", modalDesc: "Datacenter Proxy 10 IPs USA/EU 30 Days" },
-    ],
-  },
-];
-
 type NavSection = { label: string; type: "section" };
 type NavLink = { label: string; icon: string; panel?: PanelName; action?: () => void; badge?: string; ext?: boolean };
 type NavItem = NavSection | NavLink;
@@ -215,7 +77,7 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const PANEL_TITLES: Record<PanelName, string> = {
-  home: "Goodluckstore",
+  home: "VerifiedStore",
   categories: "Categories",
   profile: "My Profile",
   orders: "My Orders",
@@ -252,6 +114,19 @@ export default function Dashboard() {
   const [unreadCount, setUnreadCount] = useState(0);
   const { isAdmin } = useAdminCheck();
 
+  // Scroll animation
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) e.target.classList.add("slide-visible");
+      }),
+      { threshold: 0.1 }
+    );
+    const elements = document.querySelectorAll(".slide-from-left, .slide-from-right");
+    elements.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [activePanel, selectedCategory, dbProducts]);
+
   useEffect(() => {
     loadUserData();
   }, []);
@@ -262,7 +137,6 @@ export default function Dashboard() {
     setEmail(user.email || "");
     setUserId(user.id);
 
-    // Load profile
     const { data: profile } = await supabase
       .from("profiles")
       .select("username")
@@ -270,7 +144,6 @@ export default function Dashboard() {
       .single();
     if (profile?.username) setUsername(profile.username);
 
-    // Load wallet
     const { data: wallet } = await supabase
       .from("wallets")
       .select("balance")
@@ -278,7 +151,6 @@ export default function Dashboard() {
       .single();
     if (wallet) setBalance(Number(wallet.balance));
 
-    // Load orders
     const { data: userOrders } = await supabase
       .from("orders")
       .select("*")
@@ -286,21 +158,18 @@ export default function Dashboard() {
       .order("created_at", { ascending: false });
     if (userOrders) setOrders(userOrders as Order[]);
 
-    // Load categories
     const { data: cats } = await supabase
       .from("categories")
       .select("*")
       .order("display_order", { ascending: true });
     if (cats) setDbCategories(cats as Category[]);
 
-    // Load products
     const { data: prods } = await supabase
       .from("products")
       .select("*")
       .eq("is_active", true);
     if (prods) setDbProducts(prods as Product[]);
 
-    // Load messages
     const { data: msgs } = await supabase
       .from("messages")
       .select("*")
@@ -330,10 +199,9 @@ export default function Dashboard() {
 
   const sendMessage = async (orderId?: string) => {
     if (!msgInput.trim() || !userId) return;
-    // Find an admin user_id to send to - we'll use a placeholder; admin will see all via RLS
     const { error } = await supabase.from("messages").insert({
       sender_id: userId,
-      receiver_id: "00000000-0000-0000-0000-000000000000", // placeholder, admin sees all via RLS
+      receiver_id: "00000000-0000-0000-0000-000000000000",
       content: msgInput.trim(),
       order_id: orderId || null,
     });
@@ -364,6 +232,16 @@ export default function Dashboard() {
     const prods = getProductsForCategory(cat.id);
     if (prods.length > 0 && platformIconMap[prods[0].platform]) return platformIconMap[prods[0].platform];
     return "";
+  };
+
+  const getProductImage = (product: Product, cat?: Category | null) => {
+    if (product.image_url) {
+      return <img src={product.image_url} alt={product.title} style={{ width: 40, height: 40, borderRadius: 10, objectFit: "cover" }} />;
+    }
+    if (platformIconMap[product.platform]) {
+      return <i className={platformIconMap[product.platform]} />;
+    }
+    return <span>{cat?.emoji || "📦"}</span>;
   };
 
   const filteredDbCategories = dbCategories.filter(cat => {
@@ -437,7 +315,6 @@ export default function Dashboard() {
                     body: { product_id: modal.product_id, quantity: 1 },
                   });
                   if (error) {
-                    // Try to parse the error context for a message
                     toast.error("Purchase failed. Please try again.");
                   } else if (!data?.success) {
                     toast.error(data?.error || "Purchase failed");
@@ -531,8 +408,8 @@ export default function Dashboard() {
       <aside className={`dash-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-logo">
           <div className="logo-mark">
-            <div className="logo-icon">G</div>
-            Goodluckstore
+            <div className="logo-icon">V</div>
+            VerifiedStore
           </div>
         </div>
 
@@ -639,10 +516,10 @@ export default function Dashboard() {
               </div>
 
               <div className="category-detail-list">
-                {getProductsForCategory(selectedCategory.id).filter(p => filterBySearch(p.title + p.description)).map((product) => (
-                  <div key={product.id} className="account-row">
+                {getProductsForCategory(selectedCategory.id).filter(p => filterBySearch(p.title + p.description)).map((product, idx) => (
+                  <div key={product.id} className={`account-row ${idx % 2 === 0 ? "slide-from-left" : "slide-from-right"}`}>
                     <div className="acc-platform-icon">
-                      {platformIconMap[product.platform] ? <i className={platformIconMap[product.platform]} /> : (selectedCategory.emoji || "📦")}
+                      {getProductImage(product, selectedCategory)}
                     </div>
                     <div className="acc-info">
                       <div className="acc-desc-title">{product.title}</div>
@@ -773,10 +650,10 @@ export default function Dashboard() {
                       </div>
                       <button className="cat-see-more" onClick={() => setSelectedCategory(cat)}>See More →</button>
                     </div>
-                    {prods.map((product) => (
-                      <div key={product.id} className="account-row">
+                    {prods.map((product, idx) => (
+                      <div key={product.id} className={`account-row ${idx % 2 === 0 ? "slide-from-left" : "slide-from-right"}`}>
                         <div className="acc-platform-icon">
-                          {platformIconMap[product.platform] ? <i className={platformIconMap[product.platform]} /> : (cat.emoji || "📦")}
+                          {getProductImage(product, cat)}
                         </div>
                         <div className="acc-info">
                           <div className="acc-desc-title">{product.title}</div>
@@ -1015,13 +892,13 @@ export default function Dashboard() {
 
                       <div className="manual-bank-card">
                         <div className="manual-bank-name">🏦 First Bank of Nigeria</div>
-                        <div className="manual-bank-detail"><span>Account Name:</span> <strong>Goodluckstore Ltd</strong></div>
+                        <div className="manual-bank-detail"><span>Account Name:</span> <strong>VerifiedStore Ltd</strong></div>
                         <div className="manual-bank-detail"><span>Account Number:</span> <strong>0123456789</strong></div>
                       </div>
 
                       <div className="manual-bank-card">
                         <div className="manual-bank-name">🏦 GTBank</div>
-                        <div className="manual-bank-detail"><span>Account Name:</span> <strong>Goodluckstore Ltd</strong></div>
+                        <div className="manual-bank-detail"><span>Account Name:</span> <strong>VerifiedStore Ltd</strong></div>
                         <div className="manual-bank-detail"><span>Account Number:</span> <strong>9876543210</strong></div>
                       </div>
 
@@ -1118,7 +995,7 @@ export default function Dashboard() {
                     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                       {[
                         { icon: "💬", name: "Telegram Support", desc: "Usually replies in minutes" },
-                        { icon: "📧", name: "Email Support", desc: "support@goodluckstore.com" },
+                        { icon: "📧", name: "Email Support", desc: "support@verifiedstore.com" },
                         { icon: "🌐", name: "Live Chat", desc: "Available 24/7 online" },
                       ].map((c, i) => (
                         <div key={i} className="payment-method" onClick={() => toast(`Opening ${c.name.toLowerCase()}...`)}>
@@ -1150,7 +1027,6 @@ export default function Dashboard() {
               </div>
 
               <div style={{ padding: "0 24px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
-                {/* Messages list */}
                 <div style={{ background: "hsl(220 20% 97%)", borderRadius: 12, padding: 16, minHeight: 300, maxHeight: 500, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
                   {messages.length === 0 ? (
                     <div style={{ textAlign: "center", color: "hsl(220 10% 60%)", padding: 40 }}>
@@ -1182,7 +1058,6 @@ export default function Dashboard() {
                   )}
                 </div>
 
-                {/* Message input */}
                 <div style={{ display: "flex", gap: 8 }}>
                   <input
                     type="text"
