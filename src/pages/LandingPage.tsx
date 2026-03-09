@@ -93,7 +93,7 @@ const LandingPage = () => {
 
       {/* NAV */}
       <nav className={`landing-nav${navScrolled ? " scrolled" : ""}`}>
-        <Link to="/" className="nav-logo">Goodluck <span>Store</span></Link>
+        <Link to="/" className="nav-logo">Verified <span>Store</span></Link>
         <ul className="nav-links">
           <li><a href="#about">About</a></li>
           <li><a href="#features">Features</a></li>
@@ -160,7 +160,7 @@ const LandingPage = () => {
         <div className="about-content reveal">
           <div className="section-tag text-primary-foreground">Who We Are</div>
           <h2 className="section-title">The Premier<br /><span style={{ color: "var(--blue)" }}>Social Media</span><br />Marketplace</h2>
-          <p className="section-sub"><p className="section-sub">Goodluck Store is a premier provider of established social media accounts across all major platforms. We specialize in delivering authentic, ready-to-use accounts with real followers, genuine engagement, and verified status options.</p> of established social media accounts across all major platforms. We specialize in delivering authentic, ready-to-use accounts with real followers, genuine engagement, and verified status options.</p>
+          <p className="section-sub">Verified Store is a premier provider of established social media accounts across all major platforms. We specialize in delivering authentic, ready-to-use accounts with real followers, genuine engagement, and verified status options.</p>
           <div className="platforms-showcase">
             {[
             { icon: "fa-brands fa-instagram", name: "Instagram" },
@@ -254,7 +254,7 @@ const LandingPage = () => {
       <section className="why landing-section" id="why">
         <div className="why-header reveal">
           <div className="section-tag">Our Advantages</div>
-          <h2 className="section-title">Why Choose <span style={{ color: "var(--blue)" }}>Goodluck Store?</span></h2>
+          <h2 className="section-title">Why Choose <span style={{ color: "var(--blue)" }}>Verified Store?</span></h2>
         </div>
         <div className="why-main">
           {[
@@ -288,13 +288,13 @@ const LandingPage = () => {
         <div className="testimonials-header reveal">
           <div className="section-tag">Customer Success Stories</div>
           <h2 className="section-title">What Our <span style={{ color: "var(--blue)" }}>Customers</span> Say</h2>
-          <p className="section-sub">Join thousands of satisfied customers who <p className="section-sub">Join thousands of satisfied customers who trusted Goodluck Store to grow their social presence.</p> their social presence.</p>
+          <p className="section-sub">Join thousands of satisfied customers who trusted Verified Store to grow their social presence.</p>
         </div>
         <div className="testimonials-grid">
           {[
           { initials: "SJ", name: "Sarah Johnson", role: "Content Creator", text: '"Purchased an Instagram account with 100K followers. The account was exactly as described, verified, and the transfer was seamless. Best investment I\'ve made for my business!"', platform: "Instagram", platformIcon: "fa-brands fa-instagram", stat: "100K Followers" },
-          { initials: "MC", name: "Michael Chen", role: "Digital Marketer", text: '"Goodluck Store made it incredibly easy to jumpstart my social media presence. The account had real engagement and authentic followers. Customer support was absolutely amazing!"', platform: "TikTok", platformIcon: "fa-brands fa-tiktok", stat: "250K Followers" },
-          { initials: "ER", name: "Emily Rodriguez", role: "Business Owner", text: '"I was skeptical at first, but Goodluck Store exceeded all expectations. Instant delivery, secure payment, and the account metrics were 100% accurate. Highly recommend!"', platform: "YouTube", platformIcon: "fa-brands fa-youtube", stat: "180K Subscribers" },
+          { initials: "MC", name: "Michael Chen", role: "Digital Marketer", text: '"Verified Store made it incredibly easy to jumpstart my social media presence. The account had real engagement and authentic followers. Customer support was absolutely amazing!"', platform: "TikTok", platformIcon: "fa-brands fa-tiktok", stat: "250K Followers" },
+          { initials: "ER", name: "Emily Rodriguez", role: "Business Owner", text: '"I was skeptical at first, but Verified Store exceeded all expectations. Instant delivery, secure payment, and the account metrics were 100% accurate. Highly recommend!"', platform: "YouTube", platformIcon: "fa-brands fa-youtube", stat: "180K Subscribers" },
           { initials: "DK", name: "David Kim", role: "Influencer", text: '"The quality of accounts here is unmatched. Real followers, great engagement rates, and the verification badge was fully intact. Worth every single penny spent!"', platform: "Twitter/X", platformIcon: "fa-brands fa-x-twitter", stat: "75K Followers" }].
           map((t, i) =>
           <div className={`testimonial-card reveal${i > 0 ? ` reveal-delay-${i}` : ""}`} key={t.name}>
@@ -326,7 +326,7 @@ const LandingPage = () => {
           <div className="reveal">
             <div className="section-tag">Got Questions?</div>
             <h2 className="section-title">Frequently<br />Asked<br /><span style={{ color: "var(--blue)" }}>Questions</span></h2>
-            <p className="section-sub">Everything you need to know about <p className="section-sub">Everything you need to know about buying social media accounts from Goodluck Store.</p></p>
+            <p className="section-sub">Everything you need to know about buying social media accounts from Verified Store.</p>
           </div>
           <div className="faq-list reveal reveal-delay-1">
             {faqItems.map((faq, i) =>
@@ -361,7 +361,7 @@ const LandingPage = () => {
       <footer className="landing-footer">
         <div className="footer-top">
           <div>
-            <div className="footer-logo">Goodluck <span>Store</span></div>
+            <div className="footer-logo">Verified <span>Store</span></div>
             <p className="footer-desc">Premium social media accounts with real followers and verified status. Your trusted partner for social growth.</p>
             <div className="footer-socials">
               <div className="social-btn"><i className="fa-brands fa-instagram" /></div>
@@ -385,12 +385,12 @@ const LandingPage = () => {
           <div className="footer-col">
             <h4>Contact</h4>
             <ul className="footer-links">
-              <li><a href="#">support@goodluck.com</a></li><li><a href="#">24/7 Support</a></li><li><a href="#">Live Chat</a></li><li><a href="#">Help Center</a></li>
+              <li><a href="#">support@verifiedstore.com</a></li><li><a href="#">24/7 Support</a></li><li><a href="#">Live Chat</a></li><li><a href="#">Help Center</a></li>
             </ul>
           </div>
         </div>
         <div className="footer-bottom">
-          <div className="footer-copy"><div className="footer-copy">© 2025 Goodluck Store. All rights reserved.</div></div>
+          <div className="footer-copy">© 2025 Verified Store. All rights reserved.</div>
           <div className="footer-legal"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Refund Policy</a></div>
         </div>
       </footer>

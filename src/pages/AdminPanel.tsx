@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import "../styles/admin.css";
 
-type AdminTab = "overview" | "users" | "orders" | "products" | "categories" | "transactions" | "admins" | "messages";
+type AdminTab = "overview" | "users" | "orders" | "products" | "categories" | "transactions" | "admins" | "messages" | "logs";
 
 interface Profile {
   id: string;
@@ -42,6 +42,7 @@ interface Product {
   category_id: string;
   is_active: boolean;
   currency: string;
+  image_url: string | null;
 }
 
 interface Category {
@@ -79,11 +80,22 @@ interface UserRole {
   created_at: string;
 }
 
+interface AccountLog {
+  id: string;
+  product_id: string;
+  login: string;
+  password: string;
+  is_sold: boolean;
+  order_id: string | null;
+  created_at: string;
+}
+
 const NAV: { label: string; icon: string; tab: AdminTab }[] = [
   { label: "Overview", icon: "📊", tab: "overview" },
   { label: "Users", icon: "👥", tab: "users" },
   { label: "Orders", icon: "📦", tab: "orders" },
   { label: "Products", icon: "🛍️", tab: "products" },
+  { label: "Account Logs", icon: "🔑", tab: "logs" },
   { label: "Categories", icon: "📁", tab: "categories" },
   { label: "Transactions", icon: "💰", tab: "transactions" },
   { label: "Admin Roles", icon: "🛡️", tab: "admins" },
@@ -106,16 +118,19 @@ export default function AdminPanel() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const [accountLogs, setAccountLogs] = useState<AccountLog[]>([]);
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showLogModal, setShowLogModal] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [editCategory, setEditCategory] = useState<Category | null>(null);
 
-  const [productForm, setProductForm] = useState({ title: "", description: "", price: 0, stock: 0, platform: "", category_id: "", currency: "NGN" });
+  const [productForm, setProductForm] = useState({ title: "", description: "", price: 0, stock: 0, platform: "", category_id: "", currency: "NGN", image_url: "" });
   const [categoryForm, setCategoryForm] = useState({ name: "", slug: "", emoji: "", display_order: 0 });
   const [adminEmail, setAdminEmail] = useState("");
+  const [logForm, setLogForm] = useState({ product_id: "", login: "", password: "" });
   const [allMessages, setAllMessages] = useState<Message[]>([]);
   const [selectedChatUser, setSelectedChatUser] = useState<string | null>(null);
   const [adminMsgInput, setAdminMsgInput] = useState("");
@@ -126,7 +141,7 @@ export default function AdminPanel() {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) setAdminUserId(user.id);
 
-    const [p, w, o, pr, c, t, r, m] = await Promise.all([
+    const [p, w, o, pr, c, t, r, m, al] = await Promise.all([
       supabase.from("profiles").select("*").order("created_at", { ascending: false }),
       supabase.from("wallets").select("*"),
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
@@ -135,6 +150,7 @@ export default function AdminPanel() {
       supabase.from("transactions").select("*").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("*").order("created_at", { ascending: false }),
       supabase.from("messages").select("*").order("created_at", { ascending: true }),
+      supabase.from("account_logs").select("*").order("created_at", { ascending: false }),
     ]);
     if (p.data) setProfiles(p.data as Profile[]);
     if (w.data) setWallets(w.data as Wallet[]);
@@ -144,6 +160,7 @@ export default function AdminPanel() {
     if (t.data) setTransactions(t.data as Transaction[]);
     if (r.data) setRoles(r.data as UserRole[]);
     if (m.data) setAllMessages(m.data as Message[]);
+    if (al.data) setAccountLogs(al.data as AccountLog[]);
   };
 
   // Realtime messages for admin
@@ -161,7 +178,6 @@ export default function AdminPanel() {
     const userIds = new Set(allMessages.map(m => m.sender_id === adminUserId ? m.receiver_id : m.sender_id));
     userIds.delete("00000000-0000-0000-0000-000000000000");
     userIds.delete(adminUserId);
-    // Also add users who sent messages to the placeholder
     allMessages.forEach(m => {
       if (m.receiver_id === "00000000-0000-0000-0000-000000000000") userIds.add(m.sender_id);
     });
@@ -210,7 +226,6 @@ export default function AdminPanel() {
     const { error } = await supabase.from("profiles").update({ is_blocked: newStatus }).eq("user_id", userId);
     if (error) { toast.error("Failed to update user"); return; }
     toast.success(newStatus ? "User blocked" : "User unblocked");
-    // Update local state
     setProfiles(profiles.map((p) => p.user_id === userId ? { ...p, is_blocked: newStatus } : p));
     if (selectedUser?.user_id === userId) setSelectedUser({ ...selectedUser, is_blocked: newStatus });
   };
@@ -221,6 +236,9 @@ export default function AdminPanel() {
 
   const getUserOrders = (userId: string) => orders.filter((o) => o.user_id === userId);
   const getUserTransactions = (userId: string) => transactions.filter((t) => t.user_id === userId);
+
+  // Get unsold logs count for a product
+  const getUnsoldLogsCount = (productId: string) => accountLogs.filter(l => l.product_id === productId && !l.is_sold).length;
 
   const switchTab = (t: AdminTab) => {
     setTab(t);
@@ -247,7 +265,6 @@ export default function AdminPanel() {
     const { error: wErr } = await supabase.from("wallets").update({ balance: newBalance }).eq("user_id", selectedUser.user_id);
     if (wErr) { toast.error("Failed to update wallet"); return; }
 
-    // Log transaction
     const { data: { user } } = await supabase.auth.getUser();
     await supabase.from("transactions").insert({
       user_id: selectedUser.user_id,
@@ -274,18 +291,28 @@ export default function AdminPanel() {
   // Product CRUD
   const saveProduct = async () => {
     if (!productForm.title || !productForm.category_id) { toast.error("Fill required fields"); return; }
+    const formData = {
+      title: productForm.title,
+      description: productForm.description,
+      price: productForm.price,
+      stock: productForm.stock,
+      platform: productForm.platform,
+      category_id: productForm.category_id,
+      currency: productForm.currency,
+      image_url: productForm.image_url || null,
+    };
     if (editProduct) {
-      const { error } = await supabase.from("products").update(productForm).eq("id", editProduct.id);
+      const { error } = await supabase.from("products").update(formData).eq("id", editProduct.id);
       if (error) { toast.error("Failed to update product"); return; }
       toast.success("Product updated");
     } else {
-      const { error } = await supabase.from("products").insert(productForm);
+      const { error } = await supabase.from("products").insert(formData);
       if (error) { toast.error("Failed to create product"); return; }
       toast.success("Product created");
     }
     setShowProductModal(false);
     setEditProduct(null);
-    setProductForm({ title: "", description: "", price: 0, stock: 0, platform: "", category_id: "", currency: "NGN" });
+    setProductForm({ title: "", description: "", price: 0, stock: 0, platform: "", category_id: "", currency: "NGN", image_url: "" });
     loadAll();
   };
 
@@ -294,6 +321,28 @@ export default function AdminPanel() {
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) { toast.error("Failed to delete"); return; }
     toast.success("Product deleted");
+    loadAll();
+  };
+
+  // Account Log CRUD
+  const saveLog = async () => {
+    if (!logForm.product_id || !logForm.login || !logForm.password) { toast.error("Fill all fields"); return; }
+    const { error } = await supabase.from("account_logs").insert({
+      product_id: logForm.product_id,
+      login: logForm.login,
+      password: logForm.password,
+    });
+    if (error) { toast.error("Failed to create log"); return; }
+    toast.success("Account log added!");
+    setLogForm({ product_id: logForm.product_id, login: "", password: "" });
+    loadAll();
+  };
+
+  const deleteLog = async (id: string) => {
+    if (!confirm("Delete this log?")) return;
+    const { error } = await supabase.from("account_logs").delete().eq("id", id);
+    if (error) { toast.error("Failed to delete"); return; }
+    toast.success("Log deleted");
     loadAll();
   };
 
@@ -370,6 +419,15 @@ export default function AdminPanel() {
     !search || t.description.toLowerCase().includes(search.toLowerCase()) || getUserName(t.user_id).toLowerCase().includes(search.toLowerCase())
   );
 
+  const getProductTitle = (productId: string) => {
+    const p = products.find(pr => pr.id === productId);
+    return p?.title || productId.slice(0, 8);
+  };
+
+  const filteredLogs = accountLogs.filter(l =>
+    !search || getProductTitle(l.product_id).toLowerCase().includes(search.toLowerCase()) || l.login.toLowerCase().includes(search.toLowerCase())
+  );
+
   const renderModal = (show: boolean, onClose: () => void, title: string, children: React.ReactNode) => {
     if (!show) return null;
     return (
@@ -411,6 +469,10 @@ export default function AdminPanel() {
             <input className="admin-form-input" value={productForm.platform} onChange={(e) => setProductForm({ ...productForm, platform: e.target.value })} />
           </div>
           <div className="admin-form-group">
+            <label className="admin-form-label">Image URL</label>
+            <input className="admin-form-input" value={productForm.image_url} onChange={(e) => setProductForm({ ...productForm, image_url: e.target.value })} placeholder="https://example.com/image.png" />
+          </div>
+          <div className="admin-form-group">
             <label className="admin-form-label">Category *</label>
             <select className="admin-form-input" value={productForm.category_id} onChange={(e) => setProductForm({ ...productForm, category_id: e.target.value })}>
               <option value="">Select category</option>
@@ -430,6 +492,31 @@ export default function AdminPanel() {
           <div className="admin-form-actions">
             <button className="admin-btn admin-btn-primary" onClick={saveProduct}>{editProduct ? "Update" : "Create"}</button>
             <button className="admin-btn" style={{ background: "hsl(220 20% 93%)" }} onClick={() => { setShowProductModal(false); setEditProduct(null); }}>Cancel</button>
+          </div>
+        </>
+      ))}
+
+      {/* Log Modal */}
+      {renderModal(showLogModal, () => setShowLogModal(false), "Add Account Log", (
+        <>
+          <div className="admin-form-group">
+            <label className="admin-form-label">Product *</label>
+            <select className="admin-form-input" value={logForm.product_id} onChange={(e) => setLogForm({ ...logForm, product_id: e.target.value })}>
+              <option value="">Select product</option>
+              {products.map((p) => <option key={p.id} value={p.id}>{p.title} ({p.platform})</option>)}
+            </select>
+          </div>
+          <div className="admin-form-group">
+            <label className="admin-form-label">Login *</label>
+            <input className="admin-form-input" value={logForm.login} onChange={(e) => setLogForm({ ...logForm, login: e.target.value })} placeholder="email@example.com or username" />
+          </div>
+          <div className="admin-form-group">
+            <label className="admin-form-label">Password *</label>
+            <input className="admin-form-input" value={logForm.password} onChange={(e) => setLogForm({ ...logForm, password: e.target.value })} placeholder="account password" />
+          </div>
+          <div className="admin-form-actions">
+            <button className="admin-btn admin-btn-primary" onClick={saveLog}>Add Log</button>
+            <button className="admin-btn" style={{ background: "hsl(220 20% 93%)" }} onClick={() => setShowLogModal(false)}>Cancel</button>
           </div>
         </>
       ))}
@@ -500,7 +587,7 @@ export default function AdminPanel() {
       {/* Sidebar */}
       <aside className={`admin-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="admin-sidebar-logo">
-          <div className="logo-dot">G</div>
+          <div className="logo-dot">V</div>
           Admin Panel
         </div>
         <nav className="admin-nav">
@@ -524,7 +611,7 @@ export default function AdminPanel() {
       <div className="admin-main">
         <div className="admin-topbar">
           <div className="admin-topbar-title">{NAV.find((n) => n.tab === tab)?.icon} {NAV.find((n) => n.tab === tab)?.label || "Admin"}</div>
-          {["users", "orders", "transactions"].includes(tab) && (
+          {["users", "orders", "transactions", "logs"].includes(tab) && (
             <div className="admin-search">
               <span style={{ fontSize: 14 }}>🔍</span>
               <input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -556,16 +643,17 @@ export default function AdminPanel() {
                   <div className="admin-stat-sub">{products.filter((p) => p.is_active).length} active</div>
                 </div>
                 <div className="admin-stat-card">
+                  <div className="admin-stat-label">Account Logs</div>
+                  <div className="admin-stat-val">{accountLogs.length}</div>
+                  <div className="admin-stat-sub">{accountLogs.filter(l => !l.is_sold).length} available</div>
+                </div>
+                <div className="admin-stat-card">
                   <div className="admin-stat-label">Categories</div>
                   <div className="admin-stat-val">{categories.length}</div>
                 </div>
-                <div className="admin-stat-card">
-                  <div className="admin-stat-label">Transactions</div>
-                  <div className="admin-stat-val">{transactions.length}</div>
-                </div>
               </div>
 
-              {/* Recent orders - desktop table */}
+              {/* Recent orders */}
               <div className="admin-table-wrap">
                 <div className="admin-table-header">
                   <div className="admin-table-title">Recent Orders</div>
@@ -588,7 +676,6 @@ export default function AdminPanel() {
                 {orders.length === 0 && <div className="admin-empty"><div className="admin-empty-icon">📦</div>No orders yet</div>}
               </div>
 
-              {/* Recent orders - mobile cards */}
               <div className="admin-card-list">
                 <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 12, color: "hsl(220 20% 12%)" }}>Recent Orders</div>
                 {orders.slice(0, 8).map((o) => (
@@ -676,7 +763,6 @@ export default function AdminPanel() {
                     </div>
                   </div>
 
-                  {/* User's orders */}
                   <div className="admin-table-wrap" style={{ marginBottom: 20 }}>
                     <div className="admin-table-header">
                       <div className="admin-table-title">Orders ({getUserOrders(selectedUser.user_id).length})</div>
@@ -703,7 +789,6 @@ export default function AdminPanel() {
                     {getUserOrders(selectedUser.user_id).length === 0 && <div className="admin-empty" style={{ padding: 30 }}>No orders</div>}
                   </div>
 
-                  {/* Mobile cards for user orders */}
                   <div className="admin-card-list" style={{ marginBottom: 20 }}>
                     <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 10 }}>Orders ({getUserOrders(selectedUser.user_id).length})</div>
                     {getUserOrders(selectedUser.user_id).map((o) => (
@@ -719,7 +804,6 @@ export default function AdminPanel() {
                     ))}
                   </div>
 
-                  {/* User's transactions */}
                   <div className="admin-table-wrap">
                     <div className="admin-table-header">
                       <div className="admin-table-title">Transactions ({getUserTransactions(selectedUser.user_id).length})</div>
@@ -753,7 +837,6 @@ export default function AdminPanel() {
                 </>
               ) : (
                 <>
-                  {/* Desktop table */}
                   <div className="admin-table-wrap">
                     <div className="admin-table-header">
                       <div className="admin-table-title">All Users ({filteredProfiles.length})</div>
@@ -784,7 +867,6 @@ export default function AdminPanel() {
                     {filteredProfiles.length === 0 && <div className="admin-empty"><div className="admin-empty-icon">👥</div>No users found</div>}
                   </div>
 
-                  {/* Mobile cards */}
                   <div className="admin-card-list">
                     {filteredProfiles.map((p) => (
                       <div className="admin-card-item" key={p.id} onClick={() => setSelectedUser(p)} style={{ cursor: "pointer" }}>
@@ -883,25 +965,33 @@ export default function AdminPanel() {
                   <div className="admin-table-title">All Products ({products.length})</div>
                   <button className="admin-btn admin-btn-primary" onClick={() => {
                     setEditProduct(null);
-                    setProductForm({ title: "", description: "", price: 0, stock: 0, platform: "", category_id: "", currency: "NGN" });
+                    setProductForm({ title: "", description: "", price: 0, stock: 0, platform: "", category_id: "", currency: "NGN", image_url: "" });
                     setShowProductModal(true);
                   }}>+ Add Product</button>
                 </div>
                 <table className="admin-table">
-                  <thead><tr><th>Title</th><th>Platform</th><th>Price</th><th>Stock</th><th>Active</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Image</th><th>Title</th><th>Platform</th><th>Price</th><th>Stock</th><th>Logs</th><th>Active</th><th>Actions</th></tr></thead>
                   <tbody>
                     {products.map((p) => (
                       <tr key={p.id}>
+                        <td>
+                          {p.image_url ? (
+                            <img src={p.image_url} alt={p.title} style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
+                          ) : (
+                            <div style={{ width: 36, height: 36, borderRadius: 8, background: "hsl(220 20% 93%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>📦</div>
+                          )}
+                        </td>
                         <td style={{ fontWeight: 600 }}>{p.title}</td>
                         <td>{p.platform}</td>
                         <td>₦{Number(p.price).toLocaleString()}</td>
                         <td>{p.stock}</td>
+                        <td><span style={{ color: "hsl(220 70% 50%)", fontWeight: 700 }}>{getUnsoldLogsCount(p.id)}</span></td>
                         <td>{p.is_active ? <span className="admin-status admin-status-active">Active</span> : <span className="admin-status admin-status-blocked">Inactive</span>}</td>
                         <td>
                           <div style={{ display: "flex", gap: 4 }}>
                             <button className="admin-btn admin-btn-sm" style={{ background: "hsl(220 20% 93%)" }} onClick={() => {
                               setEditProduct(p);
-                              setProductForm({ title: p.title, description: p.description, price: p.price, stock: p.stock, platform: p.platform, category_id: p.category_id, currency: p.currency });
+                              setProductForm({ title: p.title, description: p.description, price: p.price, stock: p.stock, platform: p.platform, category_id: p.category_id, currency: p.currency, image_url: p.image_url || "" });
                               setShowProductModal(true);
                             }}>✏️</button>
                             <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => deleteProduct(p.id)}>🗑️</button>
@@ -919,24 +1009,86 @@ export default function AdminPanel() {
                   <div style={{ fontWeight: 700, fontSize: 15 }}>Products ({products.length})</div>
                   <button className="admin-btn admin-btn-primary admin-btn-sm" onClick={() => {
                     setEditProduct(null);
-                    setProductForm({ title: "", description: "", price: 0, stock: 0, platform: "", category_id: "", currency: "NGN" });
+                    setProductForm({ title: "", description: "", price: 0, stock: 0, platform: "", category_id: "", currency: "NGN", image_url: "" });
                     setShowProductModal(true);
                   }}>+ Add</button>
                 </div>
                 {products.map((p) => (
                   <div className="admin-card-item" key={p.id}>
-                    <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>{p.title}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                      {p.image_url ? (
+                        <img src={p.image_url} alt={p.title} style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
+                      ) : (
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: "hsl(220 20% 93%)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>📦</div>
+                      )}
+                      <span style={{ fontWeight: 700, fontSize: 14 }}>{p.title}</span>
+                    </div>
                     <div className="admin-card-item-row"><span className="admin-card-item-label">Platform</span><span className="admin-card-item-value">{p.platform}</span></div>
                     <div className="admin-card-item-row"><span className="admin-card-item-label">Price</span><span className="admin-card-item-value">₦{Number(p.price).toLocaleString()}</span></div>
                     <div className="admin-card-item-row"><span className="admin-card-item-label">Stock</span><span className="admin-card-item-value">{p.stock}</span></div>
+                    <div className="admin-card-item-row"><span className="admin-card-item-label">Available Logs</span><span className="admin-card-item-value" style={{ color: "hsl(220 70% 50%)", fontWeight: 700 }}>{getUnsoldLogsCount(p.id)}</span></div>
                     <div className="admin-card-item-row"><span className="admin-card-item-label">Status</span>{p.is_active ? <span className="admin-status admin-status-active">Active</span> : <span className="admin-status admin-status-blocked">Inactive</span>}</div>
                     <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
                       <button className="admin-btn admin-btn-sm" style={{ background: "hsl(220 20% 93%)" }} onClick={() => {
                         setEditProduct(p);
-                        setProductForm({ title: p.title, description: p.description, price: p.price, stock: p.stock, platform: p.platform, category_id: p.category_id, currency: p.currency });
+                        setProductForm({ title: p.title, description: p.description, price: p.price, stock: p.stock, platform: p.platform, category_id: p.category_id, currency: p.currency, image_url: p.image_url || "" });
                         setShowProductModal(true);
                       }}>✏️ Edit</button>
                       <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => deleteProduct(p.id)}>🗑️ Delete</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ═══ ACCOUNT LOGS ═══ */}
+          {tab === "logs" && (
+            <>
+              <div className="admin-table-wrap">
+                <div className="admin-table-header">
+                  <div className="admin-table-title">Account Logs ({filteredLogs.length})</div>
+                  <button className="admin-btn admin-btn-primary" onClick={() => {
+                    setLogForm({ product_id: "", login: "", password: "" });
+                    setShowLogModal(true);
+                  }}>+ Add Log</button>
+                </div>
+                <table className="admin-table">
+                  <thead><tr><th>Product</th><th>Login</th><th>Password</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                  <tbody>
+                    {filteredLogs.map((l) => (
+                      <tr key={l.id}>
+                        <td style={{ fontWeight: 600 }}>{getProductTitle(l.product_id)}</td>
+                        <td style={{ fontFamily: "monospace", fontSize: 12 }}>{l.login}</td>
+                        <td style={{ fontFamily: "monospace", fontSize: 12 }}>{l.password}</td>
+                        <td>{l.is_sold ? <span className="admin-status admin-status-blocked">Sold</span> : <span className="admin-status admin-status-active">Available</span>}</td>
+                        <td>{new Date(l.created_at).toLocaleDateString()}</td>
+                        <td>
+                          <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => deleteLog(l.id)}>🗑️</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filteredLogs.length === 0 && <div className="admin-empty"><div className="admin-empty-icon">🔑</div>No account logs yet<br /><button className="admin-btn admin-btn-primary" style={{ marginTop: 12 }} onClick={() => setShowLogModal(true)}>Add First Log</button></div>}
+              </div>
+
+              <div className="admin-card-list">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15 }}>Account Logs ({filteredLogs.length})</div>
+                  <button className="admin-btn admin-btn-primary admin-btn-sm" onClick={() => {
+                    setLogForm({ product_id: "", login: "", password: "" });
+                    setShowLogModal(true);
+                  }}>+ Add</button>
+                </div>
+                {filteredLogs.map((l) => (
+                  <div className="admin-card-item" key={l.id}>
+                    <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 8 }}>{getProductTitle(l.product_id)}</div>
+                    <div className="admin-card-item-row"><span className="admin-card-item-label">Login</span><span className="admin-card-item-value" style={{ fontFamily: "monospace", fontSize: 12 }}>{l.login}</span></div>
+                    <div className="admin-card-item-row"><span className="admin-card-item-label">Password</span><span className="admin-card-item-value" style={{ fontFamily: "monospace", fontSize: 12 }}>{l.password}</span></div>
+                    <div className="admin-card-item-row"><span className="admin-card-item-label">Status</span>{l.is_sold ? <span className="admin-status admin-status-blocked">Sold</span> : <span className="admin-status admin-status-active">Available</span>}</div>
+                    <div style={{ display: "flex", gap: 6, marginTop: 10 }}>
+                      <button className="admin-btn admin-btn-danger admin-btn-sm" onClick={() => deleteLog(l.id)}>🗑️ Delete</button>
                     </div>
                   </div>
                 ))}
@@ -1111,7 +1263,6 @@ export default function AdminPanel() {
             <>
               <h2 className="admin-section-title">💬 User Messages</h2>
               <div style={{ display: "flex", gap: 16, minHeight: 400 }}>
-                {/* User list */}
                 <div style={{ width: 240, background: "hsl(220 20% 97%)", borderRadius: 12, padding: 12, overflowY: "auto" }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: "hsl(220 10% 50%)", marginBottom: 8, textTransform: "uppercase" }}>Conversations</div>
                   {getChatUsers().length === 0 ? (
@@ -1137,7 +1288,6 @@ export default function AdminPanel() {
                   )}
                 </div>
 
-                {/* Chat area */}
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", background: "hsl(220 20% 97%)", borderRadius: 12, padding: 16 }}>
                   {!selectedChatUser ? (
                     <div style={{ textAlign: "center", color: "hsl(220 10% 60%)", padding: 60 }}>

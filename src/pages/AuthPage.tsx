@@ -40,7 +40,6 @@ const AuthPage = () => {
   const [toast, setToast] = useState({ show: false, msg: "" });
   const toastTimer = useRef<number>();
 
-  // Redirect if already logged in
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
@@ -169,14 +168,12 @@ const AuthPage = () => {
 
   return (
     <div className="auth-wrapper">
-      {/* Toast */}
       <div className={`auth-toast${toast.show ? " show" : ""}`}>
         <Zap size={16} className="toast-icon" />
         <span>{toast.msg}</span>
       </div>
 
       <div className="auth-container">
-        {/* LEFT — Branding */}
         <div className="auth-left">
           <div className="auth-orb auth-orb-1" />
           <div className="auth-orb auth-orb-2" />
@@ -184,7 +181,7 @@ const AuthPage = () => {
           <div className="auth-left-inner">
             <Link to="/" className="auth-logo">
               <div className="auth-logo-dot" />
-              <span>Goodluck<strong>Store</strong></span>
+              <span>Verified<strong>Store</strong></span>
             </Link>
 
             <div className="auth-left-content">
@@ -242,7 +239,6 @@ const AuthPage = () => {
           </div>
         </div>
 
-        {/* RIGHT — Form */}
         <div className="auth-right">
           <div className="auth-card">
             {/* LOGIN */}
@@ -411,16 +407,16 @@ const AuthPage = () => {
               )}
             </div>
 
-            {/* FORGOT PASSWORD */}
+            {/* FORGOT */}
             <div className={`auth-view${currentPage === "forgot" ? " active" : ""}`}>
-              <BackButton onClick={() => showPage("login")} label="Back to Sign In" />
-
               {forgotStep === "A" && (
                 <div>
+                  <BackButton onClick={() => showPage("login")} />
                   <div className="auth-form-header">
                     <h2 className="auth-form-title">Reset password</h2>
-                    <p className="auth-form-sub">Enter your email and we'll send a reset link.</p>
+                    <p className="auth-form-sub">Enter your email to receive a reset link</p>
                   </div>
+
                   <div className="auth-field">
                     <label>Email</label>
                     <div className="auth-input-wrap">
@@ -435,6 +431,7 @@ const AuthPage = () => {
                     </div>
                     {forgotEmailErr && <span className="auth-field-error">Please enter a valid email</span>}
                   </div>
+
                   <button className={`auth-submit${loading ? " loading" : ""}`} onClick={sendReset} disabled={loading}>
                     <span className="auth-submit-text">Send Reset Link</span>
                     <ArrowRight size={16} className="auth-submit-arrow" />
@@ -443,15 +440,16 @@ const AuthPage = () => {
               )}
 
               {forgotStep === "D" && (
-                <div className="auth-success">
+                <div className="auth-success-view">
                   <div className="auth-success-icon">
-                    <CheckCircle2 size={32} />
+                    <CheckCircle2 size={48} />
                   </div>
-                  <h3>Check your email!</h3>
-                  <p>We sent a password reset link to <strong>{forgotEmail}</strong>.</p>
+                  <h2 className="auth-form-title">Check your email</h2>
+                  <p className="auth-form-sub">
+                    We've sent a password reset link to <strong>{forgotEmail}</strong>
+                  </p>
                   <button className="auth-submit" onClick={() => showPage("login")}>
                     <span className="auth-submit-text">Back to Sign In</span>
-                    <ArrowRight size={16} className="auth-submit-arrow" />
                   </button>
                 </div>
               )}
