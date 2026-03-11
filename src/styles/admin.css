@@ -1,21 +1,22 @@
 :root {
-  --admin-bg: 220 20% 96%;
-  --admin-sidebar: 225 25% 12%;
+  --admin-bg: 210 20% 98%;
+  --admin-sidebar: 210 100% 12%;
   --admin-card: 0 0% 100%;
-  --admin-accent: 230 65% 55%;
-  --admin-danger: 0 70% 55%;
-  --admin-success: 152 55% 42%;
+  --admin-accent: 210 100% 30%;
+  --admin-danger: 0 85% 60%;
+  --admin-success: 150 70% 45%;
   --admin-warning: 38 92% 50%;
-  --admin-text: 220 20% 12%;
-  --admin-muted: 220 10% 50%;
-  --admin-border: 220 18% 90%;
+  --admin-text: 210 25% 20%;
+  --admin-muted: 210 15% 55%;
+  --admin-border: 210 20% 92%;
 }
 
 .admin-layout {
   display: flex;
   min-height: 100vh;
   background: hsl(var(--admin-bg));
-  font-family: "DM Sans", sans-serif;
+  font-family: "Inter", sans-serif;
+  font-size: 15.5px;
 }
 
 /* ── Sidebar ── */
@@ -49,7 +50,7 @@
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: linear-gradient(135deg, hsl(var(--admin-accent)), hsl(250 70% 60%));
+  background: linear-gradient(135deg, hsl(var(--admin-accent)), hsl(200 85% 65%));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -306,7 +307,7 @@
   border-radius: 10px;
   font-size: 13px;
   font-weight: 600;
-  font-family: "DM Sans", sans-serif;
+  font-family: "Inter", sans-serif;
   border: none;
   cursor: pointer;
   transition: all 0.2s;
@@ -316,7 +317,7 @@
 }
 
 .admin-btn-primary {
-  background: linear-gradient(135deg, hsl(var(--admin-accent)), hsl(250 65% 58%));
+  background: linear-gradient(135deg, hsl(var(--admin-accent)), hsl(200 85% 65%));
   color: hsl(0 0% 100%);
   box-shadow: 0 2px 8px hsl(var(--admin-accent) / 0.25);
 }
@@ -403,7 +404,7 @@
   border: none;
   outline: none;
   font-size: 13px;
-  font-family: "DM Sans", sans-serif;
+  font-family: "Inter", sans-serif;
   background: none;
   color: hsl(var(--admin-text));
   width: 220px;
@@ -485,6 +486,35 @@
   margin-top: 20px;
 }
 
+/* Modal Tabs */
+.admin-modal-tabs {
+  display: flex;
+  gap: 4px;
+  background: hsl(220 20% 95%);
+  padding: 4px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.admin-modal-tab {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: hsl(var(--admin-muted));
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.admin-modal-tab.active {
+  background: white;
+  color: hsl(var(--admin-accent));
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
 /* ── Empty state ── */
 .admin-empty {
   text-align: center;
@@ -556,7 +586,7 @@
   background: hsl(var(--admin-border));
 }
 
-.admin-user-detail-stats > div {
+.admin-user-detail-stats>div {
   background: hsl(var(--admin-card));
   padding: 18px 22px;
 }
@@ -601,6 +631,90 @@
 .admin-card-item-value {
   color: hsl(var(--admin-text));
   font-weight: 600;
+  word-break: break-all;
+}
+
+/* ── Chat System ── */
+.admin-chat-layout {
+  display: flex;
+  gap: 16px;
+  min-height: 500px;
+}
+
+.admin-chat-sidebar {
+  width: 240px;
+  background: hsl(220 20% 97%);
+  border-radius: 12px;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.admin-chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: hsl(220 20% 97%);
+  border-radius: 12px;
+  padding: 16px;
+  position: relative;
+}
+
+.admin-chat-msg {
+  padding: 10px 16px;
+  border-radius: 12px;
+  max-width: 75%;
+  font-size: 14px;
+  box-shadow: 0 1px 3px hsl(0 0% 0% / 0.08);
+  margin-bottom: 8px;
+}
+
+.admin-chat-msg.admin {
+  align-self: flex-end;
+  background: hsl(var(--admin-accent));
+  color: white;
+}
+
+.admin-chat-msg.user {
+  align-self: flex-start;
+  background: white;
+  color: hsl(var(--admin-text));
+}
+
+.admin-chat-back {
+  display: none;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 768px) {
+  .admin-chat-layout {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .admin-chat-sidebar {
+    width: 100%;
+  }
+
+  .admin-chat-sidebar.hidden {
+    display: none;
+  }
+
+  .admin-chat-main.hidden {
+    display: none;
+  }
+
+  .admin-chat-back {
+    display: inline-flex;
+  }
+
+  .admin-form-group-row {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+
+  .admin-form-group-row button {
+    width: 100%;
+  }
 }
 
 /* ── Responsive ── */

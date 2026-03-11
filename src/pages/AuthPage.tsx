@@ -11,7 +11,10 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState<AuthView>("signup");
   const [signupStep, setSignupStep] = useState(1);
-  const [forgotStep, setForgotStep] = useState<"A" | "D">("A");
+  const [forgotStep, setForgotStep] = useState<"A" | "O" | "P" | "D">("A");
+  const [otp, setOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -119,30 +122,51 @@ const AuthPage = () => {
     }
   };
 
-  const sendReset = async () => {
+  const sendOTP = async () => {
     if (!validateEmail(forgotEmail)) { setForgotEmailErr(true); return; }
 
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: window.location.origin + '/auth',
     });
     setLoading(false);
 
     if (error) {
       showToast(`❌ ${error.message}`);
     } else {
-      setForgotStep("D");
+      setForgotStep("O");
+      showToast("✅ Code sent to your email!");
     }
   };
 
-  const handleGoogleLogin = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-      },
+  const verifyOTP = async () => {
+    if (otp.length < 8) { showToast("Enter 8-digit code"); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email: forgotEmail,
+      token: otp,
+      type: 'recovery'
     });
-    if (error) showToast(`❌ ${error.message}`);
+    setLoading(false);
+    if (error) {
+      showToast(`❌ ${error.message}`);
+    } else {
+      showToast("✅ Code verified!");
+      setForgotStep("P");
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (newPassword.length < 6) { showToast("Password must be 6+ chars"); return; }
+    if (newPassword !== confirmNewPassword) { showToast("Passwords don't match"); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setLoading(false);
+    if (error) {
+      showToast(`❌ ${error.message}`);
+    } else {
+      setForgotStep("D");
+    }
   };
 
   const strengthLevels = ["", "weak", "fair", "good", "strong"];
@@ -181,7 +205,7 @@ const AuthPage = () => {
           <div className="auth-left-inner">
             <Link to="/" className="auth-logo">
               <div className="auth-logo-dot" />
-              <span>Verified<strong>Store</strong></span>
+              <span>Social<strong>Store</strong></span>
             </Link>
 
             <div className="auth-left-content">
@@ -251,14 +275,6 @@ const AuthPage = () => {
                 </p>
               </div>
 
-              <div className="auth-social-row">
-                <button className="auth-social-btn" onClick={handleGoogleLogin}>
-                  <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                  Google
-                </button>
-              </div>
-
-              <div className="auth-divider"><span>or</span></div>
 
               <div className="auth-field">
                 <label>Email</label>
@@ -321,14 +337,7 @@ const AuthPage = () => {
                     </p>
                   </div>
 
-                  <div className="auth-social-row">
-                    <button className="auth-social-btn" onClick={handleGoogleLogin}>
-                      <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                      Google
-                    </button>
-                  </div>
 
-                  <div className="auth-divider"><span>or</span></div>
 
                   <div className="auth-field">
                     <label>Username</label>
@@ -414,7 +423,7 @@ const AuthPage = () => {
                   <BackButton onClick={() => showPage("login")} />
                   <div className="auth-form-header">
                     <h2 className="auth-form-title">Reset password</h2>
-                    <p className="auth-form-sub">Enter your email to receive a reset link</p>
+                    <p className="auth-form-sub">Enter your email and we'll send a code</p>
                   </div>
 
                   <div className="auth-field">
@@ -432,8 +441,72 @@ const AuthPage = () => {
                     {forgotEmailErr && <span className="auth-field-error">Please enter a valid email</span>}
                   </div>
 
-                  <button className={`auth-submit${loading ? " loading" : ""}`} onClick={sendReset} disabled={loading}>
-                    <span className="auth-submit-text">Send Reset Link</span>
+                  <button className={`auth-submit${loading ? " loading" : ""}`} onClick={sendOTP} disabled={loading}>
+                    <span className="auth-submit-text">Send Code</span>
+                    <ArrowRight size={16} className="auth-submit-arrow" />
+                  </button>
+                </div>
+              )}
+
+              {forgotStep === "O" && (
+                <div>
+                  <BackButton onClick={() => setForgotStep("A")} />
+                  <div className="auth-form-header">
+                    <h2 className="auth-form-title">Enter code</h2>
+                    <p className="auth-form-sub">We've sent a 8-digit code to {forgotEmail}</p>
+                  </div>
+                  <div className="auth-field">
+                    <div className="auth-input-wrap">
+                      <Shield size={16} className="auth-input-icon" />
+                      <input
+                        type="text"
+                        maxLength={8}
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                        placeholder="00000000"
+                        style={{ textAlign: 'center', letterSpacing: '8px', fontSize: '20px' }}
+                      />
+                    </div>
+                  </div>
+                  <button className={`auth-submit${loading ? " loading" : ""}`} onClick={verifyOTP} disabled={loading}>
+                    <span className="auth-submit-text">Verify Code</span>
+                    <ArrowRight size={16} className="auth-submit-arrow" />
+                  </button>
+                </div>
+              )}
+
+              {forgotStep === "P" && (
+                <div>
+                  <div className="auth-form-header">
+                    <h2 className="auth-form-title">New password</h2>
+                    <p className="auth-form-sub">Set your new account password</p>
+                  </div>
+                  <div className="auth-field">
+                    <label>New Password</label>
+                    <div className="auth-input-wrap">
+                      <Lock size={16} className="auth-input-icon" />
+                      <input
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Min. 6 characters"
+                      />
+                    </div>
+                  </div>
+                  <div className="auth-field">
+                    <label>Confirm Password</label>
+                    <div className="auth-input-wrap">
+                      <Lock size={16} className="auth-input-icon" />
+                      <input
+                        type="password"
+                        value={confirmNewPassword}
+                        onChange={(e) => setConfirmNewPassword(e.target.value)}
+                        placeholder="Repeat password"
+                      />
+                    </div>
+                  </div>
+                  <button className={`auth-submit${loading ? " loading" : ""}`} onClick={handleResetPassword} disabled={loading}>
+                    <span className="auth-submit-text">Update Password</span>
                     <ArrowRight size={16} className="auth-submit-arrow" />
                   </button>
                 </div>
@@ -441,12 +514,12 @@ const AuthPage = () => {
 
               {forgotStep === "D" && (
                 <div className="auth-success-view">
-                  <div className="auth-success-icon">
+                  <div className="auth-success-icon" style={{ background: 'hsl(140 80% 55% / 0.1)', color: 'hsl(140 80% 55%)' }}>
                     <CheckCircle2 size={48} />
                   </div>
-                  <h2 className="auth-form-title">Check your email</h2>
+                  <h2 className="auth-form-title">Password Updated!</h2>
                   <p className="auth-form-sub">
-                    We've sent a password reset link to <strong>{forgotEmail}</strong>
+                    Your password has been reset successfully. You can now sign in with your new credentials.
                   </p>
                   <button className="auth-submit" onClick={() => showPage("login")}>
                     <span className="auth-submit-text">Back to Sign In</span>

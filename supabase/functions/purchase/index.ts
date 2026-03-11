@@ -18,8 +18,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) return jsonRes({ success: false, error: "Not authenticated" });
+    const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return jsonRes({ success: false, error: "Not authenticated" }, 401);
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -30,32 +32,34 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) return jsonRes({ success: false, error: "Invalid session" });
+    if (userError || !user) {
+      return jsonRes({ success: false, error: "Invalid session" }, 401);
+    }
 
     // Admin client
     const admin = createClient(supabaseUrl, serviceKey);
 
     const { product_id, quantity = 1 } = await req.json();
-    if (!product_id) return jsonRes({ success: false, error: "product_id is required" });
+    if (!product_id) return jsonRes({ success: false, error: "product_id is required" }, 400);
 
     // 1. Get product
     const { data: product, error: prodErr } = await admin
       .from("products").select("*").eq("id", product_id).eq("is_active", true).single();
-    if (prodErr || !product) return jsonRes({ success: false, error: "Product not found or inactive" });
+    if (prodErr || !product) return jsonRes({ success: false, error: "Product not found or inactive" }, 400);
 
     // 2. Check stock
-    if (product.stock < quantity) return jsonRes({ success: false, error: "Not enough stock available" });
+    if (product.stock < quantity) return jsonRes({ success: false, error: "Not enough stock available" }, 400);
 
     const totalPrice = product.price * quantity;
 
     // 3. Get wallet
     const { data: wallet, error: walletErr } = await admin
       .from("wallets").select("*").eq("user_id", user.id).single();
-    if (walletErr || !wallet) return jsonRes({ success: false, error: "Wallet not found. Please contact support." });
+    if (walletErr || !wallet) return jsonRes({ success: false, error: "Wallet not found. Please contact support." }, 400);
 
     // 4. Check balance
     if (Number(wallet.balance) < totalPrice) {
-      return jsonRes({ success: false, error: "Insufficient balance", required: totalPrice, current: Number(wallet.balance) });
+      return jsonRes({ success: false, error: "Insufficient balance", required: totalPrice, current: Number(wallet.balance) }, 402); // 402 Payment Required
     }
 
     // 5. Deduct balance
@@ -74,22 +78,58 @@ Deno.serve(async (req) => {
     const { data: order, error: orderErr } = await admin.from("orders").insert({
       user_id: user.id, product_id: product.id, product_title: product.title,
       product_platform: product.platform, total_price: totalPrice, quantity,
-      currency: product.currency, status: "pending",
+      currency: product.currency, status: "completed",
     }).select().single();
 
     if (orderErr) {
-      await admin.from("wallets").update({ balance: wallet.balance }).eq("id", wallet.id);
+      await admin.from("wallets").update({ balance: wallet.balance + totalPrice }).eq("id", wallet.id);
       await admin.from("products").update({ stock: product.stock }).eq("id", product.id);
       return jsonRes({ success: false, error: "Failed to create order" });
     }
 
-    // 8. Transaction record
+    // 8. Assign account logs to order
+    const { data: logs, error: logsErr } = await admin
+      .from("account_logs")
+      .select("id, login, password")
+      .eq("product_id", product.id)
+      .eq("is_sold", false)
+      .limit(quantity);
+
+    if (logsErr || !logs || logs.length < quantity) {
+      // Rollback
+      await admin.from("orders").delete().eq("id", order.id);
+      await admin.from("wallets").update({ balance: wallet.balance + totalPrice }).eq("id", wallet.id);
+      await admin.from("products").update({ stock: product.stock }).eq("id", product.id);
+      return jsonRes({ success: false, error: "Critical error: No logs available for this product." });
+    }
+
+    const logIds = logs.map((l: { id: string }) => l.id);
+    const { error: updateLogsErr } = await admin
+      .from("account_logs")
+      .update({ is_sold: true, order_id: order.id })
+      .in("id", logIds);
+
+    if (updateLogsErr) {
+      // Rollback
+      await admin.from("orders").delete().eq("id", order.id);
+      await admin.from("wallets").update({ balance: wallet.balance + totalPrice }).eq("id", wallet.id);
+      await admin.from("products").update({ stock: product.stock }).eq("id", product.id);
+      return jsonRes({ success: false, error: "Failed to assign accounts. Please contact support." });
+    }
+
+    // 9. Transaction record
     await admin.from("transactions").insert({
       user_id: user.id, amount: totalPrice, type: "debit",
-      description: `Purchase: ${product.title}`, reference: order.id,
+      description: `Purchase: ${product.title} (x${quantity})`, reference: order.id,
     });
 
-    return jsonRes({ success: true, order_id: order.id, new_balance: newBalance, message: "Purchase successful" });
+    return jsonRes({
+      success: true,
+      order_id: order.id,
+      new_balance: newBalance,
+      accounts: logs, // Return the credentials so frontend can display them immediately
+      message: "Purchase successful"
+    });
   } catch (err) {
     console.error("Purchase error:", err);
     return jsonRes({ success: false, error: "Internal server error" });

@@ -3,9 +3,10 @@ import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ProductSkeleton, CategorySkeleton, ProductGridSkeleton, CategoryGridSkeleton } from "@/components/Skeleton";
 import "../styles/dashboard.css";
 
-type PanelName = "home" | "orders" | "profile" | "add-funds" | "manual-payments" | "support" | "categories" | "messages";
+type PanelName = "home" | "orders" | "profile" | "add-funds" | "manual-payments" | "support" | "categories";
 
 interface ModalData {
   title: string;
@@ -22,7 +23,7 @@ interface Category {
   name: string;
   slug: string;
   emoji: string | null;
-  icon_url: string | null;
+  image_url: string | null;
 }
 
 interface Product {
@@ -57,34 +58,30 @@ interface Message {
   created_at: string;
 }
 
+
 type NavSection = { label: string; type: "section" };
 type NavLink = { label: string; icon: string; panel?: PanelName; action?: () => void; badge?: string; ext?: boolean };
 type NavItem = NavSection | NavLink;
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Main", type: "section" },
   { label: "Home", icon: "fa-solid fa-house", panel: "home" },
   { label: "Categories", icon: "fa-solid fa-layer-group", panel: "categories" },
   { label: "Profile", icon: "fa-solid fa-user", panel: "profile" },
   { label: "My Orders", icon: "fa-solid fa-box", panel: "orders" },
-  { label: "Messages", icon: "fa-solid fa-envelope", panel: "messages" },
-  { label: "Finance", type: "section" },
   { label: "Add Funds", icon: "fa-solid fa-credit-card", panel: "add-funds" },
   { label: "Manual Payments", icon: "fa-solid fa-money-bill", panel: "manual-payments" },
-  { label: "Info", type: "section" },
   { label: "Rules", icon: "fa-solid fa-file-lines", panel: undefined as unknown as PanelName },
-  { label: "Support", icon: "fa-solid fa-comments", panel: "support" },
+  { label: "Support", icon: "fa-solid fa-headset", panel: "support" },
 ];
 
 const PANEL_TITLES: Record<PanelName, string> = {
-  home: "VerifiedStore",
+  home: "Social store",
   categories: "Categories",
   profile: "My Profile",
   orders: "My Orders",
   "add-funds": "Add Funds",
   "manual-payments": "Manual Payments",
   support: "Support Center",
-  messages: "Messages",
 };
 
 export default function Dashboard() {
@@ -97,9 +94,34 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [modal, setModal] = useState<ModalData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [renderKey, setRenderKey] = useState(0);
   const [rulesOpen, setRulesOpen] = useState(false);
-  const [selectedPreset, setSelectedPreset] = useState("NGN 5,000");
-  const [selectedPayment, setSelectedPayment] = useState(0);
+  const [purchaseQuantity, setPurchaseQuantity] = useState(1);
+  const [boughtAccounts, setBoughtAccounts] = useState<{ login: string, password: string, description?: string }[] | null>(null);
+ const [selectedPreset, setSelectedPreset] = useState("NGN 5,000");
+const [selectedPayment, setSelectedPayment] = useState(0);
+const [customAmount, setCustomAmount] = useState("");
+const [fundSuccess, setFundSuccess] = useState(false);
+const [fundAmount, setFundAmount] = useState(0);
+const [payLoading, setPayLoading] = useState(false);
+  const [manualPayAmount, setManualPayAmount] = useState("");
+  const [manualPayRef, setManualPayRef] = useState("");
+  const [manualPayMethod, setManualPayMethod] = useState("");
+  const [userManualPayments, setUserManualPayments] = useState<any[]>([]);
+  const [bankDetails, setBankDetails] = useState<any[]>([]);
+  const [viewingOrderLogs, setViewingOrderLogs] = useState<any[] | null>(null);
+  const [viewingOrderTitle, setViewingOrderTitle] = useState("");
+  const [supportChatOpen, setSupportChatOpen] = useState(false);
+  const [siteSettings, setSiteSettings] = useState<Record<string, string>>({
+    telegram_group: "https://t.me/social_store_group",
+    telegram_support: "https://t.me/social_store_support",
+    whatsapp_channel: "https://wa.me/social_store_channel"
+  });
+
+  const [currentPass, setCurrentPass] = useState("");
+  const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
 
   // User data
   const [username, setUsername] = useState("");
@@ -112,72 +134,244 @@ export default function Dashboard() {
   const [msgInput, setMsgInput] = useState("");
   const [userId, setUserId] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [recentFeed, setRecentFeed] = useState<any[]>([]);
   const { isAdmin } = useAdminCheck();
+
 
   // Scroll animation
   useEffect(() => {
-    const obs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => {
-        if (e.isIntersecting) e.target.classList.add("slide-visible");
-      }),
-      { threshold: 0.1 }
-    );
-    const elements = document.querySelectorAll(".slide-from-left, .slide-from-right");
-    elements.forEach((el) => obs.observe(el));
-    return () => obs.disconnect();
-  }, [activePanel, selectedCategory, dbProducts]);
+    let obs: IntersectionObserver | null = null;
+    const timer = setTimeout(() => {
+      obs = new IntersectionObserver(
+        (entries) => entries.forEach((e) => {
+          if (e.isIntersecting) e.target.classList.add("slide-visible");
+        }),
+        { threshold: 0.05, rootMargin: "0px 0px 100px 0px" }
+      );
+      const elements = document.querySelectorAll(".slide-from-left, .slide-from-right");
+      elements.forEach((el) => {
+        // Immediately show elements already in the viewport
+        const rect = el.getBoundingClientRect();
+        const inView = rect.top < window.innerHeight && rect.bottom > 0;
+        if (inView) {
+          el.classList.add("slide-visible");
+        } else {
+          obs!.observe(el);
+        }
+      });
+    }, 200);
+    return () => {
+      clearTimeout(timer);
+      if (obs) obs.disconnect();
+    };
+  }, [activePanel, selectedCategory, dbProducts, dataLoading, renderKey, activeFilter, searchQuery]);
 
   useEffect(() => {
-    loadUserData();
-  }, []);
+  loadUserData().then(async () => {
+    // Handle SprintPay redirect back after payment
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    const payment = params.get("payment");
+    if (ref && payment === "success") {
+      window.history.replaceState({}, '', '/dashboard');
+      try {
+        // Verify transaction with SprintPay
+        const SPRINT_API_KEY = import.meta.env.VITE_SPRINTPAY_API_KEY || "";
+        const verifyRes = await fetch(
+          `https://web.sprintpay.online/api/verify-transaction?ref=${ref}&apikey=${SPRINT_API_KEY}`
+        );
+        const verifyData = await verifyRes.json();
+        if (verifyData?.status === "success" || verifyData?.data?.status === "success") {
+          const amt = Number(params.get("amount") || verifyData?.data?.amount || 0);
+          // Credit wallet
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: wallet } = await supabase.from("wallets").select("balance").eq("user_id", user.id).single();
+            const newBal = Number(wallet?.balance || 0) + amt;
+            await supabase.from("wallets").update({ balance: newBal }).eq("user_id", user.id);
+            await supabase.from("transactions").insert({
+              user_id: user.id, amount: amt, type: "credit",
+              description: "Wallet top-up via SprintPay",
+              reference: ref,
+            });
+            setBalance(newBal);
+            setFundAmount(amt);
+            setFundSuccess(true);
+            setActivePanel("add-funds");
+          }
+        } else {
+          toast.error("Payment could not be verified. Contact support with ref: " + ref);
+        }
+      } catch (e) {
+        toast.error("Verification failed. Contact support with ref: " + ref);
+      }
+    }
+  });
+  fetchRecentFeed();
+}, [navigate]);
+
+  useEffect(() => {
+    console.log("STATE UPDATED - categories:", dbCategories.length, "products:", dbProducts.length);
+  }, [dbCategories, dbProducts]);
+
+  const fetchRecentFeed = async () => {
+    // Combined real global orders + fake data for social proof
+    const { data: realOrders } = await supabase
+      .from("orders")
+      .select("product_title, total_price, created_at")
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    const fakes = [
+      { user: "Sage.", product: "MALE POF(NOT PAI...", price: "₦6,000", time: "Just now" },
+      { user: "Phoenix.", product: "PRIVATE PROXIES", price: "₦4,000", time: "10 mins ago" },
+      { user: "Cameron.", product: "POF AGED ACCOUNT", price: "₦4,500", time: "25 mins ago" },
+      { user: "Avery.", product: "DATACENTER PROXY", price: "₦3,500", time: "5 mins ago" },
+      { user: "Jordan.", product: "TRUSTED EMAIL", price: "₦2,000", time: "42 mins ago" },
+      { user: "Skyler.", product: "DASHBOARD VIP", price: "₦12,000", time: "1 hour ago" }
+    ];
+
+    const mappedReal = (realOrders || []).map(o => ({
+      user: "User**",
+      product: o.product_title,
+      price: `₦${Number(o.total_price).toLocaleString()}`,
+      time: "Recent"
+    }));
+
+    setRecentFeed([...mappedReal, ...fakes].slice(0, 10));
+  };
 
   const loadUserData = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    setEmail(user.email || "");
-    setUserId(user.id);
+    setDataLoading(true);
+    try {
+      console.log("Starting to load user data...");
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log("No user found");
+        return;
+      }
+      setEmail(user.email || "");
+      setUserId(user.id);
+      console.log("User authenticated:", user.id);
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("username")
-      .eq("user_id", user.id)
-      .single();
-    if (profile?.username) setUsername(profile.username);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("user_id", user.id)
+        .single();
+      if (profile?.username) setUsername(profile.username);
 
-    const { data: wallet } = await supabase
-      .from("wallets")
-      .select("balance")
-      .eq("user_id", user.id)
-      .single();
-    if (wallet) setBalance(Number(wallet.balance));
+      const { data: wallet } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", user.id)
+        .single();
+      if (wallet) setBalance(Number(wallet.balance));
 
-    const { data: userOrders } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
-    if (userOrders) setOrders(userOrders as Order[]);
+      const { data: userOrders } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (userOrders) setOrders(userOrders as Order[]);
 
-    const { data: cats } = await supabase
-      .from("categories")
-      .select("*")
-      .order("display_order", { ascending: true });
-    if (cats) setDbCategories(cats as Category[]);
+      const { data: cats, error: catError } = await supabase
+  .from("categories")
+  .select("*")
+  .is("deleted_at" as any, null)
+  .order("display_order", { ascending: true });
+console.log("cats error:", catError, "cats:", cats);
+if (cats) setDbCategories(cats as any as Category[]);
 
-    const { data: prods } = await supabase
-      .from("products")
-      .select("*")
-      .eq("is_active", true);
-    if (prods) setDbProducts(prods as Product[]);
+const { data: prods, error: prodError } = await supabase
+  .from("products")
+  .select("*")
+  .eq("is_active", true)
+  .is("deleted_at" as any, null);
+console.log("prods error:", prodError, "prods:", prods);
+if (prods) setDbProducts(prods as Product[]);
 
-    const { data: msgs } = await supabase
-      .from("messages")
-      .select("*")
-      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-      .order("created_at", { ascending: true });
-    if (msgs) {
-      setMessages(msgs as Message[]);
-      setUnreadCount((msgs as Message[]).filter(m => m.receiver_id === user.id && !m.is_read).length);
+      const { data: msgs } = await supabase
+        .from("messages")
+        .select("*")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order("created_at", { ascending: true });
+      if (msgs) {
+        setMessages(msgs as Message[]);
+        setUnreadCount((msgs as Message[]).filter(m => m.receiver_id === user.id && !m.is_read).length);
+      }
+
+      const { data: mps } = await supabase
+        .from("manual_payments")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (mps) setUserManualPayments(mps);
+
+      const { data: bds } = await supabase
+        .from("bank_details")
+        .select("*")
+        .eq("is_active", true)
+        .order("display_order");
+      if (bds) setBankDetails(bds);
+
+      const { data: ss } = await supabase.from("site_settings").select("*");
+      if (ss) {
+        const settingsMap: Record<string, string> = {};
+        (ss as any[]).forEach(s => settingsMap[s.key] = s.value);
+        setSiteSettings(prev => ({ ...prev, ...settingsMap }));
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    } finally {
+      setDataLoading(false);
+      setRenderKey(prev => prev + 1); // Force re-render
+      console.log("Data loading completed");
+    }
+  };
+
+  const submitManualPayment = async () => {
+    if (!manualPayAmount || !manualPayMethod) {
+      toast.error("Please enter the amount and payment method");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.from("manual_payments").insert({
+      user_id: userId,
+      amount: Number(manualPayAmount),
+      reference: manualPayRef,
+      method: manualPayMethod,
+      status: "pending",
+    });
+    setLoading(false);
+    if (error) {
+      toast.error("Failed to submit proof. Please try again.");
+    } else {
+      toast.success("Payment proof submitted! We'll verify within 30 minutes.");
+      setManualPayAmount("");
+      setManualPayRef("");
+      await loadUserData();
+      setActivePanel("home");
+    }
+  };
+
+  const fetchOrderDetails = async (orderId: string, productTitle: string) => {
+    setDataLoading(true);
+    try {
+      const { data: logs, error } = await supabase
+        .from("account_logs")
+        .select("login, password, description")
+        .eq("order_id", orderId);
+      
+      if (error) {
+        toast.error("Failed to fetch order details");
+      } else {
+        setViewingOrderLogs(logs || []);
+        setViewingOrderTitle(productTitle);
+      }
+    } catch (e) {
+      toast.error("Failed to fetch details");
+    } finally {
+      setDataLoading(false);
     }
   };
 
@@ -196,6 +390,14 @@ export default function Dashboard() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [userId]);
+
+  // Scroll chat to bottom
+  useEffect(() => {
+    const container = document.getElementById('chat-container');
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [messages, activePanel]);
 
   const sendMessage = async (orderId?: string) => {
     if (!msgInput.trim() || !userId) return;
@@ -229,14 +431,20 @@ export default function Dashboard() {
     Gmail: "fa-brands fa-google", Telegram: "fa-brands fa-telegram",
   };
   const getCatIcon = (cat: Category) => {
+    if (cat.image_url) {
+      return <img src={cat.image_url} alt={cat.name} style={{ width: 24, height: 24, borderRadius: 6, objectFit: "cover" }} />;
+    }
     const prods = getProductsForCategory(cat.id);
-    if (prods.length > 0 && platformIconMap[prods[0].platform]) return platformIconMap[prods[0].platform];
-    return "";
+    if (prods.length > 0 && platformIconMap[prods[0].platform]) return <i className={platformIconMap[prods[0].platform]} />;
+    return cat.emoji || "📦";
   };
 
   const getProductImage = (product: Product, cat?: Category | null) => {
     if (product.image_url) {
       return <img src={product.image_url} alt={product.title} style={{ width: 40, height: 40, borderRadius: 10, objectFit: "cover" }} />;
+    }
+    if (cat?.image_url) {
+      return <img src={cat.image_url} alt={product.title} style={{ width: 40, height: 40, borderRadius: 10, objectFit: "cover" }} />;
     }
     if (platformIconMap[product.platform]) {
       return <i className={platformIconMap[product.platform]} />;
@@ -250,18 +458,52 @@ export default function Dashboard() {
     return prods.some(p => p.platform.toLowerCase().includes(activeFilter));
   });
 
+  // Debug logging - only log when data actually changes
+  useEffect(() => {
+    if (!dataLoading) {
+      console.log("Debug - dbCategories length:", dbCategories.length);
+      console.log("Debug - dbProducts length:", dbProducts.length);
+      console.log("Debug - filteredDbCategories length:", filteredDbCategories.length);
+      console.log("Debug - activeFilter:", activeFilter);
+      console.log("Debug - searchQuery:", searchQuery);
+    }
+  }, [dataLoading, dbCategories, dbProducts, filteredDbCategories, activeFilter, searchQuery]);
+
   const filterBySearch = (text: string) => {
     if (!searchQuery) return true;
     return text.toLowerCase().includes(searchQuery.toLowerCase());
+  };
+
+
+  const initials = username ? username.slice(0, 2).toUpperCase() : email ? email.slice(0, 2).toUpperCase() : "U";
+
+  const handleUpdatePassword = async () => {
+    if (newPass.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+    if (newPass !== confirmPass) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPass });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Password updated successfully!");
+      setNewPass("");
+      setConfirmPass("");
+      setCurrentPass("");
+    }
   };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/auth");
   };
-
-  const initials = username ? username.slice(0, 2).toUpperCase() : email ? email.slice(0, 2).toUpperCase() : "U";
   const formattedBalance = `NGN ${balance.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
+  const shortBalance = `NGN ${balance.toLocaleString("en-NG", { maximumFractionDigits: 0 })}`;
 
   return (
     <div className="dashboard-layout">
@@ -292,9 +534,17 @@ export default function Dashboard() {
                 ⚠️ Insufficient balance. Please add funds first.
               </div>
             )}
+            <div className="modal-detail-row">
+              <span className="mdr-label">Quantity</span>
+              <div className="qty-selector">
+                <button onClick={() => setPurchaseQuantity(Math.max(1, purchaseQuantity - 1))}>-</button>
+                <span className="qty-val">{purchaseQuantity}</span>
+                <button onClick={() => setPurchaseQuantity(Math.min(modal.stock, purchaseQuantity + 1))}>+</button>
+              </div>
+            </div>
             <div className="modal-total">
               <span className="mt-label">Total Cost</span>
-              <span className="mt-val">{modal.price}</span>
+              <span className="mt-val">NGN {((modal.priceNum || 0) * purchaseQuantity).toLocaleString("en-NG", { minimumFractionDigits: 2 })}</span>
             </div>
             <button
               className={`btn-confirm${loading ? " loading" : ""}`}
@@ -304,34 +554,166 @@ export default function Dashboard() {
                   toast.error("This product is not available for purchase yet.");
                   return;
                 }
-                const priceNum = modal.priceNum || 0;
-                if (balance < priceNum) {
+                const totalPrice = (modal.priceNum || 0) * purchaseQuantity;
+                if (balance < totalPrice) {
                   toast.error("Insufficient balance. Please add funds first.");
                   return;
                 }
                 setLoading(true);
                 try {
-                  const { data, error } = await supabase.functions.invoke("purchase", {
-                    body: { product_id: modal.product_id, quantity: 1 },
+                  const { data, error } = await supabase.rpc("process_purchase", {
+                    p_product_id: modal.product_id,
+                    p_quantity: purchaseQuantity,
                   });
+
                   if (error) {
-                    toast.error("Purchase failed. Please try again.");
-                  } else if (!data?.success) {
-                    toast.error(data?.error || "Purchase failed");
+                    console.error("RPC error:", error);
+                    toast.error(`Purchase failed: ${error.message || "Please try again."}`);
                   } else {
-                    toast.success("✅ Purchase successful! Check My Orders.");
-                    setBalance(data.new_balance);
-                    await loadUserData();
+                    const result = Array.isArray(data) ? data[0] : (data as any);
+                    if (!result?.success) {
+                      toast.error(result?.error_msg || "Purchase failed");
+                    } else {
+                      toast.success(`✅ Purchase successful!`);
+                      setBalance(Number(result.new_balance));
+                      if (result.purchased_accounts) {
+                        setBoughtAccounts(result.purchased_accounts);
+                      } else {
+                        // If no accounts returned, try to get them from recent orders
+                        toast.info("Account details will be available in My Orders");
+                        setBoughtAccounts([]);
+                        await loadUserData();
+                      }
+                    }
                   }
                 } catch (e: any) {
-                  toast.error("Purchase failed. Please try again.");
+                  console.error("Purchase error:", e);
+                  toast.error("Purchase failed. Please check your connection.");
                 }
                 setLoading(false);
-                setModal(null);
               }}
             >
-              {loading ? "Processing..." : "Confirm Purchase →"}
+              {loading ? "Processing..." : `Confirm Purchase (₦${((modal.priceNum || 0) * purchaseQuantity).toLocaleString()}) →`}
             </button>
+
+            {boughtAccounts && (
+  <div className="purchase-success-overlay">
+    <div style={{ textAlign: 'center', marginBottom: 24 }}>
+      <div style={{ fontSize: 48, marginBottom: 8 }}>🎉</div>
+      <h3 style={{ fontSize: 20, fontWeight: 800, color: 'hsl(220 20% 12%)', marginBottom: 6 }}>
+        Purchase Successful!
+      </h3>
+      <p style={{ fontSize: 13, color: 'hsl(220 10% 50%)' }}>
+        Your accounts are ready. Also available in <strong>My Orders</strong>.
+      </p>
+    </div>
+
+    <div style={{ maxHeight: 280, overflowY: 'auto', paddingRight: 4 }}>
+      {boughtAccounts.length > 0 ? (
+        boughtAccounts.map((acc, i) => (
+          <div key={i} style={{
+            background: 'hsl(220 20% 97%)',
+            border: '1px solid hsl(220 20% 90%)',
+            borderRadius: 14,
+            padding: '16px',
+            marginBottom: 12,
+            position: 'relative'
+          }}>
+            {/* Account number badge */}
+            <div style={{
+              position: 'absolute', top: 12, left: 16,
+              fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+              letterSpacing: '0.08em', color: 'hsl(220 10% 55%)'
+            }}>
+              Account {i + 1}
+            </div>
+
+            {/* Copy button */}
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${acc.login}:${acc.password}`);
+                toast.success("Copied!");
+              }}
+              style={{
+                position: 'absolute', top: 10, right: 12,
+                background: 'hsl(220 70% 55%)', color: 'white',
+                border: 'none', borderRadius: 8, padding: '5px 12px',
+                fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 5
+              }}
+            >
+              <i className="fa-solid fa-copy" style={{ fontSize: 10 }} /> Copy
+            </button>
+
+            {/* Credentials */}
+            <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontFamily: '', fontSize: 14, background: 'white', borderRadius: 8, padding: '12px 14px', border: '1px solid hsl(220 20% 86%)', wordBreak: 'break-all', lineHeight: 1.7 }}>
+  <strong style={{ color: 'hsl(220 20% 15%)' }}>{acc.login.split(':').join(' ||  ')}</strong>
+</div>
+            </div>
+
+            {/* Instructions */}
+            {acc.description && (
+              <div style={{
+                marginTop: 10,
+                padding: '12px 14px',
+                background: 'linear-gradient(135deg, hsl(45 100% 97%), hsl(38 100% 93%))',
+                border: '1px solid hsl(45 80% 78%)',
+                borderRadius: 10,
+                display: 'flex', gap: 10, alignItems: 'flex-start'
+              }}>
+                <span style={{ fontSize: 16, flexShrink: 0 }}>📋</span>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'hsl(38 80% 35%)', marginBottom: 4 }}>
+                    Instructions
+                  </div>
+                  <div style={{ fontSize: 13, color: 'hsl(38 60% 25%)', lineHeight: 1.6, fontWeight: 500 }}>
+                    {acc.description}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ))
+      ) : (
+        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+          <button className="btn-secondary" onClick={() => { setModal(null); setBoughtAccounts(null); switchPanel("orders"); }}>
+            View Accounts in My Orders
+          </button>
+        </div>
+      )}
+    </div>
+
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+      <button
+  onClick={() => {
+    const textContent = boughtAccounts.map((acc, i) =>
+      `Account ${i + 1}:\n${acc.login}\n` +
+      (acc.description ? `Instructions: ${acc.description}\n` : '') +
+      `---\n`
+    ).join('\n');
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `accounts_${Date.now()}.txt`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+    toast.success("Downloaded!");
+  }}
+  style={{
+    background: 'hsl(220 70% 55%)', color: 'white', border: 'none',
+    borderRadius: 12, padding: '13px 20px', fontSize: 14, fontWeight: 700,
+    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+  }}
+>
+  <i className="fa-solid fa-download" /> Download Details
+</button>
+      <button className="btn-confirm" onClick={() => { setModal(null); setBoughtAccounts(null); }}>
+        Done ✓
+      </button>
+    </div>
+  </div>
+)}
           </div>
         </div>
       )}
@@ -408,8 +790,7 @@ export default function Dashboard() {
       <aside className={`dash-sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-logo">
           <div className="logo-mark">
-            <div className="logo-icon">V</div>
-            VerifiedStore
+            Social-store
           </div>
         </div>
 
@@ -465,7 +846,7 @@ export default function Dashboard() {
               <div className="uemail">{email}</div>
             </div>
           </div>
-          <button className="signout-btn" onClick={handleSignOut}>
+          <button className="signout-btn" onClick={handleSignOut} style={{ marginTop: 12 }}>
             <i className="fa-solid fa-arrow-right-from-bracket" /> Sign Out
           </button>
         </div>
@@ -483,17 +864,17 @@ export default function Dashboard() {
             <span className="s-icon"><i className="fa-solid fa-magnifying-glass" /></span>
             <input type="text" placeholder="Search for products or categories..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
-          <div className="topbar-right">
-            <div className="topbar-balance" onClick={() => switchPanel("add-funds")}>
+          <div className="dash-header-right">
+            <div className={`dash-user-pill${activePanel === "add-funds" ? " active" : ""}`} onClick={() => switchPanel("add-funds")}>
               <span className="bal-icon"><i className="fa-solid fa-wallet" /></span>
-              <span className="bal-text">{formattedBalance}</span>
+              <span className="bal-text">{shortBalance}</span>
             </div>
             <div className="topbar-avatar" onClick={() => switchPanel("profile")}>{initials}</div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="dash-content">
+        <div className="dash-content" key={renderKey}>
           {/* CATEGORY DETAIL */}
           {activePanel === "home" && selectedCategory && (
             <div className="dash-panel">
@@ -507,7 +888,7 @@ export default function Dashboard() {
 
               <div className="category-banner">
                 <div className="category-banner-icon">
-                  {getCatIcon(selectedCategory) ? <i className={getCatIcon(selectedCategory)} /> : (selectedCategory.emoji || "📦")}
+                  {typeof getCatIcon(selectedCategory) === 'string' ? getCatIcon(selectedCategory) : getCatIcon(selectedCategory)}
                 </div>
                 <div>
                   <h2 className="category-banner-title">{selectedCategory.name.toUpperCase()}</h2>
@@ -516,34 +897,38 @@ export default function Dashboard() {
               </div>
 
               <div className="category-detail-list">
-                {getProductsForCategory(selectedCategory.id).filter(p => filterBySearch(p.title + p.description)).map((product, idx) => (
-                  <div key={product.id} className={`account-row ${idx % 2 === 0 ? "slide-from-left" : "slide-from-right"}`}>
-                    <div className="acc-platform-icon">
-                      {getProductImage(product, selectedCategory)}
-                    </div>
-                    <div className="acc-info">
-                      <div className="acc-desc-title">{product.title}</div>
-                      <div className="acc-desc" style={{ WebkitLineClamp: 'unset', display: 'block' }}>{product.description}</div>
-                    </div>
-                    <div className="acc-stock-price">
-                      <div style={{ textAlign: "center" }}>
-                        <div className="stock-label">Stock</div>
-                        <div className={`stock-num ${product.stock === 0 ? "zero" : product.stock < 10 ? "low" : ""}`}>{product.stock}</div>
+                {dataLoading ? (
+                  <ProductGridSkeleton count={4} />
+                ) : (
+                  getProductsForCategory(selectedCategory.id).filter(p => filterBySearch(p.title + p.description)).map((product, idx) => (
+                    <div key={product.id} className={`account-row ${idx % 2 === 0 ? "slide-from-left" : "slide-from-right"}`}>
+                      <div className="acc-platform-icon">
+                        {getProductImage(product, selectedCategory)}
                       </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div className="price-label">Price</div>
-                        <div className="price-val">{product.currency} {product.price.toLocaleString("en-NG")}</div>
+                      <div className="acc-info">
+                        <div className="acc-desc-title">{product.title}</div>
+                        <div className="acc-desc" style={{ WebkitLineClamp: 'unset', display: 'block' }}>{product.description}</div>
                       </div>
+                      <div className="acc-stock-price">
+                        <div style={{ textAlign: "center" }}>
+                          <div className="stock-label">Stock</div>
+                          <div className={`stock-num ${product.stock === 0 ? "zero" : product.stock < 10 ? "low" : ""}`}>{product.stock}</div>
+                        </div>
+                        <div style={{ textAlign: "center" }}>
+                          <div className="price-label">Price</div>
+                          <div className="price-val">{product.currency} {product.price.toLocaleString("en-NG")}</div>
+                        </div>
+                      </div>
+                      {product.stock > 0 ? (
+                        <button className="buy-btn" onClick={() => { setModal({ title: product.title, desc: product.description, platform: product.platform, stock: product.stock, price: `${product.currency} ${product.price.toLocaleString("en-NG")}`, product_id: product.id, priceNum: product.price }); setPurchaseQuantity(1); }}>
+                          <i className="fa-solid fa-cart-shopping" /> BUY
+                        </button>
+                      ) : (
+                        <button className="buy-btn" disabled>Out of Stock</button>
+                      )}
                     </div>
-                    {product.stock > 0 ? (
-                      <button className="buy-btn" onClick={() => setModal({ title: product.title, desc: product.description, platform: product.platform, stock: product.stock, price: `${product.currency} ${product.price.toLocaleString("en-NG")}`, product_id: product.id, priceNum: product.price })}>
-                        <i className="fa-solid fa-cart-shopping" /> BUY
-                      </button>
-                    ) : (
-                      <button className="buy-btn" disabled>Out of Stock</button>
-                    )}
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -568,25 +953,35 @@ export default function Dashboard() {
               </div>
 
               <div className="categories-grid">
-                {dbCategories
-                  .filter((cat) => cat.name.toLowerCase().includes(categorySearch.toLowerCase()))
-                  .map((cat) => (
-                    <div
-                      key={cat.id}
-                      className="category-card"
-                      onClick={() => {
-                        setSelectedCategory(cat);
-                        setActivePanel("home");
-                        setCategorySearch("");
-                      }}
-                    >
-                      <div className="category-card-icon">
-                        {getCatIcon(cat) ? <i className={getCatIcon(cat)} /> : (cat.emoji || "📦")}
+                {dataLoading ? (
+                  <CategoryGridSkeleton count={8} />
+                ) : dbCategories.filter((cat) => cat.name.toLowerCase().includes(categorySearch.toLowerCase())).length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '40px', color: 'hsl(var(--db-text-muted))', gridColumn: '1 / -1' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>📂</div>
+                    <h3 style={{ marginBottom: '8px', color: 'hsl(var(--db-text))' }}>No Categories Found</h3>
+                    <p>Try adjusting your search or check back later.</p>
+                  </div>
+                ) : (
+                  dbCategories
+                    .filter((cat) => cat.name.toLowerCase().includes(categorySearch.toLowerCase()))
+                    .map((cat) => (
+                      <div
+                        key={cat.id}
+                        className="category-card"
+                        onClick={() => {
+                          setSelectedCategory(cat);
+                          setActivePanel("home");
+                          setCategorySearch("");
+                        }}
+                      >
+                        <div className="category-card-icon">
+                          {getCatIcon(cat)}
+                        </div>
+                        <div className="category-card-title">{cat.name}</div>
+                        <div className="category-card-count">{getProductsForCategory(cat.id).length} products</div>
                       </div>
-                      <div className="category-card-title">{cat.name}</div>
-                      <div className="category-card-count">{getProductsForCategory(cat.id).length} products</div>
-                    </div>
-                  ))}
+                    ))
+                )}
               </div>
             </div>
           )}
@@ -633,84 +1028,71 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              {filteredDbCategories.map((cat) => {
-                const prods = getProductsForCategory(cat.id).filter(p => filterBySearch(p.title + p.description));
-                if (prods.length === 0) return null;
-                const icon = getCatIcon(cat);
-                return (
-                  <div key={cat.id} className="category-block">
-                    <div className="category-header">
-                      <div className="cat-head-left">
-                        <div className="cat-platform-icon">
-                          {icon ? <i className={icon} /> : (cat.emoji || "📦")}
-                        </div>
-                        <div>
-                          <div className="cat-title">{cat.name}</div>
-                        </div>
-                      </div>
-                      <button className="cat-see-more" onClick={() => setSelectedCategory(cat)}>See More →</button>
-                    </div>
-                    {prods.map((product, idx) => (
-                      <div key={product.id} className={`account-row ${idx % 2 === 0 ? "slide-from-left" : "slide-from-right"}`}>
-                        <div className="acc-platform-icon">
-                          {getProductImage(product, cat)}
-                        </div>
-                        <div className="acc-info">
-                          <div className="acc-desc-title">{product.title}</div>
-                          <div className="acc-desc">{product.description}</div>
-                        </div>
-                        <div className="acc-stock-price">
-                          <div style={{ textAlign: "center" }}>
-                            <div className="stock-label">Stock</div>
-                            <div className={`stock-num ${product.stock === 0 ? "zero" : product.stock < 10 ? "low" : ""}`}>{product.stock}</div>
-                          </div>
-                          <div style={{ textAlign: "center" }}>
-                            <div className="price-label">Price</div>
-                            <div className="price-val">{product.currency} {product.price.toLocaleString("en-NG")}</div>
-                          </div>
-                        </div>
-                        {product.stock > 0 ? (
-                          <button className="buy-btn" onClick={() => setModal({ title: product.title, desc: product.description, platform: product.platform, stock: product.stock, price: `${product.currency} ${product.price.toLocaleString("en-NG")}`, product_id: product.id, priceNum: product.price })}>
-                            <i className="fa-solid fa-cart-shopping" /> BUY
-                          </button>
-                        ) : (
-                          <button className="buy-btn" disabled>Out of Stock</button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                );
-              })}
-              {/* Recent Orders Section */}
-              <div className="recent-orders-section">
-                <div className="recent-orders-header">
-                  <span className="recent-dot" /> RECENT ORDERS
-                </div>
-                <div className="recent-orders-table">
-                  <div className="recent-orders-th">
-                    <span>ITEM</span><span>TIME</span>
-                  </div>
-                  {[
-                    { user: "Phoenix.", product: "PRIVATE PROXIES", price: "₦4,000", time: "10 minutes ago" },
-                    { user: "Sage.", product: "MALE POF(NOT PAI...", price: "₦6,000", time: "Just now" },
-                    { user: "Cameron.", product: "POF AGED ACCOUNT", price: "₦4,500", time: "25 minutes ago" },
-                    { user: "Avery.", product: "DATACENTER PROXY", price: "₦3,500", time: "5 minutes ago" },
-                  ].map((r, i) => (
-                    <div key={i} className="recent-order-row">
-                      <div className="recent-order-info">
-                        <div><span className="recent-user">{r.user}</span> <span className="recent-bought">just bought</span></div>
-                        <div className="recent-product">{r.product}</div>
-                        <div className="recent-price">{r.price}</div>
-                      </div>
-                      <div className="recent-time">{r.time}</div>
-                    </div>
-                  ))}
-                  <div className="recent-orders-footer">
-                    <span className="recent-dot" /> Live updates · 5 recent orders
+              {dataLoading ? (
+                <ProductGridSkeleton count={6} />
+              ) : filteredDbCategories.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: 'hsl(var(--db-text-muted))' }}>
+                  <div style={{ fontSize: '48px', marginBottom: '16px' }}>📦</div>
+                  <h3 style={{ marginBottom: '8px', color: 'hsl(var(--db-text))' }}>No Products Available</h3>
+                  <p>Check back later for new products or adjust your filters.</p>
+                  <div style={{ marginTop: '16px', fontSize: '12px', color: 'hsl(var(--db-text-muted))' }}>
+                    Debug: {dbCategories.length} categories, {dbProducts.length} products total
                   </div>
                 </div>
-              </div>
-
+              ) : (
+                filteredDbCategories.map((cat) => {
+                  const prods = getProductsForCategory(cat.id).filter(p => filterBySearch(p.title + p.description));
+                  console.log(`Category ${cat.name}: ${getProductsForCategory(cat.id).length} total products, ${prods.length} after search filter`);
+                  if (prods.length === 0) return null;
+                  const icon = getCatIcon(cat);
+                  return (
+                    <div key={cat.id} className="category-block">
+                      <div className="category-header">
+                        <div className="cat-head-left">
+                          <div className="cat-platform-icon">
+                            {getCatIcon(cat)}
+                          </div>
+                          <div>
+                            <div className="cat-title">{cat.name}</div>
+                          </div>
+                        </div>
+                        <button className="cat-see-more" onClick={() => setSelectedCategory(cat)}>See More →</button>
+                      </div>
+                      {prods.map((product, idx) => (
+                        <div key={product.id} className={`account-row ${idx % 2 === 0 ? "slide-from-left" : "slide-from-right"}`}>
+                          <div className="acc-platform-icon">
+                            {getProductImage(product, cat)}
+                          </div>
+                          <div className="acc-info">
+                            <div className="acc-desc-title">{product.title}</div>
+                            <div className="acc-desc">{product.description}</div>
+                          </div>
+                          <div className="acc-stock-price">
+                            <div style={{ textAlign: "center" }}>
+                              <div className="stock-label">Stock</div>
+                              <div className={`stock-num ${product.stock === 0 ? "zero" : product.stock < 10 ? "low" : ""}`}>{product.stock}</div>
+                            </div>
+                            <div style={{ textAlign: "center" }}>
+                              <div className="price-label">Price</div>
+                              <div className="price-val">{product.currency} {product.price.toLocaleString("en-NG")}</div>
+                            </div>
+                          </div>
+                          {product.stock > 0 ? (
+                            <div className="account-actions">
+                              <button className="buy-btn" onClick={() => { setModal({ title: product.title, desc: product.description, platform: product.platform, stock: product.stock, price: `${product.currency} ${product.price.toLocaleString("en-NG")}`, product_id: product.id, priceNum: product.price }); setPurchaseQuantity(1); }}>
+                                <i className="fa-solid fa-bolt" /> BUY
+                              </button>
+                            </div>
+                          ) : (
+                            <button className="buy-btn" disabled>Out of Stock</button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })
+              )}
+          
               <div style={{ height: 28 }} />
             </div>
           )}
@@ -720,7 +1102,7 @@ export default function Dashboard() {
             <div className="dash-panel">
               <div style={{ padding: "24px 24px 0" }}>
                 <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>My Orders</h2>
-                <p style={{ fontSize: 14, color: "hsl(220 10% 50%)", marginBottom: 16 }}>View and manage your purchased accounts</p>
+                <p style={{ fontSize: 14, color: "hsl(210 15% 55%)", marginBottom: 16 }}>View and manage your purchased accounts</p>
                 <button className="btn-refresh" onClick={loadUserData}>
                   <i className="fa-solid fa-rotate" /> Refresh
                 </button>
@@ -737,11 +1119,12 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="orders-table-wrap">
-                  <div className="table-container">
+                  {/* Desktop table */}
+                  <div className="table-container orders-desktop-table">
                     <table className="dash-table">
                       <thead>
                         <tr>
-                          <th>Order ID</th><th>Account</th><th>Platform</th><th>Price</th><th>Date</th><th>Status</th>
+                          <th>Order ID</th><th>Account</th><th>Platform</th><th>Price</th><th>Date</th><th>Status</th><th>Access</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -753,13 +1136,201 @@ export default function Dashboard() {
                             <td className="order-price">NGN {Number(o.total_price).toLocaleString("en-NG", { minimumFractionDigits: 2 })}</td>
                             <td className="order-date">{new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
                             <td><span className={`status-pill status-${o.status}`}>{o.status.charAt(0).toUpperCase() + o.status.slice(1)}</span></td>
+                            <td>
+                              <button
+                                className="order-view-btn"
+                                onClick={() => fetchOrderDetails(o.id, o.product_title)}
+                              >
+                                👁️ View
+                              </button>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Mobile cards */}
+                  <div className="orders-mobile-cards">
+                    {orders.map((o) => (
+                      <div key={o.id} className="order-mobile-card">
+                        <div className="omc-row">
+                          <span className="omc-label">Order ID</span>
+                          <span className="omc-val order-id">#{o.id.slice(0, 6)}</span>
+                        </div>
+                        <div className="omc-row">
+                          <span className="omc-label">Account</span>
+                          <span className="omc-val">{o.product_title}</span>
+                        </div>
+                        <div className="omc-row">
+                          <span className="omc-label">Platform</span>
+                          <span className="omc-val">{o.product_platform}</span>
+                        </div>
+                        <div className="omc-row">
+                          <span className="omc-label">Price</span>
+                          <span className="omc-val order-price">NGN {Number(o.total_price).toLocaleString("en-NG", { minimumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="omc-row">
+                          <span className="omc-label">Date</span>
+                          <span className="omc-val">{new Date(o.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                        </div>
+                        <div className="omc-row">
+                          <span className="omc-label">Status</span>
+                          <span className={`status-pill status-${o.status}`}>{o.status.charAt(0).toUpperCase() + o.status.slice(1)}</span>
+                        </div>
+                        <button
+                          className="order-view-btn"
+                          style={{ width: '100%', marginTop: 10, justifyContent: 'center' }}
+                          onClick={() => fetchOrderDetails(o.id, o.product_title)}
+                        >
+                          👁️ View Account Details
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {viewingOrderLogs && (
+            <div className="details-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setViewingOrderLogs(null); }}>
+              <div className="details-modal">
+                <div className="details-modal-header">
+                  <h3><i className="fa-solid fa-receipt" style={{ marginRight: 12, opacity: 0.8 }} />Order Details</h3>
+                  <button onClick={() => setViewingOrderLogs(null)}><i className="fa-solid fa-xmark" /></button>
+                </div>
+                <div className="details-modal-body">
+                  <div style={{ marginBottom: 24, padding: '16px', background: 'hsl(var(--db-blue-dim))', borderRadius: 12, border: '1px solid hsl(var(--db-blue-border))' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'hsl(var(--db-blue))', opacity: 0.8, marginBottom: 4 }}>Product Purchased</div>
+                    <div style={{ fontWeight: 800, fontSize: 17, color: 'hsl(var(--db-blue))' }}>{viewingOrderTitle}</div>
+                  </div>
+
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: 'hsl(var(--db-text))', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <i className="fa-solid fa-key" style={{ opacity: 0.5 }} /> Your Account Credentials
+                  </div>
+
+                  <div className="accounts-list">
+  {viewingOrderLogs.length > 0 ? viewingOrderLogs.map((acc, i) => (
+    <div key={i} style={{
+      background: 'hsl(220 20% 97%)',
+      border: '1px solid hsl(220 20% 90%)',
+      borderRadius: 14,
+      padding: '16px',
+      marginBottom: 12,
+      position: 'relative'
+    }}>
+      <div style={{
+        position: 'absolute', top: 12, left: 16,
+        fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+        letterSpacing: '0.08em', color: 'hsl(220 10% 55%)'
+      }}>
+        Account {i + 1}
+      </div>
+
+      <button
+        onClick={() => {
+  navigator.clipboard.writeText(acc.login);
+  toast.success("Copied!");
+}}
+        style={{
+          position: 'absolute', top: 10, right: 12,
+          background: 'hsl(220 70% 55%)', color: 'white',
+          border: 'none', borderRadius: 8, padding: '5px 12px',
+          fontSize: 12, fontWeight: 600, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 5
+        }}
+      >
+        <i className="fa-solid fa-copy" style={{ fontSize: 10 }} /> Copy
+      </button>
+
+      <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ marginTop: 24 }}>
+                <div style={{ fontFamily: '', fontSize: 14, background: 'white', borderRadius: 8, padding: '12px 14px', border: '1px solid hsl(220 20% 86%)', wordBreak: 'break-all', lineHeight: 1.7 }}>
+    {acc.login.split(':').join(' || ')}
+  </div>
+</div>
+      </div>
+
+      {acc.description && (
+        <div style={{
+          marginTop: 10,
+          padding: '12px 14px',
+          background: 'linear-gradient(135deg, hsl(45 100% 97%), hsl(38 100% 93%))',
+          border: '1px solid hsl(45 80% 78%)',
+          borderRadius: 10,
+          display: 'flex', gap: 10, alignItems: 'flex-start'
+        }}>
+          <span style={{ fontSize: 16, flexShrink: 0 }}>📋</span>
+          <div>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'hsl(38 80% 35%)', marginBottom: 4 }}>
+              Instructions
+            </div>
+            <div style={{ fontSize: 13, color: 'hsl(38 60% 25%)', lineHeight: 1.6, fontWeight: 500 }}>
+              {acc.description}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )) : (
+    <div style={{ textAlign: 'center', padding: '40px 0', opacity: 0.5 }}>
+      <i className="fa-solid fa-ghost" style={{ fontSize: 32, marginBottom: 12, display: 'block' }} />
+      <p>No access details found for this order.</p>
+    </div>
+  )}
+</div>
+
+                  <div style={{ marginTop: 24, textAlign: 'center', paddingTop: '20px' }}>
+                    
+                    
+                    <button className="btn-save" style={{ width: '100%' }} onClick={() => setViewingOrderLogs(null)}>Done</button>
+                <button style={{ 
+                    backgroundColor: '#3b82f6', 
+                    padding: '14px 140px', 
+                    borderRadius: '12px', 
+                    border: 'none', 
+                    color: 'white', 
+                    fontSize: '15px', 
+                    fontWeight: '700', 
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 20px rgba(59, 130, 246, 0.3)',
+                    transition: 'all 0.3s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)',
+                    marginTop: '20px'
+                  }} className="btn-download" onClick={() => {
+                      const textContent = viewingOrderLogs.map((acc, i) => 
+                        `Account ${i + 1}:\n` +
+                        `Login: ${acc.login}\n` +
+                        `Password: ${acc.password}\n` +
+                        (acc.description ? `Instructions: ${acc.description}\n` : '') +
+                        `Platform: ${viewingOrderTitle}\n` +
+                        `Order Date: ${new Date().toLocaleDateString()}\n` +
+                        `---\n`
+                      ).join('\n');
+                      
+                      const blob = new Blob([textContent], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `order_details_${Date.now()}.txt`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
+                      
+                      toast.success("Order details downloaded!");
+                    }}>
+                      <i className="fa-solid fa-download" />
+                      Download Details
+                    </button>
+                  </div>
+
+                </div>
+              </div>
             </div>
           )}
 
@@ -773,14 +1344,14 @@ export default function Dashboard() {
                     <div className="form-group full">
                       <label className="form-label">Username</label>
                       <div className="dash-form-input" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <i className="fa-solid fa-user" style={{ color: "hsl(220 10% 50%)" }} />
+                        <i className="fa-solid fa-user" style={{ color: "hsl(210 15% 55%)" }} />
                         {username || "—"}
                       </div>
                     </div>
                     <div className="form-group full">
                       <label className="form-label">Email Address</label>
                       <div className="dash-form-input" style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <i className="fa-solid fa-envelope" style={{ color: "hsl(220 10% 50%)" }} />
+                        <i className="fa-solid fa-envelope" style={{ color: "hsl(210 15% 55%)" }} />
                         {email}
                       </div>
                     </div>
@@ -794,24 +1365,32 @@ export default function Dashboard() {
                   </div>
 
                   <div className="form-section-title" style={{ marginTop: 28 }}>Change Password</div>
-                  <p style={{ fontSize: 13, color: "hsl(220 10% 50%)", marginBottom: 20, marginTop: -10 }}>Update your password to keep your account secure</p>
+                  <p style={{ fontSize: 13, color: "hsl(210 15% 55%)", marginBottom: 20, marginTop: -10 }}>Update your password to keep your account secure</p>
                   <div className="form-grid">
                     <div className="form-group full">
-                      <label className="form-label">Current Password</label>
-                      <input type="password" className="dash-form-input" placeholder="Enter current password" />
-                    </div>
-                    <div className="form-group full">
                       <label className="form-label">New Password</label>
-                      <input type="password" className="dash-form-input" placeholder="Enter new password" />
-                      <span style={{ fontSize: 11, color: "hsl(220 10% 50%)", marginTop: 4, display: "block" }}>Password must be at least 8 characters long</span>
+                      <input
+                        type="password"
+                        className="dash-form-input"
+                        placeholder="Enter new password"
+                        value={newPass}
+                        onChange={(e) => setNewPass(e.target.value)}
+                      />
+                      <span style={{ fontSize: 11, color: "hsl(210 15% 55%)", marginTop: 4, display: "block" }}>Password must be at least 6 characters long</span>
                     </div>
                     <div className="form-group full">
                       <label className="form-label">Confirm New Password</label>
-                      <input type="password" className="dash-form-input" placeholder="Confirm new password" />
+                      <input
+                        type="password"
+                        className="dash-form-input"
+                        placeholder="Confirm new password"
+                        value={confirmPass}
+                        onChange={(e) => setConfirmPass(e.target.value)}
+                      />
                     </div>
                   </div>
                   <div className="form-actions">
-                    <button className="btn-save" onClick={() => toast.success("Password updated successfully!")}>Update Password</button>
+                    <button className="btn-save" onClick={handleUpdatePassword}>Update Password</button>
                   </div>
                 </div>
               </div>
@@ -819,61 +1398,279 @@ export default function Dashboard() {
           )}
 
           {/* ADD FUNDS */}
-          {activePanel === "add-funds" && (
-            <div className="dash-panel">
-              <div className="funds-panel">
-                <div className="section-header" style={{ padding: "0 0 20px" }}>
-                  <div className="section-head-left">
-                    <div className="section-hl" />
-                    <span className="section-title">Add Funds to Wallet</span>
-                  </div>
+          {/* ADD FUNDS */}
+{activePanel === "add-funds" && (
+  <div className="dash-panel">
+    <div className="funds-panel">
+
+      {/* SUCCESS STATE */}
+      {fundSuccess ? (
+        <div style={{
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          justifyContent: 'center', padding: '60px 24px', textAlign: 'center',
+        }}>
+          <div style={{
+            width: 90, height: 90, borderRadius: '50%',
+            background: 'linear-gradient(135deg, hsl(142 70% 45%), hsl(158 65% 40%))',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 40, marginBottom: 24, color: 'white',
+            boxShadow: '0 12px 40px hsl(142 60% 40% / 0.35)',
+          }}>✓</div>
+          <h2 style={{ fontSize: 26, fontWeight: 800, color: 'hsl(220 20% 12%)', marginBottom: 8 }}>
+            Funds Added Successfully!
+          </h2>
+          <p style={{ fontSize: 15, color: 'hsl(210 15% 50%)', marginBottom: 4 }}>
+            <strong style={{ color: 'hsl(142 60% 35%)', fontSize: 18 }}>
+              ₦{fundAmount.toLocaleString()}
+            </strong> has been credited to your wallet
+          </p>
+          <p style={{ fontSize: 13, color: 'hsl(210 15% 60%)', marginBottom: 32 }}>
+            New balance: <strong>{formattedBalance}</strong>
+          </p>
+          <div style={{
+            background: 'linear-gradient(135deg, hsl(220 70% 55%), hsl(240 65% 60%))',
+            borderRadius: 16, padding: '24px 48px', marginBottom: 32,
+            boxShadow: '0 8px 32px hsl(220 70% 55% / 0.3)',
+            color: 'white',
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.8, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              Wallet Balance
+            </div>
+            <div style={{ fontSize: 34, fontWeight: 900 }}>{formattedBalance}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button
+              onClick={() => { setFundSuccess(false); setCustomAmount(""); }}
+              style={{
+                background: 'hsl(220 20% 93%)', color: 'hsl(220 20% 30%)',
+                border: 'none', borderRadius: 12, padding: '12px 24px',
+                fontSize: 14, fontWeight: 600, cursor: 'pointer',
+              }}
+            >+ Add More Funds</button>
+            <button
+              onClick={() => switchPanel("home")}
+              style={{
+                background: 'linear-gradient(135deg, hsl(220 70% 55%), hsl(240 65% 60%))',
+                color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px',
+                fontSize: 14, fontWeight: 700, cursor: 'pointer',
+                boxShadow: '0 4px 16px hsl(220 70% 55% / 0.3)',
+              }}
+            >Browse Products →</button>
+          </div>
+        </div>
+
+      ) : (
+        <>
+          <div className="section-header" style={{ padding: "0 0 20px" }}>
+            <div className="section-head-left">
+              <div className="section-hl" />
+              <span className="section-title">Add Funds to Wallet</span>
+            </div>
+          </div>
+
+          <div className="funds-grid">
+            <div>
+              <div className="funds-card">
+                <div className="funds-card-title">Select Amount</div>
+                <div className="amount-presets">
+                  {["NGN 1,000", "NGN 5,000", "NGN 10,000", "NGN 20,000", "NGN 50,000", "NGN 100,000"].map((amt) => (
+                    <button
+                      key={amt}
+                      className={`preset-btn ${selectedPreset === amt && !customAmount ? "selected" : ""}`}
+                      onClick={() => { setSelectedPreset(amt); setCustomAmount(""); }}
+                    >{amt}</button>
+                  ))}
                 </div>
-                <div className="funds-grid">
-                  <div>
-                    <div className="funds-card">
-                      <div className="funds-card-title">Select Amount</div>
-                      <div className="amount-presets">
-                        {["NGN 1,000", "NGN 5,000", "NGN 10,000", "NGN 20,000", "NGN 50,000", "NGN 100,000"].map((amt) => (
-                          <button key={amt} className={`preset-btn ${selectedPreset === amt ? "selected" : ""}`} onClick={() => setSelectedPreset(amt)}>
-                            {amt}
-                          </button>
-                        ))}
-                      </div>
-                      <div className="form-group">
-                        <label className="form-label">Or Enter Custom Amount</label>
-                        <input type="number" className="dash-form-input" placeholder="Enter amount in NGN" />
-                      </div>
-                      <div className="form-section-title" style={{ marginTop: 20 }}>Payment Method</div>
-                      <div className="payment-methods">
-                        {[
-                          { icon: "🏦", name: "Bank Transfer", desc: "Direct bank deposit · Instant confirmation" },
-                          { icon: "💳", name: "Card Payment", desc: "Visa / Mastercard · Secure checkout" },
-                          { icon: "₿", name: "Cryptocurrency", desc: "BTC / ETH / USDT · Fast processing" },
-                        ].map((pm, i) => (
-                          <div key={i} className={`payment-method ${selectedPayment === i ? "selected" : ""}`} onClick={() => setSelectedPayment(i)}>
-                            <span className="pm-icon">{pm.icon}</span>
-                            <div><div className="pm-name">{pm.name}</div><div className="pm-desc">{pm.desc}</div></div>
-                            <div className="pm-radio" />
-                          </div>
-                        ))}
-                      </div>
-                      <button className="btn-submit-funds" onClick={() => toast("Processing payment...")}>Proceed to Payment →</button>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="funds-card">
-                      <div className="funds-card-title">Current Balance</div>
-                      <div style={{ textAlign: "center", padding: "20px 0" }}>
-                        <div style={{ fontSize: 36, fontWeight: 800, color: "hsl(220 70% 25%)" }}>{formattedBalance}</div>
-                        <div style={{ fontSize: 13, color: "hsl(220 10% 50%)", marginTop: 4 }}>Available Balance</div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="form-group" style={{ marginTop: 14 }}>
+                  <label className="form-label">Or Enter Custom Amount</label>
+                  <input
+                    type="number"
+                    className="dash-form-input"
+                    placeholder="Enter amount in NGN"
+                    value={customAmount}
+                    onChange={(e) => {
+                      setCustomAmount(e.target.value);
+                      // Clear preset when user types custom amount
+                      if (e.target.value) {
+                        setSelectedPreset("");
+                      }
+                    }}
+                  />
                 </div>
+
+                <div className="form-section-title" style={{ marginTop: 20 }}>Payment Method</div>
+                <div className="payment-methods">
+                  {[
+                    { icon: "⚡", name: "SprintPay", desc: "Bank Transfer · Crypto · Fast & Secure" },
+                    { icon: "🏦", name: "Manual Transfer", desc: "Direct bank deposit · Admin verified" },
+                  ].map((pm, i) => (
+                    <div
+                      key={i}
+                      className={`payment-method ${selectedPayment === i ? "selected" : ""}`}
+                      onClick={() => setSelectedPayment(i)}
+                    >
+                      <span className="pm-icon">{pm.icon}</span>
+                      <div>
+                        <div className="pm-name">{pm.name}</div>
+                        <div className="pm-desc">{pm.desc}</div>
+                      </div>
+                      <div style={{
+                        width: 18, height: 18, borderRadius: '50%', flexShrink: 0, marginLeft: 'auto',
+                        border: `2px solid ${selectedPayment === i ? 'hsl(220 70% 55%)' : 'hsl(220 20% 75%)'}`,
+                        background: selectedPayment === i ? 'hsl(220 70% 55%)' : 'white',
+                      }} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* SprintPay info */}
+                {selectedPayment === 0 && (
+                  <div style={{
+                    marginTop: 14, padding: '14px 16px',
+                    background: 'hsl(220 70% 55% / 0.06)',
+                    border: '1px solid hsl(220 70% 55% / 0.2)',
+                    borderRadius: 12, fontSize: 12, color: 'hsl(220 20% 40%)', lineHeight: 1.7,
+                  }}>
+                    <div style={{ fontWeight: 700, marginBottom: 6, color: 'hsl(220 70% 45%)', fontSize: 13 }}>
+                      ⚡ SprintPay Checkout
+                    </div>
+                    You'll be redirected to SprintPay's secure hosted payment page. After payment, you'll be sent back here and your wallet will be credited automatically.
+                  </div>
+                )}
+
+                {/* Manual info */}
+                {selectedPayment === 1 && (
+                  <div style={{
+                    marginTop: 14, padding: '14px 16px',
+                    background: 'hsl(38 100% 97%)',
+                    border: '1px solid hsl(38 80% 80%)',
+                    borderRadius: 12, fontSize: 12, color: 'hsl(38 60% 30%)', lineHeight: 1.7,
+                  }}>
+                    <div style={{ fontWeight: 700, marginBottom: 4 }}>⏳ Manual Transfer</div>
+                    Use the <strong>Manual Payments</strong> tab to submit proof. Admin will verify and credit your wallet within 30 minutes.
+                  </div>
+                )}
+
+                <button
+                  className="btn-submit-funds"
+                  style={{ marginTop: 20, opacity: payLoading ? 0.7 : 1 }}
+                  disabled={payLoading}
+                  onClick={() => {
+                    if (selectedPayment === 1) {
+                      switchPanel("manual-payments");
+                      return;
+                    }
+                    const amount = customAmount
+                      ? Number(customAmount)
+                      : selectedPreset ? Number(selectedPreset.replace(/[^\d]/g, "")) : 0;
+                    if (!amount || amount < 100) {
+                      toast.error("Minimum amount is ₦100");
+                      return;
+                    }
+                    setPayLoading(true);
+                    const SPRINT_API_KEY = "55699454060223578858586";
+                    const ref = `sp-${userId.slice(0, 8)}-${Date.now()}`;
+                    const redirectUrl = `${window.location.origin}/dashboard?payment=success&ref=${ref}&amount=${amount}`;
+                    const payUrl = `https://web.sprintpay.online/pay?amount=${amount}&key=${SPRINT_API_KEY}&ref=${ref}&email=${encodeURIComponent(email)}`;
+                    window.location.href = payUrl;
+                  }}
+                >
+                  {payLoading
+                    ? "Redirecting..."
+                    : selectedPayment === 1
+                    ? "Go to Manual Payments →"
+                    : `Pay ₦${(customAmount ? Number(customAmount) : selectedPreset ? Number(selectedPreset.replace(/[^\d]/g, "")) : 0).toLocaleString()} via SprintPay →`
+                  }
+                </button>
               </div>
             </div>
-          )}
 
+            {/* Right column */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* Balance */}
+              <div className="funds-card">
+                <div className="funds-card-title">Current Balance</div>
+                <div style={{ textAlign: "center", padding: "20px 0" }}>
+                  <div style={{ fontSize: 36, fontWeight: 800, color: "hsl(200 85% 45%)" }}>{formattedBalance}</div>
+                  <div style={{ fontSize: 13, color: "hsl(210 15% 55%)", marginTop: 4 }}>Available Balance</div>
+                </div>
+              </div>
+
+              {/* Integration info */}
+              <div className="funds-card">
+                <div className="funds-card-title">🔧 SprintPay Config</div>
+                <div style={{ fontSize: 12, color: 'hsl(210 15% 50%)', marginBottom: 12 }}>
+                  Set these in your SprintPay dashboard:
+                </div>
+                {[
+                  {
+                    label: 'Redirect URL',
+                    val: `${window.location.origin}/dashboard?payment=success`,
+                  },
+                  {
+                    label: 'Webhook URL',
+                    val: `${window.location.origin}/api/sprintpay/webhook`,
+                  },
+                  {
+                    label: 'Update Config URL',
+                    val: `https://web.sprintpay.online/api/assign-webhook`,
+                  },
+                ].map(({ label, val }) => (
+                  <div key={label} style={{
+                    background: 'hsl(220 20% 97%)', borderRadius: 10,
+                    padding: '10px 12px', border: '1px solid hsl(220 20% 90%)',
+                    marginBottom: 8,
+                  }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'hsl(210 15% 55%)', marginBottom: 4 }}>
+                      {label}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: 11, color: 'hsl(220 20% 30%)', wordBreak: 'break-all', lineHeight: 1.5 }}>
+                        {val}
+                      </span>
+                      <button
+                        onClick={() => { navigator.clipboard.writeText(val); toast.success("Copied!"); }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'hsl(220 70% 55%)', fontSize: 13, flexShrink: 0 }}
+                      ><i className="fa-solid fa-copy" /></button>
+                    </div>
+                  </div>
+                ))}
+
+                <div style={{
+                  marginTop: 4, fontSize: 11, color: 'hsl(142 50% 30%)',
+                  lineHeight: 1.7, padding: '10px 12px',
+                  background: 'hsl(142 60% 97%)', borderRadius: 10,
+                  border: '1px solid hsl(142 50% 85%)',
+                }}>
+                  <strong>Env variable needed:</strong><br />
+                  <code style={{ fontFamily: 'monospace' }}>VITE_SPRINTPAY_API_KEY=your_key_here</code>
+                </div>
+              </div>
+
+              {/* Processing times */}
+              <div className="funds-card">
+                <div className="funds-card-title">⏳ Processing Times</div>
+                {[
+                  { method: "SprintPay (Auto)", time: "Instant" },
+                  { method: "Manual Transfer", time: "15–30 mins" },
+                ].map(({ method, time }) => (
+                  <div key={method} style={{
+                    display: 'flex', justifyContent: 'space-between',
+                    padding: '10px 0', borderBottom: '1px solid hsl(220 20% 93%)',
+                    fontSize: 13,
+                  }}>
+                    <span style={{ color: 'hsl(210 15% 50%)' }}>{method}</span>
+                    <strong style={{ color: method === "SprintPay (Auto)" ? 'hsl(142 60% 35%)' : 'hsl(220 20% 20%)' }}>{time}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+)}
           {/* MANUAL PAYMENTS */}
           {activePanel === "manual-payments" && (
             <div className="dash-panel">
@@ -887,62 +1684,112 @@ export default function Dashboard() {
                 <div className="funds-grid">
                   <div>
                     <div className="funds-card">
-                      <div className="funds-card-title">Bank Transfer Details</div>
-                      <p style={{ fontSize: 13, color: "hsl(220 10% 50%)", marginBottom: 16 }}>Send payment to any of the accounts below and submit proof of payment</p>
+                      <div className="funds-card-title">Payment Account Details</div>
+                      <p style={{ fontSize: 13, color: "hsl(210 15% 55%)", marginBottom: 16 }}>Send payment to any of the accounts below and submit proof of payment</p>
 
-                      <div className="manual-bank-card">
-                        <div className="manual-bank-name">🏦 First Bank of Nigeria</div>
-                        <div className="manual-bank-detail"><span>Account Name:</span> <strong>VerifiedStore Ltd</strong></div>
-                        <div className="manual-bank-detail"><span>Account Number:</span> <strong>0123456789</strong></div>
-                      </div>
-
-                      <div className="manual-bank-card">
-                        <div className="manual-bank-name">🏦 GTBank</div>
-                        <div className="manual-bank-detail"><span>Account Name:</span> <strong>VerifiedStore Ltd</strong></div>
-                        <div className="manual-bank-detail"><span>Account Number:</span> <strong>9876543210</strong></div>
-                      </div>
-
-                      <div className="manual-bank-card">
-                        <div className="manual-bank-name">₿ Cryptocurrency</div>
-                        <div className="manual-bank-detail"><span>BTC:</span> <strong style={{ fontSize: 11, wordBreak: "break-all" }}>bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</strong></div>
-                        <div className="manual-bank-detail"><span>USDT (TRC20):</span> <strong style={{ fontSize: 11, wordBreak: "break-all" }}>TN7x3fKr8oPcEqS5...</strong></div>
-                      </div>
+                      {bankDetails.length === 0 ? (
+                        <div className="manual-bank-card">
+                          <div className="manual-bank-name">No accounts found</div>
+                          <div className="manual-bank-detail">Please contact support for payment details.</div>
+                        </div>
+                      ) : (
+                        bankDetails.map((b) => (
+                          <div key={b.id} className="manual-bank-card">
+                            <div className="manual-bank-name">🏦 {b.label}</div>
+                            <div className="manual-bank-detail"><span>Account Name:</span> <strong>{b.account_name}</strong></div>
+                            <div className="manual-bank-detail"><span>Account Number:</span> <strong>{b.account_number}</strong></div>
+                          </div>
+                        ))
+                      )}
 
                       <div className="form-section-title" style={{ marginTop: 20 }}>Submit Proof of Payment</div>
                       <div className="form-group" style={{ marginBottom: 14 }}>
                         <label className="form-label">Amount Sent (NGN)</label>
-                        <input type="number" className="dash-form-input" placeholder="e.g. 5000" />
+                        <input
+                          type="number"
+                          className="dash-form-input"
+                          placeholder="e.g. 5000"
+                          value={manualPayAmount}
+                          onChange={(e) => setManualPayAmount(e.target.value)}
+                        />
                       </div>
                       <div className="form-group" style={{ marginBottom: 14 }}>
                         <label className="form-label">Transaction Reference</label>
-                        <input type="text" className="dash-form-input" placeholder="Bank reference or TX hash" />
+                        <input
+                          type="text"
+                          className="dash-form-input"
+                          placeholder="Bank reference or TX hash"
+                          value={manualPayRef}
+                          onChange={(e) => setManualPayRef(e.target.value)}
+                        />
                       </div>
                       <div className="form-group" style={{ marginBottom: 14 }}>
                         <label className="form-label">Payment Method Used</label>
-                        <select className="dash-form-input">
-                          <option>Bank Transfer - First Bank</option>
-                          <option>Bank Transfer - GTBank</option>
-                          <option>Cryptocurrency - BTC</option>
-                          <option>Cryptocurrency - USDT</option>
+                        <select
+                          className="dash-form-input"
+                          value={manualPayMethod}
+                          onChange={(e) => setManualPayMethod(e.target.value)}
+                        >
+                          <option value="">Select Method</option>
+                          {bankDetails.map(b => (
+                            <option key={b.id} value={b.label}>{b.label}</option>
+                          ))}
                         </select>
                       </div>
-                      <button className="btn-submit-funds" onClick={() => toast.success("Payment proof submitted! We'll verify within 30 minutes.")}>Submit Payment Proof →</button>
+                      <button
+                        className={`btn-submit-funds ${loading ? "loading" : ""}`}
+                        disabled={loading}
+                        onClick={submitManualPayment}
+                      >
+                        {loading ? "Submitting..." : "Submit Payment Proof →"}
+                      </button>
                     </div>
                   </div>
                   <div>
                     <div className="funds-card">
                       <div className="funds-card-title">Current Balance</div>
                       <div style={{ textAlign: "center", padding: "20px 0" }}>
-                        <div style={{ fontSize: 36, fontWeight: 800, color: "hsl(220 70% 25%)" }}>{formattedBalance}</div>
-                        <div style={{ fontSize: 13, color: "hsl(220 10% 50%)", marginTop: 4 }}>Available Balance</div>
+                        <div style={{ fontSize: 36, fontWeight: 800, color: "hsl(200 85% 45%)" }}>{formattedBalance}</div>
+                        <div style={{ fontSize: 13, color: "hsl(210 15% 55%)", marginTop: 4 }}>Available Balance</div>
                       </div>
                     </div>
                     <div className="funds-card" style={{ marginTop: 16 }}>
                       <div className="funds-card-title">⏳ Processing Times</div>
                       <div className="manual-bank-detail"><span>Bank Transfer:</span> <strong>15-30 minutes</strong></div>
                       <div className="manual-bank-detail"><span>Cryptocurrency:</span> <strong>5-15 minutes</strong></div>
-                      <div style={{ fontSize: 12, color: "hsl(220 10% 50%)", marginTop: 12 }}>Payments are verified manually. Contact support if not credited within 1 hour.</div>
+                      <div style={{ fontSize: 12, color: "hsl(210 15% 55%)", marginTop: 12 }}>Payments are verified manually. Contact support if not credited within 1 hour.</div>
                     </div>
+                  </div>
+                </div>
+
+                <div className="section-header" style={{ padding: "40px 0 20px" }}>
+                  <div className="section-head-left">
+                    <div className="section-hl" />
+                    <span className="section-title">My Payment History</span>
+                  </div>
+                </div>
+
+                <div className="orders-table-wrap">
+                  <div className="table-container">
+                    <table className="dash-table">
+                      <thead>
+                        <tr><th>Method</th><th>Amount</th><th>Reference</th><th>Date</th><th>Status</th></tr>
+                      </thead>
+                      <tbody>
+                        {userManualPayments.map(mp => (
+                          <tr key={mp.id}>
+                            <td>{mp.method}</td>
+                            <td className="order-price">₦{Number(mp.amount).toLocaleString()}</td>
+                            <td style={{ fontFamily: "monospace", fontSize: 11 }}>{mp.reference || "—"}</td>
+                            <td>{new Date(mp.created_at).toLocaleDateString()}</td>
+                            <td><span className={`status-pill status-${mp.status}`}>{mp.status.charAt(0).toUpperCase() + mp.status.slice(1)}</span></td>
+                          </tr>
+                        ))}
+                        {userManualPayments.length === 0 && (
+                          <tr><td colSpan={5} style={{ textAlign: "center", padding: 40, color: "hsl(220 10% 60%)" }}>No payment submissions yet.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -952,131 +1799,185 @@ export default function Dashboard() {
           {/* SUPPORT */}
           {activePanel === "support" && (
             <div className="dash-panel">
-              <div className="support-panel">
-                <div className="section-header" style={{ padding: "0 0 20px" }}>
-                  <div className="section-head-left">
-                    <div className="section-hl" />
-                    <span className="section-title">Support Center</span>
+              {!supportChatOpen ? (
+                <div className="support-panel-modern">
+                  <div className="support-hero">
+                    <h2 className="support-hero-title">Customer Support</h2>
+                    <p className="support-hero-desc">We're here to help! Choose your preferred support channel below and our team will assist you promptly.</p>
                   </div>
-                </div>
-                <div className="support-topics">
-                  {[
-                    { icon: "📦", name: "Order Issues", sub: "Problems with your purchase" },
-                    { icon: "💰", name: "Payment & Billing", sub: "Deposit, refund inquiries" },
-                    { icon: "🔒", name: "Account Security", sub: "Login, password issues" },
-                    { icon: "📱", name: "Product Quality", sub: "Account quality issues" },
-                  ].map((t, i) => (
-                    <div key={i} className="topic-card" onClick={() => toast(`Loading ${t.name.toLowerCase()} support...`)}>
-                      <div className="topic-icon">{t.icon}</div>
-                      <div className="topic-name">{t.name}</div>
-                      <div className="topic-sub">{t.sub}</div>
+
+                  <div className="support-grid-modern">
+                    <div className="support-card-modern">
+                      <div className="support-card-icon-wrap" style={{ background: 'hsl(210 100% 25% / 0.1)', color: 'hsl(210 100% 25%)' }}>
+                        <i className="fa-solid fa-bullhorn" />
+                      </div>
+                      <div className="support-card-info">
+                        <h3>Telegram Announcement Group</h3>
+                        <p>Get latest updates, announcements and news</p>
+                      </div>
+                      <button className="support-card-btn" onClick={() => window.open(siteSettings.telegram_group, '_blank')}>
+                        Click to Join Group
+                      </button>
                     </div>
-                  ))}
-                </div>
-                <div className="support-grid">
-                  <div className="funds-card">
-                    <div className="funds-card-title">Send a Message</div>
-                    <div className="form-group" style={{ marginBottom: 14 }}>
-                      <label className="form-label">Subject</label>
-                      <input type="text" className="dash-form-input" placeholder="Brief description of your issue" />
+
+                    <div className="support-card-modern">
+                      <div className="support-card-icon-wrap" style={{ background: 'hsl(200 100% 45% / 0.1)', color: 'hsl(200 100% 45%)' }}>
+                        <i className="fa-brands fa-telegram" />
+                      </div>
+                      <div className="support-card-info">
+                        <h3>Telegram Support</h3>
+                        <p>Chat with our support team 24/7</p>
+                      </div>
+                      <button className="support-card-btn" onClick={() => window.open(siteSettings.telegram_support, '_blank')}>
+                        Start Telegram Chat
+                      </button>
                     </div>
-                    <div className="form-group" style={{ marginBottom: 14 }}>
-                      <label className="form-label">Order ID (optional)</label>
-                      <input type="text" className="dash-form-input" placeholder="#ORD000" />
+
+                    <div className="support-card-modern">
+                      <div className="support-card-icon-wrap" style={{ background: 'hsl(140 70% 45% / 0.1)', color: 'hsl(140 70% 45%)' }}>
+                        <i className="fa-brands fa-whatsapp" />
+                      </div>
+                      <div className="support-card-info">
+                        <h3>WhatsApp Channel</h3>
+                        <p>Join our WhatsApp community for instant support</p>
+                      </div>
+                      <button className="support-card-btn" onClick={() => window.open(siteSettings.whatsapp_channel, '_blank')}>
+                        Click to Join WhatsApp Channel
+                      </button>
                     </div>
-                    <div className="form-group" style={{ marginBottom: 20 }}>
-                      <label className="form-label">Message</label>
-                      <textarea className="dash-form-input" placeholder="Describe your issue in detail..." />
+
+                    {/* Dashboard Chat Option */}
+                    <div className="support-card-modern">
+                      <div className="support-card-icon-wrap" style={{ background: 'hsl(260 70% 55% / 0.1)', color: 'hsl(260 70% 55%)' }}>
+                        <i className="fa-solid fa-comments" />
+                      </div>
+                      <div className="support-card-info">
+                        <h3>Internal Dashboard Chat</h3>
+                        <p>Message us directly here if you prefer not to use other apps.</p>
+                      </div>
+                      <button className="support-card-btn" onClick={() => setSupportChatOpen(true)}>
+                        Open Dashboard Chat
+                      </button>
                     </div>
-                    <button className="btn-submit-funds" onClick={() => toast.success("Support ticket submitted!")}>Submit Ticket →</button>
                   </div>
-                  <div className="funds-card">
-                    <div className="funds-card-title">Quick Contact</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                      {[
-                        { icon: "💬", name: "Telegram Support", desc: "Usually replies in minutes" },
-                        { icon: "📧", name: "Email Support", desc: "support@verifiedstore.com" },
-                        { icon: "🌐", name: "Live Chat", desc: "Available 24/7 online" },
-                      ].map((c, i) => (
-                        <div key={i} className="payment-method" onClick={() => toast(`Opening ${c.name.toLowerCase()}...`)}>
-                          <span className="pm-icon">{c.icon}</span>
-                          <div><div className="pm-name">{c.name}</div><div className="pm-desc">{c.desc}</div></div>
-                        </div>
-                      ))}
+
+                  <div className="support-info-banner">
+                    <div className="sib-icon">🕒</div>
+                    <div className="sib-content">
+                      <h3>24/7 Support Available</h3>
+                      <p>Our support team responds within 24 hours. For urgent matters, please use Telegram or WhatsApp for faster response.</p>
                     </div>
-                    <div className="response-times-box">
-                      <div className="response-times-title">Response Times</div>
-                      <div className="response-times-body">
-                        🟢 Telegram: ~5 minutes<br />
-                        🟡 Live Chat: ~15 minutes<br />
-                        🔵 Email: ~24 hours
+                  </div>
+
+                  <div className="support-tips-section">
+                    <h3 className="tips-title">Quick Tips for Better Support</h3>
+                    <div className="tips-grid">
+                      <div className="tip-item">
+                        <i className="fa-solid fa-hashtag" />
+                        <span>Include your order number in all support requests</span>
+                      </div>
+                      <div className="tip-item">
+                        <i className="fa-solid fa-camera" />
+                        <span>Provide screenshots for technical issues</span>
+                      </div>
+                      <div className="tip-item">
+                        <i className="fa-solid fa-circle-question" />
+                        <span>Check FAQ section before contacting support</span>
+                      </div>
+                      <div className="tip-item">
+                        <i className="fa-solid fa-bolt" />
+                        <span>Use Telegram/WhatsApp for urgent matters</span>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* MESSAGES */}
-          {activePanel === "messages" && (
-            <div className="dash-panel">
-              <div style={{ padding: "24px 24px 0" }}>
-                <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 4 }}>Messages</h2>
-                <p style={{ fontSize: 14, color: "hsl(220 10% 50%)", marginBottom: 16 }}>Chat with support about your orders</p>
-              </div>
-
-              <div style={{ padding: "0 24px 24px", display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ background: "hsl(220 20% 97%)", borderRadius: 12, padding: 16, minHeight: 300, maxHeight: 500, overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
-                  {messages.length === 0 ? (
-                    <div style={{ textAlign: "center", color: "hsl(220 10% 60%)", padding: 40 }}>
-                      <div style={{ fontSize: 32, marginBottom: 8 }}>💬</div>
-                      <p>No messages yet. Send a message to get started!</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                  <div style={{ padding: "24px 24px 0", display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <button
+                      onClick={() => setSupportChatOpen(false)}
+                      style={{ background: 'none', border: 'none', fontSize: 18, color: 'hsl(var(--db-blue))', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    >
+                      <i className="fa-solid fa-arrow-left" />
+                    </button>
+                    <div>
+                      <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 2 }}>Live Chat</h2>
+                      <p style={{ fontSize: 13, color: "hsl(210 15% 55%)" }}>Our agents typically respond within 15 minutes</p>
                     </div>
-                  ) : (
-                    messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        style={{
-                          alignSelf: msg.sender_id === userId ? "flex-end" : "flex-start",
-                          background: msg.sender_id === userId ? "hsl(220 70% 50%)" : "hsl(0 0% 100%)",
-                          color: msg.sender_id === userId ? "white" : "hsl(220 20% 20%)",
-                          padding: "10px 16px",
-                          borderRadius: 12,
-                          maxWidth: "75%",
-                          fontSize: 14,
-                          boxShadow: "0 1px 3px hsl(0 0% 0% / 0.08)",
-                        }}
-                      >
-                        <div>{msg.content}</div>
-                        <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
-                          {new Date(msg.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                          {msg.sender_id !== userId && " · Admin"}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                  </div>
 
-                <div style={{ display: "flex", gap: 8 }}>
-                  <input
-                    type="text"
-                    className="dash-form-input"
-                    placeholder="Type your message..."
-                    value={msgInput}
-                    onChange={(e) => setMsgInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") sendMessage(); }}
-                    style={{ flex: 1 }}
-                  />
-                  <button className="btn-save" onClick={() => sendMessage()} style={{ whiteSpace: "nowrap" }}>
-                    Send <i className="fa-solid fa-paper-plane" />
-                  </button>
+                  <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 16, flex: 1 }}>
+                    <div
+                      id="chat-container"
+                      style={{
+                        background: "hsl(var(--db-bg))",
+                        border: "1px solid hsl(var(--db-border))",
+                        borderRadius: 16,
+                        padding: 24,
+                        minHeight: 450,
+                        maxHeight: 600,
+                        overflowY: "auto",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 12
+                      }}
+                    >
+                      {messages.length === 0 ? (
+                        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'hsl(var(--db-text-muted))', opacity: 0.7 }}>
+                          <div style={{ fontSize: 48, marginBottom: 16 }}>✉️</div>
+                          <p style={{ fontSize: 15, fontWeight: 500 }}>Start a conversation</p>
+                          <p style={{ fontSize: 13 }}>Send a message to our support agents below.</p>
+                        </div>
+                      ) : (
+                        messages.map((msg) => (
+                          <div
+                            key={msg.id}
+                            style={{
+  alignSelf: msg.sender_id === userId ? "flex-end" : "flex-start",
+  background: msg.sender_id === userId ? "hsl(var(--db-blue))" : "hsl(220 20% 94%)",
+  color: msg.sender_id === userId ? "white" : "hsl(var(--db-text))",
+  padding: "12px 18px",
+  borderRadius: msg.sender_id === userId ? "16px 16px 0 16px" : "16px 16px 16px 0",
+  maxWidth: "75%",
+  fontSize: 14,
+  boxShadow: "0 1px 4px hsl(0 0% 0% / 0.05)",
+  border: "none",
+  marginLeft: msg.sender_id === userId ? "auto" : "0",
+  marginRight: msg.sender_id === userId ? "0" : "auto",
+}}
+                          >
+                            <div style={{ lineHeight: 1.5 }}>{msg.content}</div>
+                            <div style={{ fontSize: 11, opacity: 0.7, marginTop: 6, textAlign: msg.sender_id === userId ? 'right' : 'left' }}>
+                              {new Date(msg.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                              {msg.sender_id !== userId && " · Admin Support"}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <input
+                        type="text"
+                        className="dash-form-input"
+                        placeholder="Type your message..."
+                        value={msgInput}
+                        onChange={(e) => setMsgInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") sendMessage(); }}
+                        style={{ flex: 1, height: 48, borderRadius: 12 }}
+                      />
+                      <button className="btn-save" onClick={() => sendMessage()} style={{ padding: '0 24px', height: 48, borderRadius: 12 }}>
+                        Send <i className="fa-solid fa-paper-plane" style={{ marginLeft: 8 }} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
       </div>
+
     </div>
   );
 }
